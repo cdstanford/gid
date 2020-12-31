@@ -9,7 +9,8 @@
 use super::interface::{StateGraph, Status};
 use std::collections::{HashMap, HashSet};
 
-struct NaiveStateGraph {
+#[derive(Debug, Default)]
+pub struct NaiveStateGraph {
     seen: HashSet<usize>,
     done: HashSet<usize>,
     dead: HashSet<usize>,
@@ -64,6 +65,9 @@ impl NaiveStateGraph {
     }
 }
 impl StateGraph for NaiveStateGraph {
+    fn new() -> Self {
+        Default::default()
+    }
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
         debug_assert!(!self.done.contains(&v1));
         debug_assert!(!self.dead.contains(&v1));
@@ -87,5 +91,8 @@ impl StateGraph for NaiveStateGraph {
         } else {
             Status::Unvisited
         }
+    }
+    fn vec_states(&self) -> Vec<usize> {
+        self.seen.iter().copied().collect()
     }
 }
