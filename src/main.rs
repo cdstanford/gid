@@ -1,11 +1,8 @@
 /*
-    Entrypoint to run a series of transactions using the state graph
-    interface, and collect the output.
+    Basic CLI
 */
 
-use state_graph::interface::{ExampleInput, ExampleOutput, StateGraph};
-use state_graph::naive::NaiveStateGraph;
-use state_graph::util::from_json_file;
+use state_graph::driver;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -26,34 +23,6 @@ struct Args {
 // TODO: add output file: output: Option<PathBuf>,
 
 fn main() {
-    let example_string = ExampleInput(vec![
-        state_graph::interface::Transaction::Add(1, 3),
-        state_graph::interface::Transaction::Add(1, 2),
-        state_graph::interface::Transaction::Done(2),
-    ]);
-    println!("example: {}", serde_json::to_string(&example_string).unwrap());
-
     let args = Args::from_args();
-    let input: ExampleInput = from_json_file(&args.input);
-    let expected_output: Option<ExampleOutput> =
-        args.expect_output.as_ref().map(from_json_file);
-
-    println!("===== State Graph =====");
-    println!("Running naive algorithm...");
-    let mut graph = NaiveStateGraph::new();
-    graph.process_all(&input);
-    let output = graph.collect_all();
-
-    println!("=== Output ===");
-    println!("{:?}", output);
-
-    if let Some(expected) = expected_output {
-        if output == expected {
-            println!("Success: output is as expected");
-        } else {
-            println!("Failed: output is incorrect!");
-            println!("=== Expected ===");
-            println!("{:?}", expected);
-        }
-    }
+    driver::run_example(&args.input, args.expect_output.as_ref());
 }
