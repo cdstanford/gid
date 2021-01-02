@@ -53,6 +53,12 @@ pub fn run_example(
     graph.process_all(&input);
     let output = graph.collect_all();
 
+    if cfg!(debug_assertions) {
+        println!("=== Statistics ===");
+        println!("Time: {}", graph.get_time());
+        println!("Space: {}", graph.get_space());
+    }
+
     println!("=== Output ===");
     println!("{:?}", output);
 

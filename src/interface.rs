@@ -49,6 +49,13 @@ pub trait StateGraph {
     fn get_status(&self, v: usize) -> Status;
     // Return a vector of all states that have been seen.
     fn vec_states(&self) -> Vec<usize>;
+    // Statistics -- only work in debug mode
+    // space should be true memory, up to a constant, and time should be true
+    // time, up to a constant.
+    // Specifically: space = max sum of sizes of internal data structures;
+    // time = loop iterations + recursive calls
+    fn get_space(&self) -> usize;
+    fn get_time(&self) -> usize;
 
     // Safe, checked versions
     // These should always be used over the unchecked versions for code that
@@ -111,43 +118,3 @@ pub trait StateGraph {
         state_graph.collect_all()
     }
 }
-
-// impl FromStr for Transaction {
-//     type Err = String;
-//     fn from_str(s: &str) -> Result<Self, String> {
-//         let parts: Vec<String> = s.split(' ').collect();
-//         if parts[0] == "Add" {
-//             if parts.len() == 3 {
-//                 let arg1 = parts[1]
-//                     .parse::<usize>()
-//                     .map_err(|err| format!(
-//                         "{}: Could not parse Add arg as int: {}",
-//                         err, parts[1]
-//                     ))?;
-//                 let arg2 = parts[2]
-//                     .parse::<usize>()
-//                     .map_err(|err| format!(
-//                         "{}: Could not parse Add arg as int: {}",
-//                         err, parts[2]
-//                     ))?;
-//                 Transaction::Add(arg1, arg2)
-//             } else {
-//                 Error("Wrong number of arguments to Add")
-//             }
-//         } else if parts[0] == "Done" {
-//             if parts.len() == 2 {
-//                 let arg1 = parts[1]
-//                     .parse::<usize>()
-//                     .map_err(|err| format!(
-//                         "{}: Could not parse Add arg as int: {}",
-//                         err, parts[1]
-//                     ))?;
-//                 Transaction::Done(arg1)
-//             } else {
-//                 Error("Wrong number of arguments to Add")
-//             }
-//         } else {
-//             Error(format!("Unrecognized transaction: {:?}", parts))
-//         }
-//     }
-// }
