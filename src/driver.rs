@@ -91,7 +91,27 @@ mod tests {
     }
 
     #[test]
-    fn test_file_1() {
+    fn test_1() {
         test_file("1");
+    }
+    #[test]
+    fn test_line_10() {
+        test_file("line_10");
+    }
+    #[test]
+    fn test_reverseline_10() {
+        test_file("reverseline_10");
+    }
+    #[test]
+    fn test_line_20() {
+        test_file("line_20");
+    }
+    #[test]
+    fn test_reverseline_20() {
+        test_file("reverseline_20");
+    }
+    #[test]
+    fn test_tree_3() {
+        test_file("tree_3");
     }
 }
