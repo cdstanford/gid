@@ -103,15 +103,19 @@ where
             .map(move |uid| self.id_vertices[&uid])
             .inspect(move |_| self.time.inc())
     }
-    pub fn iter_bck_edges<'a>(&'a self, v: V) -> impl Iterator<Item = V> + 'a {
+    pub fn iter_fwd_edges<'a>(&'a self, v: V) -> impl Iterator<Item = V> + 'a {
+        // Note that when vertices are merged, edges aren't. So the same vertex
+        // could appear more than once in the iterator; but iter_edges enforces
+        // that self-loops are filtered out.
         assert!(self.is_seen(v));
-        let canon = self.get_canon_id_unwrapped(v);
-        self.bck_edges[&canon]
-            .iter()
-            .map(move |id| self.id_find.find(id.0))
-            .map(move |id| self.id_vertices.get(&UniqueID(id)).unwrap())
-            .copied()
-            .inspect(move |_| self.time.inc())
+        self.iter_edges(v, &self.fwd_edges)
+    }
+    pub fn iter_bck_edges<'a>(&'a self, v: V) -> impl Iterator<Item = V> + 'a {
+        // Note that when vertices are merged, edges aren't. So the same vertex
+        // could appear more than once in the iterator; but iter_edges enforces
+        // that self-loops are filtered out.
+        assert!(self.is_seen(v));
+        self.iter_edges(v, &self.bck_edges)
     }
     pub fn merge(&mut self, v1: V, v2: V) {
         // Panics if v1 or v2 aren't seen, or if their labels differ
@@ -171,7 +175,7 @@ where
         self.time.inc();
         self.space.inc();
     }
-    pub fn add_edge_core(&mut self, v1: V, v2: V) {
+    fn add_edge_core(&mut self, v1: V, v2: V) {
         // Panics if v1 or v2 is not seen
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
@@ -199,5 +203,19 @@ where
     fn get_canon_id_unwrapped(&self, v: V) -> CanonicalID {
         let id = self.vertex_ids.get(&v).unwrap();
         CanonicalID(self.id_find.find(id.0))
+    }
+    fn iter_edges<'a>(
+        &'a self,
+        v: V,
+        edges: &'a HashMap<CanonicalID, LinkedList<UniqueID>>,
+    ) -> impl Iterator<Item = V> + 'a {
+        let canon = self.get_canon_id_unwrapped(v);
+        edges[&canon]
+            .iter()
+            .inspect(move |_| self.time.inc())
+            .map(move |id| self.id_find.find(id.0))
+            .filter(move |&id| id != canon.0)
+            .map(move |id| self.id_vertices.get(&UniqueID(id)).unwrap())
+            .copied()
     }
 }
