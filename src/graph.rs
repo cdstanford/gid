@@ -53,7 +53,7 @@ impl<V, T: Default> Default for DiGraph<V, T> {
 impl<V, T> DiGraph<V, T>
 where
     V: Copy + Clone + Eq + Hash + PartialEq,
-    T: Default,
+    T: Default + PartialEq,
 {
     /*
         Exposed API
@@ -96,8 +96,12 @@ where
         self.add_edge_core(v1, v2);
     }
     pub fn iter_vertices<'a>(&'a self) -> impl Iterator<Item = V> + 'a {
-        // TODO: iterate through each canonical ID only once instead
-        self.vertex_ids.keys().copied().inspect(move |_| self.time.inc())
+        self.labels
+            .keys()
+            .copied()
+            .map(|CanonicalID(id)| UniqueID(id))
+            .map(move |uid| self.id_vertices[&uid])
+            .inspect(move |_| self.time.inc())
     }
     pub fn iter_bck_edges<'a>(&'a self, v: V) -> impl Iterator<Item = V> + 'a {
         assert!(self.is_seen(v));
@@ -109,9 +113,28 @@ where
             .copied()
             .inspect(move |_| self.time.inc())
     }
-    // TODO: Merge vertices
-    // pub fn merge(&mut self, v1: V, v2: V) {
-    // }
+    pub fn merge(&mut self, v1: V, v2: V) {
+        // Panics if v1 or v2 aren't seen, or if their labels differ
+        assert!(self.is_seen(v1));
+        assert!(self.is_seen(v2));
+        assert!(self.get_label(v1) == self.get_label(v2));
+        let canon1 = self.get_canon_id_unwrapped(v1);
+        let canon2 = self.get_canon_id_unwrapped(v2);
+        if canon1 != canon2 {
+            self.id_find.union(canon1.0, canon2.0);
+            let new = CanonicalID(self.id_find.find(canon1.0));
+            debug_assert_eq!(new.0, self.id_find.find(canon2.0));
+            debug_assert!(new == canon1 || new == canon2);
+            let old = if new == canon1 { canon2 } else { canon1 };
+            // Note the following are O(1)
+            self.labels.remove(&old);
+            let mut old_fwd = self.fwd_edges.remove(&old).unwrap();
+            let mut old_bck = self.bck_edges.remove(&old).unwrap();
+            self.fwd_edges.get_mut(&new).unwrap().append(&mut old_fwd);
+            self.bck_edges.get_mut(&new).unwrap().append(&mut old_bck);
+        }
+        self.time.inc();
+    }
 
     /*
         Debug mode statistics
