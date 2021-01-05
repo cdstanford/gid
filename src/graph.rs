@@ -96,12 +96,17 @@ where
         self.add_edge_core(v1, v2);
     }
     pub fn iter_vertices<'a>(&'a self) -> impl Iterator<Item = V> + 'a {
+        // For merged vertices, includes only one copy
         self.labels
             .keys()
             .copied()
             .map(|CanonicalID(id)| UniqueID(id))
             .map(move |uid| self.id_vertices[&uid])
             .inspect(move |_| self.time.inc())
+    }
+    pub fn iter_vertices_all<'a>(&'a self) -> impl Iterator<Item = V> + 'a {
+        // Includes every original vertex even when merged
+        self.vertex_ids.keys().copied()
     }
     pub fn iter_fwd_edges<'a>(&'a self, v: V) -> impl Iterator<Item = V> + 'a {
         // Note that when vertices are merged, edges aren't. So the same vertex
@@ -119,9 +124,11 @@ where
     }
     pub fn merge(&mut self, v1: V, v2: V) {
         // Panics if v1 or v2 aren't seen, or if their labels differ
+        // Returns new canonical ID
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
         assert!(self.get_label(v1) == self.get_label(v2));
+        self.time.inc();
         let canon1 = self.get_canon_id_unwrapped(v1);
         let canon2 = self.get_canon_id_unwrapped(v2);
         if canon1 != canon2 {
@@ -137,7 +144,7 @@ where
             self.fwd_edges.get_mut(&new).unwrap().append(&mut old_fwd);
             self.bck_edges.get_mut(&new).unwrap().append(&mut old_bck);
         }
-        self.time.inc();
+        // Could return new vertex here; for now we return nothing.
     }
 
     /*

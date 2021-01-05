@@ -14,6 +14,7 @@
 use super::debug_counter::DebugCounter;
 use super::graph::DiGraph;
 use super::interface::{StateGraph, Status};
+use std::collections::HashSet;
 
 #[derive(Debug, Default)]
 pub struct SimpleStateGraph {
@@ -22,10 +23,52 @@ pub struct SimpleStateGraph {
     additional_time: DebugCounter,
 }
 impl SimpleStateGraph {
+    fn merge_vertices(&mut self, v1: usize, v2: usize) {
+        debug_assert!(self.is_done(v1));
+        debug_assert!(self.is_done(v2));
+        debug_assert!(v1 != v2);
+        self.graph.merge(v1, v2);
+    }
     fn merge_all_cycles(&mut self, v: usize) {
         debug_assert!(self.is_done(v));
         // Merge all cycles through v (assuming no other cycles in Done states)
-        // TODO
+
+        // Phase 1: Fwd DFS
+        let mut visited_fwd = HashSet::new();
+        let mut to_visit = Vec::new();
+        to_visit.push(v);
+        while !to_visit.is_empty() {
+            let v1 = to_visit.pop().unwrap();
+            if !visited_fwd.contains(&v1) {
+                visited_fwd.insert(v1);
+                for v2 in self.graph.iter_fwd_edges(v1) {
+                    to_visit.push(v2);
+                }
+            }
+            self.additional_time.inc();
+        }
+
+        // Phase 2: Backward DFS
+        let visited_fwd = visited_fwd;
+        let mut visited_bck = HashSet::new();
+        to_visit.push(v);
+        while !to_visit.is_empty() {
+            let v1 = to_visit.pop().unwrap();
+            if visited_fwd.contains(&v1) && !visited_bck.contains(&v1) {
+                visited_bck.insert(v1);
+                for v2 in self.graph.iter_bck_edges(v1) {
+                    to_visit.push(v2);
+                }
+            }
+            self.additional_time.inc();
+        }
+
+        // Merge all vertices in visited_bck
+        for &u in &visited_bck {
+            if u != v {
+                self.merge_vertices(u, v);
+            }
+        }
     }
     fn check_dead_recursive(&mut self, v: usize) {
         // Check if v is dead and recurse on back edges.
@@ -64,7 +107,7 @@ impl StateGraph for SimpleStateGraph {
         *self.graph.get_label_or_default(v)
     }
     fn vec_states(&self) -> Vec<usize> {
-        self.graph.iter_vertices().collect()
+        self.graph.iter_vertices_all().collect()
     }
     fn get_space(&self) -> usize {
         self.graph.get_space()

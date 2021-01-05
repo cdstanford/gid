@@ -67,13 +67,14 @@ where
 fn run_core<G: StateGraph>(
     in_file: &PathBuf,
     expected_out_file: Option<&PathBuf>,
+    alg_name: &str,
 ) -> bool {
     let input: ExampleInput = from_json_file(in_file);
     let expect: Option<ExampleOutput> = expected_out_file.map(from_json_file);
 
     println!("===== State Graph =====");
 
-    println!("Running naive algorithm...");
+    println!("Running {} algorithm...", alg_name);
     let mut graph = G::new();
     graph.process_all(&input);
     let output = graph.collect_all();
@@ -109,10 +110,10 @@ pub fn run_example(
 ) -> bool {
     match algorithm {
         Algorithm::Naive => {
-            run_core::<NaiveStateGraph>(in_file, expected_out_file)
+            run_core::<NaiveStateGraph>(in_file, expected_out_file, "Naive")
         }
         Algorithm::Simple => {
-            run_core::<SimpleStateGraph>(in_file, expected_out_file)
+            run_core::<SimpleStateGraph>(in_file, expected_out_file, "Simple")
         }
     }
 }
@@ -129,7 +130,7 @@ mod tests {
         let outfile = PathBuf::from(format!("examples/{}_out.json", prefix));
         assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
         // TODO Uncomment and get test working
-        // assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
+        assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
     }
 
     #[test]
