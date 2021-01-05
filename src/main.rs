@@ -2,7 +2,7 @@
     Basic CLI
 */
 
-use state_graph::driver;
+use state_graph::driver::{self, Algorithm};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -19,10 +19,17 @@ struct Args {
     /// Expected output, if any
     #[structopt(short, long, parse(from_os_str))]
     expect_output: Option<PathBuf>,
+
+    #[structopt(short, long, default_value = "Naive")]
+    algorithm: Algorithm,
 }
 // TODO: add output file: output: Option<PathBuf>,
 
 fn main() {
     let args = Args::from_args();
-    driver::run_example(&args.input, args.expect_output.as_ref());
+    driver::run_example(
+        &args.input,
+        args.expect_output.as_ref(),
+        args.algorithm,
+    );
 }

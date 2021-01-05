@@ -21,6 +21,33 @@ pub struct SimpleStateGraph {
     // Debug mode statistics -- on top of those tracked by graph
     additional_time: DebugCounter,
 }
+impl SimpleStateGraph {
+    fn merge_all_cycles(&mut self, v: usize) {
+        debug_assert!(self.is_done(v));
+        // Merge all cycles through v (assuming no other cycles in Done states)
+        // TODO
+    }
+    fn check_dead_recursive(&mut self, v: usize) {
+        // Check if v is dead and recurse on back edges.
+
+        // If v is already dead or not dead, return.
+        if self.is_dead(v) {
+            return;
+        }
+        for w in self.graph.iter_fwd_edges(v) {
+            if !self.is_dead(w) {
+                return;
+            }
+        }
+        // Mark v dead
+        self.graph.overwrite_vertex(v, Status::Dead);
+        // Recurse
+        let mut to_recurse: Vec<usize> = self.graph.iter_bck_edges(v).collect();
+        for u in to_recurse.drain(..) {
+            self.check_dead_recursive(u);
+        }
+    }
+}
 impl StateGraph for SimpleStateGraph {
     fn new() -> Self {
         Default::default()
@@ -30,7 +57,8 @@ impl StateGraph for SimpleStateGraph {
     }
     fn mark_done_unchecked(&mut self, v: usize) {
         self.graph.overwrite_vertex(v, Status::Unknown);
-        // TODO: Do something here!
+        self.merge_all_cycles(v);
+        self.check_dead_recursive(v);
     }
     fn get_status(&self, v: usize) -> Status {
         *self.graph.get_label_or_default(v)

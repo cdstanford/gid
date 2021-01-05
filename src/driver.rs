@@ -6,11 +6,36 @@
 
 use super::interface::{ExampleInput, ExampleOutput, StateGraph};
 use super::naive::NaiveStateGraph;
+use super::simple::SimpleStateGraph;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
+use structopt::StructOpt;
+
+/*
+    Exposed enum for which state graph implementation to use
+*/
+
+#[derive(Debug, StructOpt)]
+pub enum Algorithm {
+    Naive,
+    Simple,
+    // Tarjan,
+    // Smart,
+}
+impl FromStr for Algorithm {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, String> {
+        match s.to_lowercase().as_str() {
+            "n" | "naive" => Ok(Algorithm::Naive),
+            "s" | "simple" => Ok(Algorithm::Simple),
+            _ => Err(format!("Could not parse as Algorithm: {}", s)),
+        }
+    }
+}
 
 /*
     Utility for file I/O
@@ -39,7 +64,7 @@ where
     Main driver to run examples
 */
 
-pub fn run_example(
+fn run_core<G: StateGraph>(
     in_file: &PathBuf,
     expected_out_file: Option<&PathBuf>,
 ) -> bool {
@@ -49,7 +74,7 @@ pub fn run_example(
     println!("===== State Graph =====");
 
     println!("Running naive algorithm...");
-    let mut graph = NaiveStateGraph::new();
+    let mut graph = G::new();
     graph.process_all(&input);
     let output = graph.collect_all();
 
@@ -77,6 +102,21 @@ pub fn run_example(
     }
 }
 
+pub fn run_example(
+    in_file: &PathBuf,
+    expected_out_file: Option<&PathBuf>,
+    algorithm: Algorithm,
+) -> bool {
+    match algorithm {
+        Algorithm::Naive => {
+            run_core::<NaiveStateGraph>(in_file, expected_out_file)
+        }
+        Algorithm::Simple => {
+            run_core::<SimpleStateGraph>(in_file, expected_out_file)
+        }
+    }
+}
+
 /*
     Unit tests from the input/output files
 */
@@ -87,7 +127,9 @@ mod tests {
     fn test_file(prefix: &str) {
         let infile = PathBuf::from(format!("examples/{}_in.json", prefix));
         let outfile = PathBuf::from(format!("examples/{}_out.json", prefix));
-        assert!(run_example(&infile, Some(&outfile)));
+        assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
+        // TODO Uncomment and get test working
+        // assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
     }
 
     #[test]
