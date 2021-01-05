@@ -114,4 +114,16 @@ mod tests {
     fn test_tree_3() {
         test_file("tree_3");
     }
+    #[test]
+    fn test_loop_3() {
+        test_file("loop_3");
+    }
+    #[test]
+    fn test_liveloop_3() {
+        test_file("liveloop_3");
+    }
+    #[test]
+    fn test_reverseloop_3() {
+        test_file("reverseloop_3");
+    }
 }
