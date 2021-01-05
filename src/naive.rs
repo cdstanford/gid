@@ -7,31 +7,30 @@
 */
 
 use super::debug_counter::DebugCounter;
+use super::graph::DiGraph;
 use super::interface::{StateGraph, Status};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 #[derive(Debug, Default)]
 pub struct NaiveStateGraph {
-    seen: HashSet<usize>,
-    done: HashSet<usize>,
-    dead: HashSet<usize>,
-    fwd_edges: HashMap<usize, HashSet<usize>>,
-    bck_edges: HashMap<usize, HashSet<usize>>,
-    // Debug mode statistics
-    space: DebugCounter,
-    time: DebugCounter,
+    graph: DiGraph<usize, Status>,
+    // Debug mode statistics -- on top of those tracked by graph
+    additional_time: DebugCounter,
 }
 impl NaiveStateGraph {
     fn ensure_seen(&mut self, v: usize) {
-        if !self.seen.contains(&v) {
-            self.seen.insert(v);
-            debug_assert!(!self.fwd_edges.contains_key(&v));
-            debug_assert!(!self.bck_edges.contains_key(&v));
-            self.fwd_edges.insert(v, HashSet::new());
-            self.bck_edges.insert(v, HashSet::new());
-            self.time.inc();
-            self.space.inc();
+        if !self.graph.is_seen(v) {
+            self.graph.add_vertex(v, Status::Unvisited);
         }
+    }
+    fn set_status(&mut self, v: usize, st: Status) {
+        self.graph.add_vertex(v, st);
+    }
+    fn is_done(&self, v: usize) -> bool {
+        self.get_status(v) != Status::Unvisited
+    }
+    fn is_dead(&self, v: usize) -> bool {
+        self.get_status(v) == Status::Dead
     }
     fn recalculate_dead_states(&mut self) {
         // Recalculate the subset of done states that are dead: states
@@ -42,37 +41,36 @@ impl NaiveStateGraph {
 
         // Initialize
         let mut to_visit = Vec::new();
+        let mut done = HashSet::new();
         let mut not_dead = HashSet::new();
-        for &v in &self.seen {
-            if !self.done.contains(&v) {
+        for v in self.graph.iter_vertices() {
+            if self.is_done(v) {
+                done.insert(v);
+            } else {
                 to_visit.push(v);
                 not_dead.insert(v);
-                self.time.inc();
             }
-            // We don't increment self.time here because this is just an
-            // inefficiency in the implementation.
         }
 
         // DFS
         while !to_visit.is_empty() {
             let v = to_visit.pop().unwrap();
-            for &u in &self.bck_edges[&v] {
+            for u in self.graph.iter_bck_edges(v) {
                 if !not_dead.contains(&u) {
                     to_visit.push(u);
                     not_dead.insert(u);
                 }
-                self.time.inc();
             }
-            self.time.inc();
+            self.additional_time.inc();
         }
 
         // Mark not-not-dead states as dead
-        for &v in &self.done {
-            debug_assert!(!(self.dead.contains(&v) && not_dead.contains(&v)));
+        for &v in &done {
+            debug_assert!(!(self.is_dead(v) && not_dead.contains(&v)));
             if !not_dead.contains(&v) {
-                self.dead.insert(v);
+                self.set_status(v, Status::Dead);
             }
-            self.time.inc();
+            self.additional_time.inc();
         }
     }
 }
@@ -81,45 +79,32 @@ impl StateGraph for NaiveStateGraph {
         Default::default()
     }
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
-        debug_assert!(!self.done.contains(&v1));
-        debug_assert!(!self.dead.contains(&v1));
+        debug_assert_eq!(self.get_status(v1), Status::Unvisited);
         self.ensure_seen(v1);
         self.ensure_seen(v2);
-        self.fwd_edges.get_mut(&v1).unwrap().insert(v2);
-        self.bck_edges.get_mut(&v2).unwrap().insert(v1);
-        self.space.inc();
-        self.time.inc();
+        self.graph.add_edge(v1, v2);
     }
     fn mark_done_unchecked(&mut self, v: usize) {
-        debug_assert!(!self.done.contains(&v));
-        debug_assert!(!self.dead.contains(&v));
-        self.done.insert(v);
+        debug_assert_eq!(self.get_status(v), Status::Unvisited);
+        self.set_status(v, Status::Unknown);
         self.recalculate_dead_states();
-        self.time.inc();
     }
     fn get_status(&self, v: usize) -> Status {
-        self.time.inc();
-        if self.dead.contains(&v) {
-            debug_assert!(self.done.contains(&v));
-            Status::Dead
-        } else if self.done.contains(&v) {
-            Status::Unknown
-        } else {
-            Status::Unvisited
-        }
+        self.additional_time.inc();
+        *self.graph.get_label(v).unwrap_or(&Status::Unvisited)
     }
 
     fn vec_states(&self) -> Vec<usize> {
-        // Warning: self.time not tracked here
-        self.seen.iter().copied().collect()
+        // Warning: self.time not increased here
+        self.graph.iter_vertices().collect()
     }
 
     // Statistics
     // These panic if not in debug mode.
     fn get_space(&self) -> usize {
-        self.space.get()
+        self.graph.get_space()
     }
     fn get_time(&self) -> usize {
-        self.time.get()
+        self.graph.get_time() + self.additional_time.get()
     }
 }
