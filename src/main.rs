@@ -23,7 +23,6 @@ struct Args {
     #[structopt(short, long, default_value = "Naive")]
     algorithm: Algorithm,
 }
-// TODO: add output file: output: Option<PathBuf>,
 
 fn main() {
     let args = Args::from_args();

@@ -129,7 +129,6 @@ mod tests {
         let infile = PathBuf::from(format!("examples/{}_in.json", prefix));
         let outfile = PathBuf::from(format!("examples/{}_out.json", prefix));
         assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
-        // TODO Uncomment and get test working
         assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
     }
 
