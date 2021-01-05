@@ -18,20 +18,6 @@ pub struct NaiveStateGraph {
     additional_time: DebugCounter,
 }
 impl NaiveStateGraph {
-    fn ensure_seen(&mut self, v: usize) {
-        if !self.graph.is_seen(v) {
-            self.graph.add_vertex(v, Status::Unvisited);
-        }
-    }
-    fn set_status(&mut self, v: usize, st: Status) {
-        self.graph.add_vertex(v, st);
-    }
-    fn is_done(&self, v: usize) -> bool {
-        self.get_status(v) != Status::Unvisited
-    }
-    fn is_dead(&self, v: usize) -> bool {
-        self.get_status(v) == Status::Dead
-    }
     fn recalculate_dead_states(&mut self) {
         // Recalculate the subset of done states that are dead: states
         // that can't reach an Unvisited state (i.e. all reachable states are
@@ -68,7 +54,7 @@ impl NaiveStateGraph {
         for &v in &done {
             debug_assert!(!(self.is_dead(v) && not_dead.contains(&v)));
             if !not_dead.contains(&v) {
-                self.set_status(v, Status::Dead);
+                self.graph.overwrite_vertex(v, Status::Dead);
             }
             self.additional_time.inc();
         }
@@ -79,28 +65,18 @@ impl StateGraph for NaiveStateGraph {
         Default::default()
     }
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
-        debug_assert_eq!(self.get_status(v1), Status::Unvisited);
-        self.ensure_seen(v1);
-        self.ensure_seen(v2);
-        self.graph.add_edge(v1, v2);
+        self.graph.ensure_edge(v1, v2);
     }
     fn mark_done_unchecked(&mut self, v: usize) {
-        debug_assert_eq!(self.get_status(v), Status::Unvisited);
-        self.set_status(v, Status::Unknown);
+        self.graph.overwrite_vertex(v, Status::Unknown);
         self.recalculate_dead_states();
     }
     fn get_status(&self, v: usize) -> Status {
-        self.additional_time.inc();
-        *self.graph.get_label(v).unwrap_or(&Status::Unvisited)
+        *self.graph.get_label_or_default(v)
     }
-
     fn vec_states(&self) -> Vec<usize> {
-        // Warning: self.time not increased here
         self.graph.iter_vertices().collect()
     }
-
-    // Statistics
-    // These panic if not in debug mode.
     fn get_space(&self) -> usize {
         self.graph.get_space()
     }

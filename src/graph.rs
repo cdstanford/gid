@@ -28,12 +28,14 @@ pub struct DiGraph<V, T> {
     labels: HashMap<CanonicalID, T>,
     fwd_edges: HashMap<CanonicalID, LinkedList<UniqueID>>,
     bck_edges: HashMap<CanonicalID, LinkedList<UniqueID>>,
+    default_label: T, // Used in get_label_or_default()
     // Debug mode statistics
     space: DebugCounter,
     time: DebugCounter,
 }
-impl<V, T> Default for DiGraph<V, T> {
-    // Can't derive automatically because don't want to assume T: Default
+impl<V, T: Default> Default for DiGraph<V, T> {
+    // Can't derive automatically because we don't want to assume V: Default
+    // (Basically: derive macro isn't smart enough)
     fn default() -> Self {
         Self {
             vertex_ids: Default::default(),
@@ -42,6 +44,7 @@ impl<V, T> Default for DiGraph<V, T> {
             labels: Default::default(),
             fwd_edges: Default::default(),
             bck_edges: Default::default(),
+            default_label: Default::default(),
             space: Default::default(),
             time: Default::default(),
         }
@@ -50,6 +53,7 @@ impl<V, T> Default for DiGraph<V, T> {
 impl<V, T> DiGraph<V, T>
 where
     V: Copy + Clone + Eq + Hash + PartialEq,
+    T: Default,
 {
     /*
         Exposed API
@@ -65,49 +69,31 @@ where
         self.time.inc();
         self.get_canon_id(v).and_then(|id| self.labels.get(&id))
     }
-    pub fn add_vertex(&mut self, v: V, label: T) {
+    pub fn get_label_or_default(&self, v: V) -> &T {
+        self.get_label(v).unwrap_or(&self.default_label)
+    }
+    pub fn overwrite_vertex(&mut self, v: V, label: T) {
         // overwrites if already seen
         if self.is_seen(v) {
-            let canon_id = self.get_canon_id(v).unwrap();
+            let canon_id = self.get_canon_id_unwrapped(v);
             self.labels.insert(canon_id, label);
             self.time.inc();
         } else {
-            let new_id = self.id_find.alloc();
-            let unique_id = UniqueID(new_id);
-            let canon_id = CanonicalID(new_id);
-            debug_assert_eq!(self.id_find.find(new_id), new_id);
-            debug_assert!(!self.vertex_ids.contains_key(&v));
-            debug_assert!(!self.id_vertices.contains_key(&unique_id));
-            debug_assert!(!self.labels.contains_key(&canon_id));
-            debug_assert!(!self.fwd_edges.contains_key(&canon_id));
-            debug_assert!(!self.bck_edges.contains_key(&canon_id));
-            self.vertex_ids.insert(v, unique_id);
-            self.id_vertices.insert(unique_id, v);
-            self.labels.insert(canon_id, label);
-            self.fwd_edges.insert(canon_id, LinkedList::new());
-            self.bck_edges.insert(canon_id, LinkedList::new());
-            self.time.inc();
-            self.space.inc();
+            self.add_vertex_core(v, label);
         }
     }
-    pub fn add_edge(&mut self, v1: V, v2: V) {
-        // Panics if v1 and v2 are not seen
-        assert!(self.is_seen(v1));
-        assert!(self.is_seen(v2));
-        let canon1 = self.get_canon_id(v1).unwrap();
-        let canon2 = self.get_canon_id(v2).unwrap();
-        if canon1 != canon2 {
-            self.fwd_edges
-                .get_mut(&canon1)
-                .unwrap()
-                .push_back(UniqueID(canon2.0));
-            self.bck_edges
-                .get_mut(&canon2)
-                .unwrap()
-                .push_back(UniqueID(canon1.0));
-            self.space.inc();
+    pub fn ensure_vertex(&mut self, v: V) {
+        // if not already seen, adds the default value
+        if !self.is_seen(v) {
+            self.add_vertex_core(v, Default::default());
         }
         self.time.inc();
+    }
+    pub fn ensure_edge(&mut self, v1: V, v2: V) {
+        // add an edge, ensuring the vertices exist first
+        self.ensure_vertex(v1);
+        self.ensure_vertex(v2);
+        self.add_edge_core(v1, v2);
     }
     pub fn iter_vertices<'a>(&'a self) -> impl Iterator<Item = V> + 'a {
         // TODO: iterate through each canonical ID only once instead
@@ -115,7 +101,7 @@ where
     }
     pub fn iter_bck_edges<'a>(&'a self, v: V) -> impl Iterator<Item = V> + 'a {
         assert!(self.is_seen(v));
-        let canon = self.get_canon_id(v).unwrap();
+        let canon = self.get_canon_id_unwrapped(v);
         self.bck_edges[&canon]
             .iter()
             .map(move |id| self.id_find.find(id.0))
@@ -142,10 +128,53 @@ where
     /*
         Internal
     */
+    fn add_vertex_core(&mut self, v: V, label: T) {
+        // Panics if v is seen
+        debug_assert!(!self.is_seen(v));
+        let new_id = self.id_find.alloc();
+        let unique_id = UniqueID(new_id);
+        let canon_id = CanonicalID(new_id);
+        debug_assert_eq!(self.id_find.find(new_id), new_id);
+        debug_assert!(!self.vertex_ids.contains_key(&v));
+        debug_assert!(!self.id_vertices.contains_key(&unique_id));
+        debug_assert!(!self.labels.contains_key(&canon_id));
+        debug_assert!(!self.fwd_edges.contains_key(&canon_id));
+        debug_assert!(!self.bck_edges.contains_key(&canon_id));
+        self.vertex_ids.insert(v, unique_id);
+        self.id_vertices.insert(unique_id, v);
+        self.labels.insert(canon_id, label);
+        self.fwd_edges.insert(canon_id, LinkedList::new());
+        self.bck_edges.insert(canon_id, LinkedList::new());
+        self.time.inc();
+        self.space.inc();
+    }
+    pub fn add_edge_core(&mut self, v1: V, v2: V) {
+        // Panics if v1 or v2 is not seen
+        assert!(self.is_seen(v1));
+        assert!(self.is_seen(v2));
+        let canon1 = self.get_canon_id_unwrapped(v1);
+        let canon2 = self.get_canon_id_unwrapped(v2);
+        if canon1 != canon2 {
+            self.fwd_edges
+                .get_mut(&canon1)
+                .unwrap()
+                .push_back(UniqueID(canon2.0));
+            self.bck_edges
+                .get_mut(&canon2)
+                .unwrap()
+                .push_back(UniqueID(canon1.0));
+            self.space.inc();
+        }
+        self.time.inc();
+    }
     fn get_canon_id(&self, v: V) -> Option<CanonicalID> {
         self.vertex_ids
             .get(&v)
             .map(|id| self.id_find.find(id.0))
             .map(CanonicalID)
+    }
+    fn get_canon_id_unwrapped(&self, v: V) -> CanonicalID {
+        let id = self.vertex_ids.get(&v).unwrap();
+        CanonicalID(self.id_find.find(id.0))
     }
 }

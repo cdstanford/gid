@@ -14,6 +14,12 @@ pub enum Status {
     Unknown,
     Unvisited,
 }
+impl Default for Status {
+    fn default() -> Self {
+        Status::Unvisited
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum Transaction {
     Add(usize, usize),
@@ -73,14 +79,22 @@ pub trait StateGraph: Sized {
     // over the unchecked versions as they validate that the sequence of
     // inputs is correct.
     fn add_transition(&mut self, v1: usize, v2: usize) {
-        assert!(self.get_status(v1) == Status::Unvisited);
+        assert!(!self.is_done(v1));
         if v1 != v2 {
             self.add_transition_unchecked(v1, v2);
         }
     }
     fn mark_done(&mut self, v: usize) {
-        assert!(self.get_status(v) == Status::Unvisited);
+        assert!(!self.is_done(v));
         self.mark_done_unchecked(v);
+    }
+
+    // Some conveniences
+    fn is_done(&self, v: usize) -> bool {
+        self.get_status(v) != Status::Unvisited
+    }
+    fn is_dead(&self, v: usize) -> bool {
+        self.get_status(v) == Status::Dead
     }
 
     // Same as the above but using the Transaction enum
