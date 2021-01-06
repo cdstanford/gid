@@ -6,7 +6,6 @@
     does naive DFS to determine whether states are dead.
 */
 
-use super::debug_counter::DebugCounter;
 use super::graph::DiGraph;
 use super::interface::{StateGraph, Status};
 use std::collections::HashSet;
@@ -14,8 +13,6 @@ use std::collections::HashSet;
 #[derive(Debug, Default)]
 pub struct NaiveStateGraph {
     graph: DiGraph<usize, Status>,
-    // Debug mode statistics -- on top of those tracked by graph
-    additional_time: DebugCounter,
 }
 impl NaiveStateGraph {
     fn recalculate_dead_states(&mut self) {
@@ -47,7 +44,6 @@ impl NaiveStateGraph {
                     not_dead.insert(u);
                 }
             }
-            self.additional_time.inc();
         }
 
         // Mark not-not-dead states as dead
@@ -56,7 +52,8 @@ impl NaiveStateGraph {
             if !not_dead.contains(&v) {
                 self.graph.overwrite_vertex(v, Status::Dead);
             }
-            self.additional_time.inc();
+            // could increment self.graph.time here but not really important,
+            // done was already iterated through in above loop
         }
     }
 }
@@ -81,6 +78,6 @@ impl StateGraph for NaiveStateGraph {
         self.graph.get_space()
     }
     fn get_time(&self) -> usize {
-        self.graph.get_time() + self.additional_time.get()
+        self.graph.get_time()
     }
 }

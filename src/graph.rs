@@ -87,7 +87,6 @@ where
         if !self.is_seen(v) {
             self.add_vertex_core(v, Default::default());
         }
-        self.time.inc();
     }
     pub fn ensure_edge(&mut self, v1: V, v2: V) {
         // add an edge, ensuring the vertices exist first
@@ -216,6 +215,7 @@ where
         v: V,
         edges: &'a HashMap<CanonicalID, LinkedList<UniqueID>>,
     ) -> impl Iterator<Item = V> + 'a {
+        self.time.inc();
         let canon = self.get_canon_id_unwrapped(v);
         edges[&canon]
             .iter()
