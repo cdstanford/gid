@@ -11,16 +11,14 @@
     (see graph.rs)
 */
 
-use super::debug_counter::DebugCounter;
 use super::graph::DiGraph;
 use super::interface::{StateGraph, Status};
 use std::collections::HashSet;
+use std::iter;
 
 #[derive(Debug, Default)]
 pub struct SimpleStateGraph {
     graph: DiGraph<usize, Status>,
-    // Debug mode statistics -- on top of those tracked by graph
-    additional_time: DebugCounter,
 }
 impl SimpleStateGraph {
     fn merge_vertices(&mut self, v1: usize, v2: usize) {
@@ -30,48 +28,25 @@ impl SimpleStateGraph {
         self.graph.merge(v1, v2);
     }
     fn merge_all_cycles(&mut self, v: usize) {
-        debug_assert!(self.is_done(v));
         // Merge all cycles through v (assuming no other cycles in Done states)
-
-        // Phase 1: Fwd DFS
-        let mut visited_fwd = HashSet::new();
-        let mut to_visit = Vec::new();
-        to_visit.push(v);
-        while !to_visit.is_empty() {
-            let v1 = to_visit.pop().unwrap();
-            if !visited_fwd.contains(&v1) {
-                visited_fwd.insert(v1);
-                for v2 in self.graph.iter_fwd_edges(v1) {
-                    to_visit.push(v2);
-                }
-            }
-            self.additional_time.inc();
-        }
-
-        // Phase 2: Backward DFS
-        let visited_fwd = visited_fwd;
-        let mut visited_bck = HashSet::new();
-        to_visit.push(v);
-        while !to_visit.is_empty() {
-            let v1 = to_visit.pop().unwrap();
-            if visited_fwd.contains(&v1) && !visited_bck.contains(&v1) {
-                visited_bck.insert(v1);
-                for v2 in self.graph.iter_bck_edges(v1) {
-                    to_visit.push(v2);
-                }
-            }
-            self.additional_time.inc();
-        }
-
-        // Merge all vertices in visited_bck
-        for &u in &visited_bck {
-            if u != v {
-                self.merge_vertices(u, v);
-            }
+        debug_assert!(self.is_done(v));
+        let fwd_reachable: HashSet<usize> =
+            self.graph.dfs_fwd(iter::once(v), |w| !self.is_done(w)).collect();
+        let bi_reachable: HashSet<usize> = self
+            .graph
+            .dfs_bck(iter::once(v), |u| !fwd_reachable.contains(&u))
+            .collect();
+        for &u in &bi_reachable {
+            debug_assert!(u != v);
+            self.merge_vertices(u, v);
         }
     }
     fn check_dead_recursive(&mut self, v: usize) {
         // Check if v is dead and recurse on back edges.
+        // TODO: I think this implementation may be buggy
+        // (failure case would be a diamond).
+        // Replace with a topologically-sorting search function in search.rs
+        // and graph.rs
 
         // If v is already dead or not dead, return.
         if self.is_dead(v) {
@@ -113,6 +88,6 @@ impl StateGraph for SimpleStateGraph {
         self.graph.get_space()
     }
     fn get_time(&self) -> usize {
-        self.graph.get_time() + self.additional_time.get()
+        self.graph.get_time()
     }
 }
