@@ -7,6 +7,7 @@
 use super::interface::{ExampleInput, ExampleOutput, StateGraph};
 use super::naive::NaiveStateGraph;
 use super::simple::SimpleStateGraph;
+use super::tarjan::TarjanStateGraph;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 use std::fs::File;
@@ -23,8 +24,8 @@ use structopt::StructOpt;
 pub enum Algorithm {
     Naive,
     Simple,
-    // Tarjan,
-    // Smart,
+    Tarjan,
+    Jump,
 }
 impl FromStr for Algorithm {
     type Err = String;
@@ -32,6 +33,8 @@ impl FromStr for Algorithm {
         match s.to_lowercase().as_str() {
             "n" | "naive" => Ok(Algorithm::Naive),
             "s" | "simple" => Ok(Algorithm::Simple),
+            "t" | "tarjan" => Ok(Algorithm::Tarjan),
+            "j" | "jump" => Ok(Algorithm::Jump),
             _ => Err(format!("Could not parse as Algorithm: {}", s)),
         }
     }
@@ -72,7 +75,7 @@ fn run_core<G: StateGraph>(
     let input: ExampleInput = from_json_file(in_file);
     let expect: Option<ExampleOutput> = expected_out_file.map(from_json_file);
 
-    println!("===== State Graph =====");
+    println!("===== {} =====", in_file.to_str().unwrap());
 
     println!("Running {} algorithm...", alg_name);
     let mut graph = G::new();
@@ -115,6 +118,12 @@ pub fn run_example(
         Algorithm::Simple => {
             run_core::<SimpleStateGraph>(in_file, expected_out_file, "Simple")
         }
+        Algorithm::Tarjan => {
+            run_core::<TarjanStateGraph>(in_file, expected_out_file, "Tarjan")
+        }
+        Algorithm::Jump => {
+            unimplemented!()
+        }
     }
 }
 
@@ -123,4 +132,6 @@ pub fn assert_example(prefix: &str) {
     let outfile = PathBuf::from(format!("examples/{}_out.json", prefix));
     assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
     assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
+    // Not passing unit tests, TODO: Debug
+    // assert!(run_example(&infile, Some(&outfile), Algorithm::Tarjan));
 }

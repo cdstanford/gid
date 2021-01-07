@@ -1,13 +1,13 @@
    46 ./src/debug_counter.rs
-  126 ./src/driver.rs
-  268 ./src/graph.rs
+  137 ./src/driver.rs
+  277 ./src/graph.rs
   138 ./src/interface.rs
+    7 ./src/jump.rs
     9 ./src/lib.rs
    34 ./src/main.rs
    65 ./src/naive.rs
   187 ./src/search.rs
    84 ./src/simple.rs
-    7 ./src/smart.rs
-   61 ./src/tarjan.rs
+  190 ./src/tarjan.rs
    42 ./tests/test_examples.rs
- 1067 total
+ 1216 total

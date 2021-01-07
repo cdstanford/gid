@@ -98,6 +98,12 @@ where
         self.ensure_vertex(v2);
         self.add_edge_core(v1, v2);
     }
+    pub fn is_same_vertex(&self, v1: V, v2: V) -> bool {
+        self.time.inc();
+        let id1 = self.get_canon_id(v1);
+        let id2 = self.get_canon_id(v2);
+        v1 == v2 || id1.is_some() && id1 == id2
+    }
     pub fn iter_vertices<'a>(&'a self) -> impl Iterator<Item = V> + 'a {
         // For merged vertices, includes only one copy
         self.labels
