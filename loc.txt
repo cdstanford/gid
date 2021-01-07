@@ -8,6 +8,6 @@
    62 ./src/search.rs
    93 ./src/simple.rs
     7 ./src/smart.rs
-    7 ./src/tarjan.rs
+   61 ./src/tarjan.rs
    42 ./tests/test_examples.rs
-  879 total
+  933 total
