@@ -22,6 +22,10 @@ pub struct DebugCounter {
     val: Cell<usize>,
 }
 impl DebugCounter {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     #[cfg(debug_assertions)]
     pub fn inc(&self) {
         // There is a nice nightly feature that does this a bit cleaner:

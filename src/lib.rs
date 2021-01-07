@@ -3,6 +3,7 @@ pub mod driver;
 pub mod graph;
 pub mod interface;
 pub mod naive;
+pub mod search;
 pub mod simple;
 pub mod smart;
 pub mod tarjan;

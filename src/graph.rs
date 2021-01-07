@@ -10,6 +10,7 @@
 */
 
 use super::debug_counter::DebugCounter;
+use super::search::DFS;
 use disjoint_sets::UnionFind;
 use std::collections::{HashMap, LinkedList};
 use std::hash::Hash;
@@ -145,12 +146,33 @@ where
         }
         // Could return new vertex here; for now we return nothing.
     }
+    pub fn dfs_fwd<'a>(
+        &'a self,
+        sources: impl Iterator<Item = V> + 'a,
+        exclude: impl (Fn(V) -> bool) + Clone + 'a,
+    ) -> impl Iterator<Item = V> + 'a {
+        // Precondition: everything in 'sources' should be seen
+        DFS::new(sources, move |v| {
+            let exclude = exclude.clone();
+            self.iter_fwd_edges(v).filter(move |&w| !exclude(w))
+        })
+    }
+    pub fn dfs_bck<'a>(
+        &'a self,
+        sources: impl Iterator<Item = V> + 'a,
+        exclude: impl (Fn(V) -> bool) + Clone + 'a,
+    ) -> impl Iterator<Item = V> + 'a {
+        // Precondition: everything in 'sources' should be seen
+        DFS::new(sources, move |v| {
+            let exclude = exclude.clone();
+            self.iter_bck_edges(v).filter(move |&w| !exclude(w))
+        })
+    }
 
     /*
         Debug mode statistics
         These panic if not in debug mode.
     */
-    // These panic if not in debug mode.
     pub fn get_space(&self) -> usize {
         self.space.get()
     }
