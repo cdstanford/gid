@@ -43,26 +43,17 @@ impl SimpleStateGraph {
     }
     fn check_dead_recursive(&mut self, v: usize) {
         // Check if v is dead and recurse on back edges.
-        // TODO: I think this implementation may be buggy
-        // (failure case would be a diamond).
-        // Replace with a topologically-sorting search function in search.rs
-        // and graph.rs
-
-        // If v is already dead or not dead, return.
-        if self.is_dead(v) {
-            return;
-        }
-        for w in self.graph.iter_fwd_edges(v) {
-            if !self.is_dead(w) {
-                return;
-            }
-        }
-        // Mark v dead
-        self.graph.overwrite_vertex(v, Status::Dead);
-        // Recurse
-        let mut to_recurse: Vec<usize> = self.graph.iter_bck_edges(v).collect();
-        for u in to_recurse.drain(..) {
-            self.check_dead_recursive(u);
+        let now_dead: HashSet<usize> = self
+            .graph
+            .topo_search_bck(
+                iter::once(v),
+                |u| !self.is_done(u),
+                |w| self.is_dead(w),
+            )
+            .collect();
+        debug_assert!(now_dead.is_empty() || now_dead.contains(&v));
+        for &u in now_dead.iter() {
+            self.graph.overwrite_vertex(u, Status::Dead);
         }
     }
 }

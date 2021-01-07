@@ -10,7 +10,7 @@
 */
 
 use super::debug_counter::DebugCounter;
-use super::search::DFS;
+use super::search::{DepthFirstSearch, TopologicalSearch};
 use disjoint_sets::UnionFind;
 use std::collections::{HashMap, LinkedList};
 use std::hash::Hash;
@@ -152,7 +152,7 @@ where
         exclude: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
         // Precondition: everything in 'sources' should be seen
-        DFS::new(sources, move |v| {
+        DepthFirstSearch::new(sources, move |v| {
             let exclude = exclude.clone();
             self.iter_fwd_edges(v).filter(move |&w| !exclude(w))
         })
@@ -163,10 +163,28 @@ where
         exclude: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
         // Precondition: everything in 'sources' should be seen
-        DFS::new(sources, move |v| {
+        DepthFirstSearch::new(sources, move |v| {
             let exclude = exclude.clone();
             self.iter_bck_edges(v).filter(move |&w| !exclude(w))
         })
+    }
+    pub fn topo_search_bck<'a>(
+        &'a self,
+        candidate_starts: impl Iterator<Item = V> + 'a,
+        exclude_bck: impl (Fn(V) -> bool) + Clone + 'a,
+        exclude_fwd: impl (Fn(V) -> bool) + Clone + 'a,
+    ) -> impl Iterator<Item = V> + 'a {
+        TopologicalSearch::new(
+            candidate_starts,
+            move |v| {
+                let exclude_bck = exclude_bck.clone();
+                self.iter_bck_edges(v).filter(move |&w| !exclude_bck(w))
+            },
+            move |v| {
+                let exclude_fwd = exclude_fwd.clone();
+                self.iter_fwd_edges(v).filter(move |&w| !exclude_fwd(w))
+            },
+        )
     }
 
     /*
