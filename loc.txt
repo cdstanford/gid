@@ -1,5 +1,5 @@
    46 ./src/debug_counter.rs
-  171 ./src/driver.rs
+  126 ./src/driver.rs
   250 ./src/graph.rs
   138 ./src/interface.rs
     9 ./src/lib.rs
@@ -9,4 +9,5 @@
    93 ./src/simple.rs
     7 ./src/smart.rs
     7 ./src/tarjan.rs
-  882 total
+   42 ./tests/test_examples.rs
+  879 total

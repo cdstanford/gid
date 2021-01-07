@@ -118,54 +118,9 @@ pub fn run_example(
     }
 }
 
-/*
-    Unit tests from the input/output files
-*/
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn test_file(prefix: &str) {
-        let infile = PathBuf::from(format!("examples/{}_in.json", prefix));
-        let outfile = PathBuf::from(format!("examples/{}_out.json", prefix));
-        assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
-        assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
-    }
-
-    #[test]
-    fn test_1() {
-        test_file("1");
-    }
-    #[test]
-    fn test_line_10() {
-        test_file("line_10");
-    }
-    #[test]
-    fn test_reverseline_10() {
-        test_file("reverseline_10");
-    }
-    #[test]
-    fn test_line_20() {
-        test_file("line_20");
-    }
-    #[test]
-    fn test_reverseline_20() {
-        test_file("reverseline_20");
-    }
-    #[test]
-    fn test_tree_3() {
-        test_file("tree_3");
-    }
-    #[test]
-    fn test_loop_3() {
-        test_file("loop_3");
-    }
-    #[test]
-    fn test_liveloop_3() {
-        test_file("liveloop_3");
-    }
-    #[test]
-    fn test_reverseloop_3() {
-        test_file("reverseloop_3");
-    }
+pub fn assert_example(prefix: &str) {
+    let infile = PathBuf::from(format!("examples/{}_in.json", prefix));
+    let outfile = PathBuf::from(format!("examples/{}_out.json", prefix));
+    assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
+    assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
 }
