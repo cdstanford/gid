@@ -41,7 +41,7 @@ impl SimpleStateGraph {
             self.merge_vertices(u, v);
         }
     }
-    fn check_dead_recursive(&mut self, v: usize) {
+    fn check_dead_iterative(&mut self, v: usize) {
         // Check if v is dead and recurse on back edges.
         let now_dead: HashSet<usize> = self
             .graph
@@ -67,7 +67,7 @@ impl StateGraph for SimpleStateGraph {
     fn mark_done_unchecked(&mut self, v: usize) {
         self.graph.overwrite_vertex(v, Status::Unknown);
         self.merge_all_cycles(v);
-        self.check_dead_recursive(v);
+        self.check_dead_iterative(v);
     }
     fn get_status(&self, v: usize) -> Status {
         *self.graph.get_label_or_default(v)

@@ -70,6 +70,9 @@ where
         self.time.inc();
         self.get_canon_id(v).and_then(|id| self.labels.get(&id))
     }
+    pub fn get_label_mut(&mut self, v: V) -> Option<&mut T> {
+        self.get_canon_id(v).and_then(move |id| self.labels.get_mut(&id))
+    }
     pub fn get_label_or_default(&self, v: V) -> &T {
         self.get_label(v).unwrap_or(&self.default_label)
     }
