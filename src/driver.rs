@@ -5,6 +5,7 @@
 */
 
 use super::interface::{ExampleInput, ExampleOutput, StateGraph};
+use super::jump::JumpStateGraph;
 use super::naive::NaiveStateGraph;
 use super::simple::SimpleStateGraph;
 use super::tarjan::TarjanStateGraph;
@@ -122,7 +123,7 @@ pub fn run_example(
             run_core::<TarjanStateGraph>(in_file, expected_out_file, "Tarjan")
         }
         Algorithm::Jump => {
-            unimplemented!()
+            run_core::<JumpStateGraph>(in_file, expected_out_file, "Jump")
         }
     }
 }
@@ -134,4 +135,6 @@ pub fn assert_example(prefix: &str) {
     assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
     // Not passing unit tests, TODO: Debug
     // assert!(run_example(&infile, Some(&outfile), Algorithm::Tarjan));
+    // Not passing unit tests, TODO: Debug
+    // assert!(run_example(&infile, Some(&outfile), Algorithm::Jump));
 }

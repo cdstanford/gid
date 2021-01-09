@@ -13,6 +13,7 @@ use super::debug_counter::DebugCounter;
 use super::search::{DepthFirstSearch, TopologicalSearch};
 use disjoint_sets::UnionFind;
 use std::collections::{HashMap, LinkedList};
+use std::fmt::Debug;
 use std::hash::Hash;
 
 // Newtypes to keep different types of ID straight
@@ -54,7 +55,7 @@ impl<V, T: Default> Default for DiGraph<V, T> {
 impl<V, T> DiGraph<V, T>
 where
     V: Copy + Clone + Eq + Hash + PartialEq,
-    T: Default + PartialEq,
+    T: Debug + Default + PartialEq,
 {
     /*
         Exposed API
@@ -98,6 +99,11 @@ where
         self.ensure_vertex(v2);
         self.add_edge_core(v1, v2);
     }
+    pub fn pop_edge_fwd(&mut self, v: V) -> Option<V> {
+        // Warning: Does not currently remove from _bck, see pop_edge_fwd_core
+        self.ensure_vertex(v);
+        self.pop_edge_fwd_core(v)
+    }
     pub fn is_same_vertex(&self, v1: V, v2: V) -> bool {
         self.time.inc();
         let id1 = self.get_canon_id(v1);
@@ -131,12 +137,15 @@ where
         assert!(self.is_seen(v));
         self.iter_edges(v, &self.bck_edges)
     }
-    pub fn merge(&mut self, v1: V, v2: V) {
-        // Panics if v1 or v2 aren't seen, or if their labels differ
-        // Returns new canonical ID
+    pub fn merge_using<F>(&mut self, v1: V, v2: V, merge_fun: F)
+    where
+        F: Fn(T, T) -> T,
+    {
+        // Panics if v1 or v2 aren't seen
+        // Uses function F to merge labels
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
-        assert!(self.get_label(v1) == self.get_label(v2));
+
         self.time.inc();
         let canon1 = self.get_canon_id_unwrapped(v1);
         let canon2 = self.get_canon_id_unwrapped(v2);
@@ -146,14 +155,25 @@ where
             debug_assert_eq!(new.0, self.id_find.find(canon2.0));
             debug_assert!(new == canon1 || new == canon2);
             let old = if new == canon1 { canon2 } else { canon1 };
-            // Note the following are O(1)
-            self.labels.remove(&old);
+            // Merge labels using merge_fun
+            let label1 = self.labels.remove(&old).unwrap();
+            let label2 = self.labels.remove(&new).unwrap();
+            self.labels.insert(new, merge_fun(label1, label2));
+            // Merge edges -- note the following are O(1)
             let mut old_fwd = self.fwd_edges.remove(&old).unwrap();
             let mut old_bck = self.bck_edges.remove(&old).unwrap();
             self.fwd_edges.get_mut(&new).unwrap().append(&mut old_fwd);
             self.bck_edges.get_mut(&new).unwrap().append(&mut old_bck);
         }
         // Could return new vertex here; for now we return nothing.
+    }
+    pub fn merge(&mut self, v1: V, v2: V) {
+        // Panics if v1 or v2 aren't seen, or if their labels differ
+        assert_eq!(self.get_label(v1), self.get_label(v2));
+        self.merge_using(v1, v2, |t1, t2| {
+            debug_assert_eq!(t1, t2);
+            t1
+        });
     }
     pub fn dfs_fwd<'a>(
         &'a self,
@@ -248,6 +268,21 @@ where
             self.space.inc();
         }
         self.time.inc();
+    }
+    fn pop_edge_fwd_core(&mut self, v: V) -> Option<V> {
+        assert!(self.is_seen(v));
+        self.time.inc();
+        // Note:
+        // Would be reasonable to add a .dec() option and self.space.dec();
+        // currently space is only an upper bound on actual space
+        // Warning TODO:
+        // Does not currently remove from _bck -- the user must be aware
+        // that deleting a forward edge does not remove the backward edge.
+        // To delete _bck, need to implement a lazy set of deleted edges
+        // and clean up edges if they are in the deleted set when visited.
+        let canon = self.get_canon_id_unwrapped(v);
+        let w_id = self.fwd_edges.get_mut(&canon).unwrap().pop_back();
+        w_id.map(move |id| *self.id_vertices.get(&id).unwrap())
     }
     fn get_canon_id(&self, v: V) -> Option<CanonicalID> {
         self.vertex_ids
