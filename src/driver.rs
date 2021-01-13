@@ -92,6 +92,10 @@ where
     Main driver to run examples
 */
 
+// TODO: Performance comparison
+// fn run_compare<G: StateGraph>(
+// )
+
 fn run_core<G: StateGraph>(
     in_file: &PathBuf,
     expected_out_file: Option<&PathBuf>,
