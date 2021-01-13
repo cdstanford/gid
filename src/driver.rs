@@ -10,9 +10,10 @@ use super::naive::NaiveStateGraph;
 use super::simple::SimpleStateGraph;
 use super::tarjan::TarjanStateGraph;
 use serde::de::DeserializeOwned;
+use serde::ser::Serialize;
 use std::fmt::Debug;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use structopt::StructOpt;
@@ -50,7 +51,16 @@ where
     P: AsRef<Path> + Debug,
 {
     BufReader::new(File::open(&path).unwrap_or_else(|err| {
-        panic!("Could not open file at: {:?} -- {}", path, err)
+        panic!("Could not open file for reading: {:?} -- {}", path, err)
+    }))
+}
+
+pub fn path_writer<P>(path: P) -> BufWriter<File>
+where
+    P: AsRef<Path> + Debug,
+{
+    BufWriter::new(File::create(&path).unwrap_or_else(|err| {
+        panic!("Could not open file for writing: {:?} -- {}", path, err)
     }))
 }
 
@@ -60,7 +70,17 @@ where
     T: DeserializeOwned,
 {
     serde_json::from_reader(path_reader(&path)).unwrap_or_else(|err| {
-        panic!("Could not read JSON: {:?} -- {}", path, err)
+        panic!("Could not read JSON from {:?} -- {}", path, err)
+    })
+}
+
+pub fn to_json_file<P, T>(path: P, data: T)
+where
+    P: AsRef<Path> + Debug,
+    T: Serialize,
+{
+    serde_json::to_writer(path_writer(&path), &data).unwrap_or_else(|err| {
+        panic!("Could not write JSON to {:?} -- {}", path, err)
     })
 }
 
@@ -128,9 +148,17 @@ pub fn run_example(
     }
 }
 
+pub fn infile_from_prefix(prefix: &str) -> String {
+    format!("examples/{}_in.json", prefix)
+}
+
+pub fn outfile_from_prefix(prefix: &str) -> String {
+    format!("examples/{}_out.json", prefix)
+}
+
 pub fn assert_example(prefix: &str) {
-    let infile = PathBuf::from(format!("examples/{}_in.json", prefix));
-    let outfile = PathBuf::from(format!("examples/{}_out.json", prefix));
+    let infile = PathBuf::from(infile_from_prefix(prefix));
+    let outfile = PathBuf::from(outfile_from_prefix(prefix));
     assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
     assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
     // Not passing unit tests, TODO: Debug

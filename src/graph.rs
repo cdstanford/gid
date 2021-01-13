@@ -7,6 +7,9 @@
     - merging vertices in O(1) time (the two vertex names are now aliases)
       (requires a merge function T x T -> T)
     - iterating through the edges at a vertex (O(1) per edge)
+      Note: this iterates over original edges; currently doesn't
+      support "cleaning" edges by removing duplicates in case of
+      merging.
 */
 
 use super::debug_counter::DebugCounter;
