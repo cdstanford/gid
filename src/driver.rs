@@ -135,6 +135,5 @@ pub fn assert_example(prefix: &str) {
     assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
     // Not passing unit tests, TODO: Debug
     // assert!(run_example(&infile, Some(&outfile), Algorithm::Tarjan));
-    // Not passing unit tests, TODO: Debug
-    // assert!(run_example(&infile, Some(&outfile), Algorithm::Jump));
+    assert!(run_example(&infile, Some(&outfile), Algorithm::Jump));
 }

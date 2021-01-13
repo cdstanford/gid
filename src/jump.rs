@@ -24,6 +24,7 @@ pub struct JumpStateGraph {
 }
 impl JumpStateGraph {
     fn set_status(&mut self, v: usize, status: Status) {
+        // println!("  Set status: {} {:?}", v, status);
         debug_assert!(self.graph.is_seen(v));
         self.graph.get_label_mut(v).unwrap().status = status;
     }
@@ -35,6 +36,9 @@ impl JumpStateGraph {
         self.graph.get_label(v).unwrap().jumps[n]
     }
     fn get_first_jump(&self, v: usize) -> usize {
+        // println!("get_first_jump: {} {}", v, self.is_done(v));
+        debug_assert!(self.is_done(v));
+        debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
         self.get_nth_jump(v, 0)
     }
     fn get_last_jump(&self, v: usize) -> usize {
@@ -55,17 +59,20 @@ impl JumpStateGraph {
     }
     fn pop_last_jump(&mut self, v: usize) {
         // Remove the current last element in the jumps list.
+        // println!("  Popping last jump: {}", v);
         debug_assert!(self.is_done(v));
         debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
         self.graph.get_label_mut(v).unwrap().jumps.pop();
     }
     fn clear_jumps(&mut self, v: usize) {
+        // println!("  Clearing jumps: {}", v);
         debug_assert!(self.is_done(v));
         debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
         self.graph.get_label_mut(v).unwrap().jumps.clear();
     }
     fn push_last_jump(&mut self, v: usize, w: usize) {
         // Add a last element to the jumps list.
+        // println!("  Pushing jump: {}, {}", v, w);
         debug_assert!(self.is_done(v));
         self.graph.get_label_mut(v).unwrap().jumps.push(w);
     }
@@ -104,8 +111,9 @@ impl JumpStateGraph {
     fn merge_path_from(&mut self, v: usize) {
         let to_merge: Vec<usize> = {
             iter::successors(Some(v), |&w| {
+                // println!("{} {:?} {}", w, self.get_status(w));
                 if self.is_done(w) {
-                    Some(self.get_first_jump(v))
+                    Some(self.get_first_jump(w))
                 } else {
                     None
                 }
@@ -113,6 +121,7 @@ impl JumpStateGraph {
             .collect()
         };
         for &w in &to_merge {
+            // println!("  Merging: {}, {}", v, w);
             self.graph.merge_using(v, w, |_label1, _label2| Default::default());
         }
     }
@@ -122,16 +131,20 @@ impl JumpStateGraph {
         vertex.
     */
     fn initialize_jumps(&mut self, v: usize) {
+        // println!("Initializing jumps from: {}", v);
         while let Some(w) = self.graph.pop_edge_fwd(v) {
             if self.is_dead(w) {
+                // println!("  (dead)");
                 continue;
             }
             let w_end = self.jump(w);
             if self.graph.is_same_vertex(v, w_end) {
                 // Merge cycle and continue
-                self.merge_path_from(v);
+                // println!("  (merging {} -> {} -> ... -> {})", v, w, w_end);
+                self.merge_path_from(w);
             } else {
                 // No further work, set jump and return
+                // println!("  (setting jump and returning)");
                 debug_assert!(self
                     .graph
                     .get_label(v)
@@ -145,8 +158,11 @@ impl JumpStateGraph {
         }
         // No more edges -- v is dead.
         // Recurse on all edges backwards from v.
+        self.set_status(v, Status::Dead);
         let to_recurse: Vec<usize> = self.graph.iter_bck_edges(v).collect();
+        // println!("Found Dead: {}", v);
         for &u in &to_recurse {
+            // println!("  Recursing on: {}", u);
             if self.is_done(u)
                 && self.graph.is_same_vertex(self.get_first_jump(u), v)
             {
@@ -161,9 +177,11 @@ impl StateGraph for JumpStateGraph {
         Default::default()
     }
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
+        // println!("# Adding transition: {}, {}", v1, v2);
         self.graph.ensure_edge(v1, v2);
     }
     fn mark_done_unchecked(&mut self, v: usize) {
+        // println!("# Marking Done: {}", v);
         self.initialize_jumps(v);
     }
     fn get_status(&self, v: usize) -> Status {
