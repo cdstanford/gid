@@ -104,7 +104,38 @@ fn gen_liveloop(n: usize) -> Example {
         unknown: (0..n).collect(),
         unvisited: vec![n],
     };
-    Example(format!("loop_{}", n), ex_in, expect)
+    Example(format!("liveloop_{}", n), ex_in, expect)
+}
+
+fn gen_reverseloop(n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in (0..n).rev() {
+        ex_in.0.push(Transaction::Add(i, (i + 1) % n));
+        ex_in.0.push(Transaction::Done(i));
+    }
+    let expect = ExampleOutput {
+        dead: (0..n).collect(),
+        unknown: vec![],
+        unvisited: vec![],
+    };
+    Example(format!("reverseloop_{}", n), ex_in, expect)
+}
+
+fn gen_reverseliveloop(n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in (0..n).rev() {
+        ex_in.0.push(Transaction::Add(i, (i + 1) % n));
+        if i == 0 {
+            ex_in.0.push(Transaction::Add(i, n));
+        }
+        ex_in.0.push(Transaction::Done(i));
+    }
+    let expect = ExampleOutput {
+        dead: (0..n).collect(),
+        unknown: vec![],
+        unvisited: vec![n],
+    };
+    Example(format!("reverseliveloop_{}", n), ex_in, expect)
 }
 
 fn main() {
@@ -115,5 +146,7 @@ fn main() {
         gen_reverseliveline(i).save();
         gen_loop(i).save();
         gen_liveloop(i).save();
+        gen_reverseloop(i).save();
+        gen_reverseliveloop(i).save();
     }
 }
