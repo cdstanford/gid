@@ -29,9 +29,9 @@ pub enum Transaction {
 pub struct ExampleInput(pub Vec<Transaction>);
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExampleOutput {
-    dead: Vec<usize>,
-    unknown: Vec<usize>,
-    unvisited: Vec<usize>,
+    pub dead: Vec<usize>,
+    pub unknown: Vec<usize>,
+    pub unvisited: Vec<usize>,
 }
 
 pub trait StateGraph: Sized {

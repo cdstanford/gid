@@ -79,6 +79,8 @@ where
     P: AsRef<Path> + Debug,
     T: Serialize,
 {
+    // TODO: The file output is all squashed together without newlines, can
+    // serde_json make it prettier?
     serde_json::to_writer(path_writer(&path), &data).unwrap_or_else(|err| {
         panic!("Could not write JSON to {:?} -- {}", path, err)
     })
@@ -152,13 +154,13 @@ pub fn infile_from_prefix(prefix: &str) -> String {
     format!("examples/{}_in.json", prefix)
 }
 
-pub fn outfile_from_prefix(prefix: &str) -> String {
+pub fn expectedfile_from_prefix(prefix: &str) -> String {
     format!("examples/{}_out.json", prefix)
 }
 
 pub fn assert_example(prefix: &str) {
     let infile = PathBuf::from(infile_from_prefix(prefix));
-    let outfile = PathBuf::from(outfile_from_prefix(prefix));
+    let outfile = PathBuf::from(expectedfile_from_prefix(prefix));
     assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
     assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
     // Not passing unit tests, TODO: Debug
