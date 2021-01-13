@@ -12,7 +12,7 @@ use super::tarjan::TarjanStateGraph;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::fmt::Debug;
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -64,23 +64,6 @@ where
     }))
 }
 
-pub fn append_newline<P>(path: P)
-where
-    P: AsRef<Path> + Debug,
-{
-    // append a newline to the file at path
-    // panic if the path doesn't exist
-    let file =
-        OpenOptions::new().append(true).open(&path).unwrap_or_else(|err| {
-            panic!(
-                "Could not open file to append newline: {:?} -- {}",
-                &path, err
-            )
-        });
-    let mut writer = BufWriter::new(file);
-    writeln!(&mut writer).unwrap();
-}
-
 pub fn from_json_file<P, T>(path: P) -> T
 where
     P: AsRef<Path> + Debug,
@@ -96,11 +79,13 @@ where
     P: AsRef<Path> + Debug,
     T: Serialize,
 {
-    let writer = path_writer(&path);
-    serde_json::to_writer_pretty(writer, &data).unwrap_or_else(|err| {
+    let mut writer = path_writer(&path);
+    serde_json::to_writer_pretty(&mut writer, &data).unwrap_or_else(|err| {
         panic!("Could not write JSON to {:?} -- {}", path, err)
     });
-    append_newline(path);
+    writeln!(&mut writer).unwrap_or_else(|err| {
+        format!("Could not append newline to file: {:?} -- {}", &path, err);
+    });
 }
 
 /*
