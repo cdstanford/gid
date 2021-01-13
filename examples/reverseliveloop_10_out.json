@@ -1,5 +1,6 @@
 {
-  "dead": [
+  "dead": [],
+  "unknown": [
     0,
     1,
     2,
@@ -11,7 +12,6 @@
     8,
     9
   ],
-  "unknown": [],
   "unvisited": [
     10
   ]

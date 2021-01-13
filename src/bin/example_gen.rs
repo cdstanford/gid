@@ -131,8 +131,8 @@ fn gen_reverseliveloop(n: usize) -> Example {
         ex_in.0.push(Transaction::Done(i));
     }
     let expect = ExampleOutput {
-        dead: (0..n).collect(),
-        unknown: vec![],
+        dead: vec![],
+        unknown: (0..n).collect(),
         unvisited: vec![n],
     };
     Example(format!("reverseliveloop_{}", n), ex_in, expect)

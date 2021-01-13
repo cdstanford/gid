@@ -8,10 +8,10 @@ use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt(
-    name = "state graph interface",
-    about = "Run a state graph algorithm on an input or output file."
+    name = "run basic example",
+    about = "Run a state graph algorithm on an example input."
 )]
-struct Args {
+struct Args1 {
     /// Input file
     #[structopt(parse(from_os_str))]
     input: PathBuf,
@@ -24,11 +24,39 @@ struct Args {
     algorithm: Algorithm,
 }
 
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "run perf/stats comparison",
+    about = "Run all state graph algorithm on an example input, compare stats."
+)]
+struct Args2 {
+    /// Input file
+    #[structopt(parse(from_os_str))]
+    input: PathBuf,
+
+    /// Expected output
+    #[structopt(parse(from_os_str))]
+    expect_output: PathBuf,
+}
+
+#[derive(StructOpt)]
+#[structopt(name = "state graph command line")]
+enum SubComs {
+    RunExample(Args1),
+    StatsComparison(Args2),
+}
+
 fn main() {
-    let args = Args::from_args();
-    driver::run_example(
-        &args.input,
-        args.expect_output.as_ref(),
-        args.algorithm,
-    );
+    match SubComs::from_args() {
+        SubComs::RunExample(args1) => {
+            driver::run_example(
+                &args1.input,
+                args1.expect_output.as_ref(),
+                args1.algorithm,
+            );
+        }
+        SubComs::StatsComparison(args2) => {
+            driver::run_compare(&args2.input, &args2.expect_output);
+        }
+    }
 }

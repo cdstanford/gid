@@ -92,10 +92,6 @@ where
     Main driver to run examples
 */
 
-// TODO: Performance comparison
-// fn run_compare<G: StateGraph>(
-// )
-
 fn run_core<G: StateGraph>(
     in_file: &PathBuf,
     expected_out_file: Option<&PathBuf>,
@@ -172,4 +168,34 @@ pub fn assert_example(prefix: &str) {
     // Not passing unit tests, TODO: Debug
     // assert!(run_example(&infile, Some(&outfile), Algorithm::Tarjan));
     assert!(run_example(&infile, Some(&outfile), Algorithm::Jump));
+}
+
+/*
+    Performance comparison
+*/
+fn get_stats<G: StateGraph>(
+    input: &ExampleInput,
+    expect: &ExampleOutput,
+) -> (usize, usize) {
+    if !cfg!(debug_assertions) {
+        panic!("Must be in debug mode to track time/space counters");
+    }
+    let mut graph = G::new();
+    graph.process_all(&input);
+    let output = graph.collect_all();
+    assert_eq!(&output, expect);
+    (graph.get_time(), graph.get_space())
+}
+
+pub fn run_compare(in_file: &PathBuf, expected_out_file: &PathBuf) {
+    let input: ExampleInput = from_json_file(in_file);
+    let expect: ExampleOutput = from_json_file(expected_out_file);
+
+    println!(
+        "=== Time and Space Statistics: {} ===",
+        in_file.to_str().unwrap()
+    );
+    println!("Naive: {:?}", get_stats::<NaiveStateGraph>(&input, &expect));
+    println!("Simple: {:?}", get_stats::<SimpleStateGraph>(&input, &expect));
+    println!("Jump: {:?}", get_stats::<JumpStateGraph>(&input, &expect));
 }

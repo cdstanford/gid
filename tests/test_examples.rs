@@ -129,6 +129,23 @@ fn test_reverseloop_100() {
 }
 
 #[test]
+fn test_reverseliveloop_3() {
+    driver::assert_example("reverseliveloop_3");
+}
+#[test]
+fn test_reverseliveloop_10() {
+    driver::assert_example("reverseliveloop_10");
+}
+#[test]
+fn test_reverseliveloop_20() {
+    driver::assert_example("reverseliveloop_20");
+}
+#[test]
+fn test_reverseliveloop_100() {
+    driver::assert_example("reverseliveloop_100");
+}
+
+#[test]
 fn test_tree_3() {
     driver::assert_example("tree_3");
 }
