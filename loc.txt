@@ -1,14 +1,15 @@
-   38 ./src/bin/example_gen.rs
-   34 ./src/bin/main.rs
+  142 ./src/bin/example_gen.rs
+   45 ./src/bin/main.rs
    46 ./src/debug_counter.rs
-  186 ./src/driver.rs
+  120 ./src/driver.rs
   315 ./src/graph.rs
-  138 ./src/interface.rs
+  193 ./src/interface.rs
   199 ./src/jump.rs
-    9 ./src/lib.rs
+   10 ./src/lib.rs
    65 ./src/naive.rs
   187 ./src/search.rs
    84 ./src/simple.rs
   190 ./src/tarjan.rs
-   42 ./tests/test_examples.rs
- 1533 total
+   52 ./src/util.rs
+  151 ./tests/test_examples.rs
+ 1799 total
