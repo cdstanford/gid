@@ -4,17 +4,15 @@
     I am using the examples both for unit testing and performance analysis.
 */
 
-use state_graph::driver::{self};
+use state_graph::driver;
 use state_graph::interface::{ExampleInput, ExampleOutput, Transaction};
+use state_graph::util;
 
 struct Example(String, ExampleInput, ExampleOutput);
 impl Example {
     fn save(&self) {
-        driver::to_json_file(driver::infile_from_prefix(&self.0), &self.1);
-        driver::to_json_file(
-            driver::expectedfile_from_prefix(&self.0),
-            &self.2,
-        );
+        util::to_json_file(driver::infile_from_prefix(&self.0), &self.1);
+        util::to_json_file(driver::expectedfile_from_prefix(&self.0), &self.2);
     }
 }
 

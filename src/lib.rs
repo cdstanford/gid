@@ -7,3 +7,4 @@ pub mod naive;
 pub mod search;
 pub mod simple;
 pub mod tarjan;
+pub mod util;

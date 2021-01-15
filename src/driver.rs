@@ -1,7 +1,7 @@
 /*
     The driver:
-    - handles file I/O, running a series of transactions using the state
-      graph interface, and collecting/viewing/checking the output.
+    Handles running a series of transactions using the state
+    graph interface, and collecting/viewing/checking the output.
 */
 
 use super::interface::{ExampleInput, ExampleOutput, StateGraph};
@@ -9,12 +9,9 @@ use super::jump::JumpStateGraph;
 use super::naive::NaiveStateGraph;
 use super::simple::SimpleStateGraph;
 use super::tarjan::TarjanStateGraph;
-use serde::de::DeserializeOwned;
-use serde::ser::Serialize;
-use std::fmt::Debug;
-use std::fs::File;
-use std::io::{BufReader, BufWriter, Write};
-use std::path::{Path, PathBuf};
+use super::util;
+use std::fmt::{self, Debug};
+use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
 
@@ -41,51 +38,16 @@ impl FromStr for Algorithm {
         }
     }
 }
-
-/*
-    Utility for file I/O
-*/
-
-pub fn path_reader<P>(path: P) -> BufReader<File>
-where
-    P: AsRef<Path> + Debug,
-{
-    BufReader::new(File::open(&path).unwrap_or_else(|err| {
-        panic!("Could not open file for reading: {:?} -- {}", path, err)
-    }))
-}
-
-pub fn path_writer<P>(path: P) -> BufWriter<File>
-where
-    P: AsRef<Path> + Debug,
-{
-    BufWriter::new(File::create(&path).unwrap_or_else(|err| {
-        panic!("Could not open file for writing: {:?} -- {}", path, err)
-    }))
-}
-
-pub fn from_json_file<P, T>(path: P) -> T
-where
-    P: AsRef<Path> + Debug,
-    T: DeserializeOwned,
-{
-    serde_json::from_reader(path_reader(&path)).unwrap_or_else(|err| {
-        panic!("Could not read JSON from {:?} -- {}", path, err)
-    })
-}
-
-pub fn to_json_file<P, T>(path: P, data: T)
-where
-    P: AsRef<Path> + Debug,
-    T: Serialize,
-{
-    let mut writer = path_writer(&path);
-    serde_json::to_writer_pretty(&mut writer, &data).unwrap_or_else(|err| {
-        panic!("Could not write JSON to {:?} -- {}", path, err)
-    });
-    writeln!(&mut writer).unwrap_or_else(|err| {
-        format!("Could not append newline to file: {:?} -- {}", &path, err);
-    });
+impl fmt::Display for Algorithm {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let result = match self {
+            Algorithm::Naive => "naive",
+            Algorithm::Simple => "simple",
+            Algorithm::Tarjan => "tarjan",
+            Algorithm::Jump => "jump",
+        };
+        write!(f, "{}", result)
+    }
 }
 
 /*
@@ -97,8 +59,9 @@ fn run_core<G: StateGraph>(
     expected_out_file: Option<&PathBuf>,
     alg_name: &str,
 ) -> bool {
-    let input: ExampleInput = from_json_file(in_file);
-    let expect: Option<ExampleOutput> = expected_out_file.map(from_json_file);
+    let input: ExampleInput = util::from_json_file(in_file);
+    let expect: Option<ExampleOutput> =
+        expected_out_file.map(util::from_json_file);
 
     println!("===== {} =====", in_file.to_str().unwrap());
 
@@ -188,8 +151,8 @@ fn get_stats<G: StateGraph>(
 }
 
 pub fn run_compare(in_file: &PathBuf, expected_out_file: &PathBuf) {
-    let input: ExampleInput = from_json_file(in_file);
-    let expect: ExampleOutput = from_json_file(expected_out_file);
+    let input: ExampleInput = util::from_json_file(in_file);
+    let expect: ExampleOutput = util::from_json_file(expected_out_file);
 
     println!(
         "=== Time and Space Statistics: {} ===",
