@@ -1,0 +1,5 @@
+{
+    "dead": [2, 3, 4],
+    "unknown": [1],
+    "unvisited": [0]
+}

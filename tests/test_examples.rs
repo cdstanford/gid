@@ -10,6 +10,16 @@ fn test_1() {
 }
 
 #[test]
+fn test_2() {
+    driver::assert_example("2");
+}
+
+#[test]
+fn test_3() {
+    driver::assert_example("3");
+}
+
+#[test]
 fn test_line() {
     driver::assert_example("line_3");
     driver::assert_example("line_10");
