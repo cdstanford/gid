@@ -4,25 +4,17 @@
     I am using the examples both for unit testing and performance analysis.
 */
 
-use state_graph::driver;
-use state_graph::interface::{ExampleInput, ExampleOutput, Transaction};
-use state_graph::util;
-
-struct Example(String, ExampleInput, ExampleOutput);
-impl Example {
-    fn save(&self) {
-        util::to_json_file(driver::infile_from_prefix(&self.0), &self.1);
-        util::to_json_file(driver::expectedfile_from_prefix(&self.0), &self.2);
-    }
-}
+use state_graph::interface::{
+    Example, ExampleInput, ExampleOutput, Transaction,
+};
 
 fn gen_line(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..n {
-        ex_in.0.push(Transaction::Add(i, i + 1));
-        ex_in.0.push(Transaction::Done(i));
+        ex_in.push(Transaction::Add(i, i + 1));
+        ex_in.push(Transaction::Done(i));
     }
-    ex_in.0.push(Transaction::Done(n));
+    ex_in.push(Transaction::Done(n));
     let expect = ExampleOutput {
         dead: (0..(n + 1)).collect(),
         unknown: vec![],
@@ -34,8 +26,8 @@ fn gen_line(n: usize) -> Example {
 fn gen_liveline(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..n {
-        ex_in.0.push(Transaction::Add(i, i + 1));
-        ex_in.0.push(Transaction::Done(i));
+        ex_in.push(Transaction::Add(i, i + 1));
+        ex_in.push(Transaction::Done(i));
     }
     let expect = ExampleOutput {
         dead: vec![],
@@ -48,10 +40,10 @@ fn gen_liveline(n: usize) -> Example {
 fn gen_reverseline(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in (0..n).rev() {
-        ex_in.0.push(Transaction::Add(i, i + 1));
-        ex_in.0.push(Transaction::Done(i));
+        ex_in.push(Transaction::Add(i, i + 1));
+        ex_in.push(Transaction::Done(i));
     }
-    ex_in.0.push(Transaction::Done(n));
+    ex_in.push(Transaction::Done(n));
     let expect = ExampleOutput {
         dead: (0..(n + 1)).collect(),
         unknown: vec![],
@@ -63,8 +55,8 @@ fn gen_reverseline(n: usize) -> Example {
 fn gen_reverseliveline(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in (0..n).rev() {
-        ex_in.0.push(Transaction::Add(i, i + 1));
-        ex_in.0.push(Transaction::Done(i));
+        ex_in.push(Transaction::Add(i, i + 1));
+        ex_in.push(Transaction::Done(i));
     }
     let expect = ExampleOutput {
         dead: vec![],
@@ -77,8 +69,8 @@ fn gen_reverseliveline(n: usize) -> Example {
 fn gen_loop(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..n {
-        ex_in.0.push(Transaction::Add(i, (i + 1) % n));
-        ex_in.0.push(Transaction::Done(i));
+        ex_in.push(Transaction::Add(i, (i + 1) % n));
+        ex_in.push(Transaction::Done(i));
     }
     let expect = ExampleOutput {
         dead: (0..n).collect(),
@@ -91,11 +83,11 @@ fn gen_loop(n: usize) -> Example {
 fn gen_liveloop(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..n {
-        ex_in.0.push(Transaction::Add(i, (i + 1) % n));
+        ex_in.push(Transaction::Add(i, (i + 1) % n));
         if i == 0 {
-            ex_in.0.push(Transaction::Add(i, n));
+            ex_in.push(Transaction::Add(i, n));
         }
-        ex_in.0.push(Transaction::Done(i));
+        ex_in.push(Transaction::Done(i));
     }
     let expect = ExampleOutput {
         dead: vec![],
@@ -108,8 +100,8 @@ fn gen_liveloop(n: usize) -> Example {
 fn gen_reverseloop(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in (0..n).rev() {
-        ex_in.0.push(Transaction::Add(i, (i + 1) % n));
-        ex_in.0.push(Transaction::Done(i));
+        ex_in.push(Transaction::Add(i, (i + 1) % n));
+        ex_in.push(Transaction::Done(i));
     }
     let expect = ExampleOutput {
         dead: (0..n).collect(),
@@ -122,11 +114,11 @@ fn gen_reverseloop(n: usize) -> Example {
 fn gen_reverseliveloop(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in (0..n).rev() {
-        ex_in.0.push(Transaction::Add(i, (i + 1) % n));
+        ex_in.push(Transaction::Add(i, (i + 1) % n));
         if i == 0 {
-            ex_in.0.push(Transaction::Add(i, n));
+            ex_in.push(Transaction::Add(i, n));
         }
-        ex_in.0.push(Transaction::Done(i));
+        ex_in.push(Transaction::Done(i));
     }
     let expect = ExampleOutput {
         dead: vec![],

@@ -6,7 +6,9 @@
     implement this interface.
 */
 
+use super::util;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Status {
@@ -25,14 +27,10 @@ pub enum Transaction {
     Add(usize, usize),
     Done(usize),
 }
-#[derive(Debug, Deserialize, Serialize)]
-pub struct ExampleInput(pub Vec<Transaction>);
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct ExampleOutput {
-    pub dead: Vec<usize>,
-    pub unknown: Vec<usize>,
-    pub unvisited: Vec<usize>,
-}
+
+/*
+    The main interface
+*/
 
 pub trait StateGraph: Sized {
     /*
@@ -104,35 +102,92 @@ pub trait StateGraph: Sized {
             Transaction::Done(v1) => self.mark_done(v1),
         }
     }
-    fn process_all(&mut self, ts: &ExampleInput) {
-        for &t in &ts.0 {
-            self.process(t);
-        }
+}
+
+/*
+    Abstract the overall input/output behavior of an example
+*/
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct ExampleInput(pub Vec<Transaction>);
+impl ExampleInput {
+    pub fn new() -> Self {
+        Default::default()
+    }
+    pub fn push(&mut self, t: Transaction) {
+        self.0.push(t);
+    }
+}
+
+#[derive(Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+pub struct ExampleOutput {
+    pub dead: Vec<usize>,
+    pub unknown: Vec<usize>,
+    pub unvisited: Vec<usize>,
+}
+impl ExampleOutput {
+    pub fn new() -> Self {
+        Default::default()
+    }
+    pub fn add(&mut self, v: usize, st: Status) {
+        match st {
+            Status::Dead => self.dead.push(v),
+            Status::Unknown => self.unknown.push(v),
+            Status::Unvisited => self.unvisited.push(v),
+        };
+    }
+    pub fn finalize(&mut self) {
+        // should be called prior to saving, printing, etc.
+        self.dead.sort_unstable();
+        self.unknown.sort_unstable();
+        self.unvisited.sort_unstable();
+    }
+}
+
+/*
+    Example struct: represents a single test case, which can be read from a file
+    or saved to a file
+*/
+fn infile_from_prefix(prefix: &str) -> String {
+    format!("examples/{}_in.json", prefix)
+}
+fn expectedfile_from_prefix(prefix: &str) -> String {
+    format!("examples/{}_out.json", prefix)
+}
+pub struct Example(pub String, pub ExampleInput, pub ExampleOutput);
+impl Example {
+    pub fn new(
+        prefix: &str,
+        input: ExampleInput,
+        output: ExampleOutput,
+    ) -> Self {
+        Self(prefix.to_string(), input, output)
+    }
+    pub fn load_from(prefix: &str) -> Self {
+        // May panic if file(s) do not exist
+        let infile = PathBuf::from(infile_from_prefix(prefix));
+        let outfile = PathBuf::from(expectedfile_from_prefix(prefix));
+        let input = util::from_json_file(&infile);
+        let output = util::from_json_file(&outfile);
+        Self::new(prefix, input, output)
+    }
+    pub fn save(&self) {
+        util::to_json_file(infile_from_prefix(&self.0), &self.1);
+        util::to_json_file(expectedfile_from_prefix(&self.0), &self.2);
     }
 
-    // Final output
-    // Return the list of states of each status, sorted.
-    fn collect_all(&self) -> ExampleOutput {
-        let mut dead = Vec::new();
-        let mut unknown = Vec::new();
-        let mut unvisited = Vec::new();
-        for &v in &self.vec_states() {
-            match self.get_status(v) {
-                Status::Dead => dead.push(v),
-                Status::Unknown => unknown.push(v),
-                Status::Unvisited => unvisited.push(v),
-            };
+    // Run the example input on the graph, returning the output and whether
+    // it matches the expected output.
+    pub fn run<G: StateGraph>(&self, graph: &mut G) -> (ExampleOutput, bool) {
+        for &t in &self.1 .0 {
+            graph.process(t);
         }
-        dead.sort_unstable();
-        unknown.sort_unstable();
-        unvisited.sort_unstable();
-        ExampleOutput { dead, unknown, unvisited }
-    }
-
-    // Top-level function to run an input and produce an output
-    fn run_example(input: &ExampleInput) -> ExampleOutput {
-        let mut state_graph = Self::new();
-        state_graph.process_all(input);
-        state_graph.collect_all()
+        let mut result = ExampleOutput::new();
+        for &v in &graph.vec_states() {
+            result.add(v, graph.get_status(v));
+        }
+        result.finalize();
+        let matches = result == self.2;
+        (result, matches)
     }
 }

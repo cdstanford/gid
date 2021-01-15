@@ -4,14 +4,12 @@
     graph interface, and collecting/viewing/checking the output.
 */
 
-use super::interface::{ExampleInput, ExampleOutput, StateGraph};
+use super::interface::{Example, StateGraph};
 use super::jump::JumpStateGraph;
 use super::naive::NaiveStateGraph;
 use super::simple::SimpleStateGraph;
 use super::tarjan::TarjanStateGraph;
-use super::util;
 use std::fmt::{self, Debug};
-use std::path::PathBuf;
 use std::str::FromStr;
 use structopt::StructOpt;
 
@@ -51,24 +49,17 @@ impl fmt::Display for Algorithm {
 }
 
 /*
-    Main driver to run examples
+    Run examples or test cases
 */
 
-fn run_core<G: StateGraph>(
-    in_file: &PathBuf,
-    expected_out_file: Option<&PathBuf>,
-    alg_name: &str,
-) -> bool {
-    let input: ExampleInput = util::from_json_file(in_file);
-    let expect: Option<ExampleOutput> =
-        expected_out_file.map(util::from_json_file);
+fn run_core<G: StateGraph>(alg_name: &str, prefix: &str) -> bool {
+    let example = Example::load_from(prefix);
 
-    println!("===== {} =====", in_file.to_str().unwrap());
+    println!("===== {} =====", example.0);
 
     println!("Running {} algorithm...", alg_name);
     let mut graph = G::new();
-    graph.process_all(&input);
-    let output = graph.collect_all();
+    let (output, correct) = example.run(&mut graph);
 
     if cfg!(debug_assertions) {
         println!("=== Statistics ===");
@@ -79,86 +70,51 @@ fn run_core<G: StateGraph>(
     println!("=== Output ===");
     println!("{:?}", output);
 
-    if let Some(expected) = expect {
-        if output == expected {
-            println!("Success: output is as expected");
-            true
-        } else {
-            println!("Failed: output is incorrect!");
-            println!("=== Expected ===");
-            println!("{:?}", expected);
-            false
-        }
-    } else {
+    if correct {
+        println!("Success: output is as expected");
         true
+    } else {
+        println!("Failed: output is incorrect!");
+        println!("=== Expected ===");
+        println!("{:?}", example.2);
+        false
     }
 }
 
-pub fn run_example(
-    in_file: &PathBuf,
-    expected_out_file: Option<&PathBuf>,
-    algorithm: Algorithm,
-) -> bool {
+pub fn run_example(prefix: &str, algorithm: Algorithm) -> bool {
     match algorithm {
-        Algorithm::Naive => {
-            run_core::<NaiveStateGraph>(in_file, expected_out_file, "Naive")
-        }
-        Algorithm::Simple => {
-            run_core::<SimpleStateGraph>(in_file, expected_out_file, "Simple")
-        }
-        Algorithm::Tarjan => {
-            run_core::<TarjanStateGraph>(in_file, expected_out_file, "Tarjan")
-        }
-        Algorithm::Jump => {
-            run_core::<JumpStateGraph>(in_file, expected_out_file, "Jump")
-        }
+        Algorithm::Naive => run_core::<NaiveStateGraph>("Naive", prefix),
+        Algorithm::Simple => run_core::<SimpleStateGraph>("Simple", prefix),
+        Algorithm::Tarjan => run_core::<TarjanStateGraph>("Tarjan", prefix),
+        Algorithm::Jump => run_core::<JumpStateGraph>("Jump", prefix),
     }
-}
-
-pub fn infile_from_prefix(prefix: &str) -> String {
-    format!("examples/{}_in.json", prefix)
-}
-
-pub fn expectedfile_from_prefix(prefix: &str) -> String {
-    format!("examples/{}_out.json", prefix)
 }
 
 pub fn assert_example(prefix: &str) {
-    let infile = PathBuf::from(infile_from_prefix(prefix));
-    let outfile = PathBuf::from(expectedfile_from_prefix(prefix));
-    assert!(run_example(&infile, Some(&outfile), Algorithm::Naive));
-    assert!(run_example(&infile, Some(&outfile), Algorithm::Simple));
+    assert!(run_example(prefix, Algorithm::Naive));
+    assert!(run_example(prefix, Algorithm::Simple));
     // Not passing unit tests, TODO: Debug
-    // assert!(run_example(&infile, Some(&outfile), Algorithm::Tarjan));
-    assert!(run_example(&infile, Some(&outfile), Algorithm::Jump));
+    // assert!(run_example(prefix, Algorithm::Tarjan));
+    assert!(run_example(prefix, Algorithm::Jump));
 }
 
 /*
     Performance comparison
 */
-fn get_stats<G: StateGraph>(
-    input: &ExampleInput,
-    expect: &ExampleOutput,
-) -> (usize, usize) {
+fn get_stats<G: StateGraph>(prefix: &str) -> (usize, usize) {
     if !cfg!(debug_assertions) {
         panic!("Must be in debug mode to track time/space counters");
     }
+    let example = Example::load_from(prefix);
     let mut graph = G::new();
-    graph.process_all(&input);
-    let output = graph.collect_all();
-    assert_eq!(&output, expect);
+    let (_output, correct) = example.run(&mut graph);
+    assert!(correct);
     (graph.get_time(), graph.get_space())
 }
 
-pub fn run_compare(in_file: &PathBuf, expected_out_file: &PathBuf) {
-    let input: ExampleInput = util::from_json_file(in_file);
-    let expect: ExampleOutput = util::from_json_file(expected_out_file);
-
-    println!(
-        "=== Time and Space Statistics: {} ===",
-        in_file.to_str().unwrap()
-    );
-    println!("Naive: {:?}", get_stats::<NaiveStateGraph>(&input, &expect));
-    println!("Simple: {:?}", get_stats::<SimpleStateGraph>(&input, &expect));
-    println!("Jump: {:?}", get_stats::<JumpStateGraph>(&input, &expect));
+pub fn run_compare(prefix: &str) {
+    println!("=== Time and Space Statistics: {} ===", prefix);
+    println!("Naive: {:?}", get_stats::<NaiveStateGraph>(prefix));
+    println!("Simple: {:?}", get_stats::<SimpleStateGraph>(prefix));
+    println!("Jump: {:?}", get_stats::<JumpStateGraph>(prefix));
 }
