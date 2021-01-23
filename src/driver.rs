@@ -92,8 +92,7 @@ pub fn run_example(prefix: &str, algorithm: Algorithm) -> bool {
 pub fn assert_example(prefix: &str) {
     assert!(run_example(prefix, Algorithm::Naive));
     assert!(run_example(prefix, Algorithm::Simple));
-    // Not passing unit tests, TODO: Debug
-    // assert!(run_example(prefix, Algorithm::Tarjan));
+    assert!(run_example(prefix, Algorithm::Tarjan));
     assert!(run_example(prefix, Algorithm::Jump));
 }
 

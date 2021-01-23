@@ -165,6 +165,8 @@ where
         sources: impl Iterator<Item = V> + 'a,
         exclude: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
+        // Depth-first search forward from 'sources', NOT including 'sources',
+        // and excluding vertices in the graph matching the predicate 'exclude'.
         // Precondition: everything in 'sources' should be seen
         DepthFirstSearch::new(sources, move |v| {
             let exclude = exclude.clone();
@@ -176,6 +178,8 @@ where
         sources: impl Iterator<Item = V> + 'a,
         exclude: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
+        // Depth-first search backward from 'sources', NOT including 'sources',
+        // and excluding vertices in the graph matching the predicate 'exclude'.
         // Precondition: everything in 'sources' should be seen
         DepthFirstSearch::new(sources, move |v| {
             let exclude = exclude.clone();
@@ -188,6 +192,15 @@ where
         exclude_bck: impl (Fn(V) -> bool) + Clone + 'a,
         exclude_fwd: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
+        // Visit vertices starting from candidate_starts in a topologically
+        // sorted order going backwards. The guarantee is that for each vertex
+        // v returned by the search, all forward vertices from v (other than
+        // those in 'exclude_fwd') have already been returned, and v is either
+        // in 'candidate_starts' or a backward vertex from an already returned
+        // vertex (excluding those in 'exclude_bck').
+        // The search includes 'candidate_starts' if they qualify for these
+        // conditions.
+        // See search::TopologicalSearch for more details.
         TopologicalSearch::new(
             candidate_starts,
             move |v| {

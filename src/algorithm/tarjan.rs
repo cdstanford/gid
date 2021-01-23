@@ -16,7 +16,7 @@
 
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::iter;
 
 // The key to the algorithm: pseudo-topological numbering
@@ -31,24 +31,31 @@ impl Default for Level {
 #[derive(Debug, Default)]
 pub struct TarjanStateGraph {
     graph: DiGraph<usize, (Status, Level)>,
+    // edges from open states, not yet added to the graph
+    pending_edges: HashMap<usize, Vec<usize>>,
+    // count of graph edges
     edge_counter: usize,
 }
 impl TarjanStateGraph {
+    /* The core parameter for the algorithm: delta = sqrt(num edges) */
     fn delta(&self) -> usize {
-        // sqrt(num edges)
         (self.edge_counter as f64).sqrt() as usize
     }
+
+    /* Vertex label getters / setters */
     fn set_status(&mut self, v: usize, status: Status) {
         debug_assert!(self.is_seen(v));
         self.graph.get_label_mut(v).unwrap().0 = status;
     }
     fn get_level(&self, v: usize) -> Level {
+        debug_assert!(self.is_seen(v));
         self.graph.get_label(v).unwrap().1
     }
     fn set_level(&mut self, v: usize, level: Level) {
         debug_assert!(self.is_seen(v));
         self.graph.get_label_mut(v).unwrap().1 = level;
     }
+
     fn update_levels_iterative(&mut self, v1: usize, v2: usize) {
         // Update levels after adding an edge (v1, v2),
         // AND ensure acyclic by merging cycles.
@@ -62,7 +69,10 @@ impl TarjanStateGraph {
         //   instead of stopping after Delta unique vertices, I might be
         //   stopping earlier after Delta edges.
 
-        // ===== MAIN ALGORITHM =====
+        debug_assert_eq!(self.get_status(v1), Some(Status::Unknown));
+        debug_assert!(
+            self.is_closed(v2) || self.graph.iter_fwd_edges(v2).count() == 0
+        );
 
         // ===== STEP 1: Test Order =====
         let level1 = self.get_level(v1);
@@ -72,12 +82,18 @@ impl TarjanStateGraph {
         }
 
         // ===== STEP 2: Search Backward =====
-        let iter_bck =
-            self.graph.dfs_bck(iter::once(v1), |u| self.get_level(u) == level1);
         let mut found_cycle = false;
         let mut count = 0;
         let mut set_bck = HashSet::new();
-        for u in iter_bck.take(self.delta()) {
+        set_bck.insert(v1);
+        for u in self
+            .graph
+            .dfs_bck(iter::once(v1), |u| {
+                debug_assert!(self.get_level(u) <= level1);
+                self.get_level(u) < level1
+            })
+            .take(self.delta())
+        {
             if self.graph.is_same_vertex(u, v2) {
                 found_cycle = true;
             }
@@ -87,6 +103,7 @@ impl TarjanStateGraph {
         let count = count;
         let set_bck = set_bck;
         debug_assert!(count <= self.delta());
+        debug_assert_eq!(count + 1, set_bck.len());
 
         // ===== STEP 3: Search Forward =====
         if count == self.delta() || level2 < level1 {
@@ -103,7 +120,8 @@ impl TarjanStateGraph {
             let level_to_increase: Vec<usize> = self
                 .graph
                 .dfs_fwd(iter::once(v2), |w| {
-                    set_bck.contains(&w) || self.get_level(w) < new_level
+                    debug_assert!(self.get_level(w) >= level2);
+                    !set_bck.contains(&w) && self.get_level(w) >= new_level
                 })
                 .collect();
 
@@ -116,16 +134,17 @@ impl TarjanStateGraph {
 
             debug_assert_eq!(self.get_level(v2), new_level);
         }
-        debug_assert!(self.get_level(v1) >= level1);
-        debug_assert!(self.get_level(v1) <= Level(level1.0 + 1));
-        debug_assert!(self.get_level(v2) >= level2);
+        debug_assert!(level2 <= level1);
+        debug_assert!(level1 <= self.get_level(v1));
         debug_assert!(self.get_level(v1) <= self.get_level(v2));
+        debug_assert!(self.get_level(v2) <= Level(level1.0 + 1));
         let level1 = self.get_level(v1);
         let level2 = self.get_level(v2);
 
         // ===== STEP 4: Form Component =====
         if found_cycle {
-            debug_assert!(level1 == level2);
+            debug_assert_eq!(level1, level2);
+            debug_assert!(v1 != v2);
             // This part is roughly the same as merge_all_cycles in simple.rs
             let fwd_reachable: HashSet<usize> = self
                 .graph
@@ -133,14 +152,22 @@ impl TarjanStateGraph {
                     debug_assert!(self.get_level(w) >= level1);
                     self.get_level(w) > level1
                 })
+                .chain(iter::once(v2))
                 .collect();
+            debug_assert!(fwd_reachable.contains(&v1));
+            debug_assert!(fwd_reachable.contains(&v2));
             let bi_reachable: HashSet<usize> = self
                 .graph
                 .dfs_bck(iter::once(v1), |u| !fwd_reachable.contains(&u))
+                .chain(iter::once(v1))
                 .collect();
+            debug_assert!(bi_reachable.contains(&v1));
+            debug_assert!(bi_reachable.contains(&v2));
             for &u in &bi_reachable {
-                debug_assert!(u != v1);
-                self.graph.merge(u, v1);
+                debug_assert_eq!(self.get_status(v1), Some(Status::Unknown));
+                if u != v1 {
+                    self.graph.merge(u, v1);
+                }
             }
         }
 
@@ -167,12 +194,21 @@ impl StateGraph for TarjanStateGraph {
         Default::default()
     }
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
-        self.edge_counter += 1;
-        self.graph.ensure_edge(v1, v2);
-        self.update_levels_iterative(v1, v2);
+        self.graph.ensure_vertex(v1);
+        self.graph.ensure_vertex(v2);
+        debug_assert_eq!(self.get_status(v1), Some(Status::Open));
+        self.pending_edges.entry(v1).or_default().push(v2);
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
         self.set_status(v, Status::Unknown);
+        for w in self.pending_edges.remove(&v).unwrap_or_default().drain(..) {
+            self.edge_counter += 1;
+            debug_assert!(self.is_seen(w));
+            self.graph.ensure_edge(v, w);
+            self.update_levels_iterative(v, w);
+            debug_assert_eq!(self.get_status(v), Some(Status::Unknown));
+        }
+        debug_assert!(!self.pending_edges.contains_key(&v));
         self.check_dead_iterative(v);
     }
     fn get_status(&self, v: usize) -> Option<Status> {
