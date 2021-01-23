@@ -2,8 +2,6 @@
     Our new implementation of the StateGraph trait.
     Uses "jump" pointers to jump from each state a large number
     of states ahead at once.
-
-    TODO (Planned)
 */
 
 use super::debug_counter::DebugCounter;
@@ -13,7 +11,11 @@ use std::iter;
 
 #[derive(Debug, Default, PartialEq)]
 struct Node {
+    // jump list: nonempty for done vertices.
+    // First is a real edge, and the ith is approximately 2^i edges forward.
     jumps: Vec<usize>,
+    // reserve list: draining copy of fwd_edges. When depleted, node is dead.
+    reserve: Vec<usize>,
     status: Status,
 }
 
@@ -27,6 +29,17 @@ impl JumpStateGraph {
         // println!("  Set status: {} {:?}", v, status);
         debug_assert!(self.graph.is_seen(v));
         self.graph.get_label_mut(v).unwrap().status = status;
+    }
+
+    /* Reserve edges getters / setters */
+    fn push_reserve(&mut self, v: usize, w: usize) {
+        debug_assert!(self.graph.is_seen(v));
+        debug_assert!(!self.is_done(v));
+        self.graph.get_label_mut(v).unwrap().reserve.push(w);
+    }
+    fn pop_reserve(&mut self, v: usize) -> Option<usize> {
+        debug_assert!(!self.is_done(v));
+        self.graph.get_label_mut(v).unwrap().reserve.pop()
     }
 
     /* Jump list getters / setters */
@@ -132,7 +145,7 @@ impl JumpStateGraph {
     */
     fn initialize_jumps(&mut self, v: usize) {
         // println!("Initializing jumps from: {}", v);
-        while let Some(w) = self.graph.pop_edge_fwd(v) {
+        while let Some(w) = self.pop_reserve(v) {
             if self.is_dead(w) {
                 // println!("  (dead)");
                 continue;
@@ -159,16 +172,26 @@ impl JumpStateGraph {
         // No more edges -- v is dead.
         // Recurse on all edges backwards from v.
         self.set_status(v, Status::Dead);
-        let to_recurse: Vec<usize> = self.graph.iter_bck_edges(v).collect();
+        let to_recurse: Vec<usize> = self
+            .graph
+            .iter_bck_edges(v)
+            .filter(|&u| {
+                self.is_done(u)
+                    && self.graph.is_same_vertex(self.get_first_jump(u), v)
+            })
+            .collect();
         // println!("Found Dead: {}", v);
+        // First set to_recurse as unvisited so that recursive calls won't mess
+        // with them
         for &u in &to_recurse {
             // println!("  Recursing on: {}", u);
-            if self.is_done(u)
-                && self.graph.is_same_vertex(self.get_first_jump(u), v)
-            {
-                self.clear_jumps(u);
-                self.initialize_jumps(u);
-            }
+            self.clear_jumps(u);
+            self.set_status(u, Status::Unvisited);
+        }
+        // Then go through and initialize jumps for each one
+        for &u in &to_recurse {
+            // println!("  Recursing on: {}", u);
+            self.initialize_jumps(u);
         }
     }
 }
@@ -179,6 +202,7 @@ impl StateGraph for JumpStateGraph {
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
         // println!("# Adding transition: {}, {}", v1, v2);
         self.graph.ensure_edge(v1, v2);
+        self.push_reserve(v1, v2);
     }
     fn mark_done_unchecked(&mut self, v: usize) {
         // println!("# Marking Done: {}", v);

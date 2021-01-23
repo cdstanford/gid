@@ -8,8 +8,8 @@
       (requires a merge function T x T -> T)
     - iterating through the edges at a vertex (O(1) per edge)
       Note: this iterates over original edges; currently doesn't
-      support "cleaning" edges by removing duplicates in case of
-      merging.
+      support "cleaning" edges by removing duplicates and self-loops
+      in case of merged vertices.
 */
 
 use super::debug_counter::DebugCounter;
@@ -75,6 +75,7 @@ where
         self.get_canon_id(v).and_then(|id| self.labels.get(&id))
     }
     pub fn get_label_mut(&mut self, v: V) -> Option<&mut T> {
+        self.time.inc();
         self.get_canon_id(v).and_then(move |id| self.labels.get_mut(&id))
     }
     pub fn get_label_or_default(&self, v: V) -> &T {
@@ -102,18 +103,13 @@ where
         self.ensure_vertex(v2);
         self.add_edge_core(v1, v2);
     }
-    pub fn pop_edge_fwd(&mut self, v: V) -> Option<V> {
-        // Warning: Does not currently remove from _bck, see pop_edge_fwd_core
-        self.ensure_vertex(v);
-        self.pop_edge_fwd_core(v)
-    }
     pub fn is_same_vertex(&self, v1: V, v2: V) -> bool {
         self.time.inc();
         let id1 = self.get_canon_id(v1);
         let id2 = self.get_canon_id(v2);
         v1 == v2 || id1.is_some() && id1 == id2
     }
-    pub fn iter_vertices<'a>(&'a self) -> impl Iterator<Item = V> + 'a {
+    pub fn iter_vertices(&self) -> impl Iterator<Item = V> + '_ {
         // For merged vertices, includes only one copy
         self.labels
             .keys()
@@ -122,18 +118,18 @@ where
             .map(move |uid| self.id_vertices[&uid])
             .inspect(move |_| self.time.inc())
     }
-    pub fn iter_vertices_all<'a>(&'a self) -> impl Iterator<Item = V> + 'a {
+    pub fn iter_vertices_all(&self) -> impl Iterator<Item = V> + '_ {
         // Includes every original vertex even when merged
         self.vertex_ids.keys().copied()
     }
-    pub fn iter_fwd_edges<'a>(&'a self, v: V) -> impl Iterator<Item = V> + 'a {
+    pub fn iter_fwd_edges(&self, v: V) -> impl Iterator<Item = V> + '_ {
         // Note that when vertices are merged, edges aren't. So the same vertex
         // could appear more than once in the iterator; but iter_edges enforces
         // that self-loops are filtered out.
         assert!(self.is_seen(v));
         self.iter_edges(v, &self.fwd_edges)
     }
-    pub fn iter_bck_edges<'a>(&'a self, v: V) -> impl Iterator<Item = V> + 'a {
+    pub fn iter_bck_edges(&self, v: V) -> impl Iterator<Item = V> + '_ {
         // Note that when vertices are merged, edges aren't. So the same vertex
         // could appear more than once in the iterator; but iter_edges enforces
         // that self-loops are filtered out.
@@ -271,21 +267,6 @@ where
             self.space.inc();
         }
         self.time.inc();
-    }
-    fn pop_edge_fwd_core(&mut self, v: V) -> Option<V> {
-        assert!(self.is_seen(v));
-        self.time.inc();
-        // Note:
-        // Would be reasonable to add a .dec() option and self.space.dec();
-        // currently space is only an upper bound on actual space
-        // Warning TODO:
-        // Does not currently remove from _bck -- the user must be aware
-        // that deleting a forward edge does not remove the backward edge.
-        // To delete _bck, need to implement a lazy set of deleted edges
-        // and clean up edges if they are in the deleted set when visited.
-        let canon = self.get_canon_id_unwrapped(v);
-        let w_id = self.fwd_edges.get_mut(&canon).unwrap().pop_back();
-        w_id.map(move |id| *self.id_vertices.get(&id).unwrap())
     }
     fn get_canon_id(&self, v: V) -> Option<CanonicalID> {
         self.vertex_ids
