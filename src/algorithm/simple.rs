@@ -69,8 +69,8 @@ impl StateGraph for SimpleStateGraph {
         self.merge_all_cycles(v);
         self.check_dead_iterative(v);
     }
-    fn get_status(&self, v: usize) -> Status {
-        *self.graph.get_label_or_default(v)
+    fn get_status(&self, v: usize) -> Option<Status> {
+        self.graph.get_label(v).copied()
     }
     fn vec_states(&self) -> Vec<usize> {
         self.graph.iter_vertices_all().collect()

@@ -50,8 +50,8 @@ impl StateGraph for NaiveStateGraph {
         self.graph.overwrite_vertex(v, Status::Unknown);
         self.recalculate_dead_states();
     }
-    fn get_status(&self, v: usize) -> Status {
-        *self.graph.get_label_or_default(v)
+    fn get_status(&self, v: usize) -> Option<Status> {
+        self.graph.get_label(v).copied()
     }
     fn vec_states(&self) -> Vec<usize> {
         self.graph.iter_vertices().collect()

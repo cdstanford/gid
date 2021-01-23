@@ -27,13 +27,13 @@ pub struct JumpStateGraph {
 impl JumpStateGraph {
     fn set_status(&mut self, v: usize, status: Status) {
         // println!("  Set status: {} {:?}", v, status);
-        debug_assert!(self.graph.is_seen(v));
+        debug_assert!(self.is_seen(v));
         self.graph.get_label_mut(v).unwrap().status = status;
     }
 
     /* Reserve edges getters / setters */
     fn push_reserve(&mut self, v: usize, w: usize) {
-        debug_assert!(self.graph.is_seen(v));
+        debug_assert!(self.is_seen(v));
         debug_assert!(!self.is_closed(v));
         self.graph.get_label_mut(v).unwrap().reserve.push(w);
     }
@@ -208,8 +208,8 @@ impl StateGraph for JumpStateGraph {
         // println!("# Marking Done: {}", v);
         self.initialize_jumps(v);
     }
-    fn get_status(&self, v: usize) -> Status {
-        self.graph.get_label_or_default(v).status
+    fn get_status(&self, v: usize) -> Option<Status> {
+        self.graph.get_label(v).map(|l| l.status)
     }
     fn vec_states(&self) -> Vec<usize> {
         self.graph.iter_vertices_all().collect()

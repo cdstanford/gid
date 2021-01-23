@@ -56,7 +56,8 @@ pub trait StateGraph: Sized {
 
     // Return whether v is Open, or v is Closed but there is a path from
     // v to an Open state (Unknown), or there is no such path (Dead).
-    fn get_status(&self, v: usize) -> Status;
+    // If the state is not seen, return None.
+    fn get_status(&self, v: usize) -> Option<Status>;
 
     // Return a vector of all states that have been seen.
     fn vec_states(&self) -> Vec<usize>;
@@ -88,11 +89,14 @@ pub trait StateGraph: Sized {
     }
 
     // Some conveniences
+    fn is_seen(&self, v: usize) -> bool {
+        self.get_status(v).is_some()
+    }
     fn is_closed(&self, v: usize) -> bool {
-        self.get_status(v) != Status::Open
+        self.get_status(v).map_or(false, |st| st != Status::Open)
     }
     fn is_dead(&self, v: usize) -> bool {
-        self.get_status(v) == Status::Dead
+        self.get_status(v) == Some(Status::Dead)
     }
 
     // Same as the above but using the Transaction enum
@@ -184,7 +188,7 @@ impl Example {
         }
         let mut result = ExampleOutput::new();
         for &v in &graph.vec_states() {
-            result.add(v, graph.get_status(v));
+            result.add(v, graph.get_status(v).unwrap());
         }
         result.finalize();
         let matches = result == self.2;

@@ -39,14 +39,14 @@ impl TarjanStateGraph {
         (self.edge_counter as f64).sqrt() as usize
     }
     fn set_status(&mut self, v: usize, status: Status) {
-        debug_assert!(self.graph.is_seen(v));
+        debug_assert!(self.is_seen(v));
         self.graph.get_label_mut(v).unwrap().0 = status;
     }
     fn get_level(&self, v: usize) -> Level {
-        self.graph.get_label_or_default(v).1
+        self.graph.get_label(v).unwrap().1
     }
     fn set_level(&mut self, v: usize, level: Level) {
-        debug_assert!(self.graph.is_seen(v));
+        debug_assert!(self.is_seen(v));
         self.graph.get_label_mut(v).unwrap().1 = level;
     }
     fn update_levels_iterative(&mut self, v1: usize, v2: usize) {
@@ -175,8 +175,8 @@ impl StateGraph for TarjanStateGraph {
         self.set_status(v, Status::Unknown);
         self.check_dead_iterative(v);
     }
-    fn get_status(&self, v: usize) -> Status {
-        self.graph.get_label_or_default(v).0
+    fn get_status(&self, v: usize) -> Option<Status> {
+        self.graph.get_label(v).map(|l| l.0)
     }
     fn vec_states(&self) -> Vec<usize> {
         self.graph.iter_vertices_all().collect()

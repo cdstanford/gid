@@ -10,6 +10,9 @@
       Note: this iterates over original edges; currently doesn't
       support "cleaning" edges by removing duplicates and self-loops
       in case of merged vertices.
+
+    If T implements Default, additionally supports "ensure" functionality
+    (i.e. add a vertex default if it doesn't exist already).
 */
 
 use super::debug_counter::DebugCounter;
@@ -33,12 +36,11 @@ pub struct DiGraph<V, T> {
     labels: HashMap<CanonicalID, T>,
     fwd_edges: HashMap<CanonicalID, LinkedList<UniqueID>>,
     bck_edges: HashMap<CanonicalID, LinkedList<UniqueID>>,
-    default_label: T, // Used in get_label_or_default()
     // Debug mode statistics
     space: DebugCounter,
     time: DebugCounter,
 }
-impl<V, T: Default> Default for DiGraph<V, T> {
+impl<V, T> Default for DiGraph<V, T> {
     // Can't derive automatically because we don't want to assume V: Default
     // (Basically: derive macro isn't smart enough)
     fn default() -> Self {
@@ -49,7 +51,6 @@ impl<V, T: Default> Default for DiGraph<V, T> {
             labels: Default::default(),
             fwd_edges: Default::default(),
             bck_edges: Default::default(),
-            default_label: Default::default(),
             space: Default::default(),
             time: Default::default(),
         }
@@ -58,7 +59,7 @@ impl<V, T: Default> Default for DiGraph<V, T> {
 impl<V, T> DiGraph<V, T>
 where
     V: Copy + Clone + Eq + Hash + PartialEq,
-    T: Debug + Default + PartialEq,
+    T: Debug + PartialEq,
 {
     /*
         Exposed API
@@ -78,9 +79,6 @@ where
         self.time.inc();
         self.get_canon_id(v).and_then(move |id| self.labels.get_mut(&id))
     }
-    pub fn get_label_or_default(&self, v: V) -> &T {
-        self.get_label(v).unwrap_or(&self.default_label)
-    }
     pub fn overwrite_vertex(&mut self, v: V, label: T) {
         // overwrites if already seen
         if self.is_seen(v) {
@@ -90,18 +88,6 @@ where
         } else {
             self.add_vertex_core(v, label);
         }
-    }
-    pub fn ensure_vertex(&mut self, v: V) {
-        // if not already seen, adds the default value
-        if !self.is_seen(v) {
-            self.add_vertex_core(v, Default::default());
-        }
-    }
-    pub fn ensure_edge(&mut self, v1: V, v2: V) {
-        // add an edge, ensuring the vertices exist first
-        self.ensure_vertex(v1);
-        self.ensure_vertex(v2);
-        self.add_edge_core(v1, v2);
     }
     pub fn is_same_vertex(&self, v1: V, v2: V) -> bool {
         self.time.inc();
@@ -292,5 +278,27 @@ where
             .filter(move |&id| id != canon.0)
             .map(move |id| self.id_vertices.get(&UniqueID(id)).unwrap())
             .copied()
+    }
+}
+
+/*
+    Additional functionality when T: Default
+*/
+impl<V, T> DiGraph<V, T>
+where
+    V: Copy + Clone + Eq + Hash + PartialEq,
+    T: Debug + Default + PartialEq,
+{
+    pub fn ensure_vertex(&mut self, v: V) {
+        // if not already seen, adds the default value
+        if !self.is_seen(v) {
+            self.add_vertex_core(v, Default::default());
+        }
+    }
+    pub fn ensure_edge(&mut self, v1: V, v2: V) {
+        // add an edge, ensuring the vertices exist first
+        self.ensure_vertex(v1);
+        self.ensure_vertex(v2);
+        self.add_edge_core(v1, v2);
     }
 }
