@@ -14,18 +14,18 @@ use std::path::PathBuf;
 pub enum Status {
     Dead,
     Unknown,
-    Unvisited,
+    Open,
 }
 impl Default for Status {
     fn default() -> Self {
-        Status::Unvisited
+        Status::Open
     }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum Transaction {
     Add(usize, usize),
-    Done(usize),
+    Close(usize),
 }
 
 /*
@@ -38,8 +38,8 @@ pub trait StateGraph: Sized {
 
         For convenience, the main functions are unchecked:
         - add_transition_unchecked can assume both its vertices are distinct and that the
-          source is Unvisited.
-        - mark_done_unchecked can assume that its vertex is Unvisited.
+          source is Open.
+        - mark_closed_unchecked can assume that its vertex is Open.
 
         Derived checked versions are then provided as safe wrappers around these.
     */
@@ -47,15 +47,15 @@ pub trait StateGraph: Sized {
     // Constructor
     fn new() -> Self;
 
-    // Add a new transition to the graph from an Unvisited state to any state.
-    // (If the vertex doesn't exist yet, create it and mark it unvisited.)
+    // Add a new transition to the graph from an Open state to any state.
+    // (If the vertex doesn't exist yet, create it and mark it open.)
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize);
 
-    // Mark an unvisited state as visited.
-    fn mark_done_unchecked(&mut self, v: usize);
+    // Mark an open state as closed.
+    fn mark_closed_unchecked(&mut self, v: usize);
 
-    // Return whether v is Unvisited, or v is Visited but there is a path from
-    // v to an Unvisited state (Unknown), or there is no such path (Dead).
+    // Return whether v is Open, or v is Closed but there is a path from
+    // v to an Open state (Unknown), or there is no such path (Dead).
     fn get_status(&self, v: usize) -> Status;
 
     // Return a vector of all states that have been seen.
@@ -73,23 +73,23 @@ pub trait StateGraph: Sized {
         Derived (default) functions
     */
 
-    // The safe add_transition and mark_done should generally be used
+    // The safe add_transition and mark_closed should generally be used
     // over the unchecked versions as they validate that the sequence of
     // inputs is correct.
     fn add_transition(&mut self, v1: usize, v2: usize) {
-        assert!(!self.is_done(v1));
+        assert!(!self.is_closed(v1));
         if v1 != v2 {
             self.add_transition_unchecked(v1, v2);
         }
     }
-    fn mark_done(&mut self, v: usize) {
-        assert!(!self.is_done(v));
-        self.mark_done_unchecked(v);
+    fn mark_closed(&mut self, v: usize) {
+        assert!(!self.is_closed(v));
+        self.mark_closed_unchecked(v);
     }
 
     // Some conveniences
-    fn is_done(&self, v: usize) -> bool {
-        self.get_status(v) != Status::Unvisited
+    fn is_closed(&self, v: usize) -> bool {
+        self.get_status(v) != Status::Open
     }
     fn is_dead(&self, v: usize) -> bool {
         self.get_status(v) == Status::Dead
@@ -99,7 +99,7 @@ pub trait StateGraph: Sized {
     fn process(&mut self, t: Transaction) {
         match t {
             Transaction::Add(v1, v2) => self.add_transition(v1, v2),
-            Transaction::Done(v1) => self.mark_done(v1),
+            Transaction::Close(v1) => self.mark_closed(v1),
         }
     }
 }
@@ -123,7 +123,7 @@ impl ExampleInput {
 pub struct ExampleOutput {
     pub dead: Vec<usize>,
     pub unknown: Vec<usize>,
-    pub unvisited: Vec<usize>,
+    pub open: Vec<usize>,
 }
 impl ExampleOutput {
     pub fn new() -> Self {
@@ -133,14 +133,14 @@ impl ExampleOutput {
         match st {
             Status::Dead => self.dead.push(v),
             Status::Unknown => self.unknown.push(v),
-            Status::Unvisited => self.unvisited.push(v),
+            Status::Open => self.open.push(v),
         };
     }
     pub fn finalize(&mut self) {
         // should be called prior to saving, printing, etc.
         self.dead.sort_unstable();
         self.unknown.sort_unstable();
-        self.unvisited.sort_unstable();
+        self.open.sort_unstable();
     }
 }
 

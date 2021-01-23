@@ -1,5 +1,5 @@
 {
     "dead": [3],
     "unknown": [1, 2],
-    "unvisited": [0, 4]
+    "open": [0, 4]
 }

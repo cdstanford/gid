@@ -11,7 +11,7 @@ use std::iter;
 
 #[derive(Debug, Default, PartialEq)]
 struct Node {
-    // jump list: nonempty for done vertices.
+    // jump list: nonempty for closed vertices.
     // First is a real edge, and the ith is approximately 2^i edges forward.
     jumps: Vec<usize>,
     // reserve list: draining copy of fwd_edges. When depleted, node is dead.
@@ -34,36 +34,36 @@ impl JumpStateGraph {
     /* Reserve edges getters / setters */
     fn push_reserve(&mut self, v: usize, w: usize) {
         debug_assert!(self.graph.is_seen(v));
-        debug_assert!(!self.is_done(v));
+        debug_assert!(!self.is_closed(v));
         self.graph.get_label_mut(v).unwrap().reserve.push(w);
     }
     fn pop_reserve(&mut self, v: usize) -> Option<usize> {
-        debug_assert!(!self.is_done(v));
+        debug_assert!(!self.is_closed(v));
         self.graph.get_label_mut(v).unwrap().reserve.pop()
     }
 
     /* Jump list getters / setters */
     fn get_nth_jump(&self, v: usize, n: usize) -> usize {
-        debug_assert!(self.is_done(v));
+        debug_assert!(self.is_closed(v));
         debug_assert!(self.graph.get_label(v).unwrap().jumps.len() > n);
         self.graph.get_label(v).unwrap().jumps[n]
     }
     fn get_first_jump(&self, v: usize) -> usize {
-        // println!("get_first_jump: {} {}", v, self.is_done(v));
-        debug_assert!(self.is_done(v));
+        // println!("get_first_jump: {} {}", v, self.is_closed(v));
+        debug_assert!(self.is_closed(v));
         debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
         self.get_nth_jump(v, 0)
     }
     fn get_last_jump(&self, v: usize) -> usize {
         // Get the current last element in the jumps list.
-        debug_assert!(self.is_done(v));
+        debug_assert!(self.is_closed(v));
         debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
         *self.graph.get_label(v).unwrap().jumps.last().unwrap()
     }
     fn get_num_jumps(&self, v: usize) -> usize {
         // Get the length of the jumps list
-        // (unvisited vertices implicitly have no jumps)
-        if self.is_done(v) {
+        // (open vertices implicitly have no jumps)
+        if self.is_closed(v) {
             debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
             self.graph.get_label(v).unwrap().jumps.len()
         } else {
@@ -73,20 +73,20 @@ impl JumpStateGraph {
     fn pop_last_jump(&mut self, v: usize) {
         // Remove the current last element in the jumps list.
         // println!("  Popping last jump: {}", v);
-        debug_assert!(self.is_done(v));
+        debug_assert!(self.is_closed(v));
         debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
         self.graph.get_label_mut(v).unwrap().jumps.pop();
     }
     fn clear_jumps(&mut self, v: usize) {
         // println!("  Clearing jumps: {}", v);
-        debug_assert!(self.is_done(v));
+        debug_assert!(self.is_closed(v));
         debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
         self.graph.get_label_mut(v).unwrap().jumps.clear();
     }
     fn push_last_jump(&mut self, v: usize, w: usize) {
         // Add a last element to the jumps list.
         // println!("  Pushing jump: {}, {}", v, w);
-        debug_assert!(self.is_done(v));
+        debug_assert!(self.is_closed(v));
         self.graph.get_label_mut(v).unwrap().jumps.push(w);
     }
 
@@ -95,12 +95,12 @@ impl JumpStateGraph {
 
         Jump from v to the Univisted vertex it currently points to.
         The assumption / invariant is that although some jumps
-        may be obsolete, there is always an unvisited vertex that
+        may be obsolete, there is always an open vertex that
         is pointed to once obsolete jumps are removed.
     */
     fn jump(&mut self, v: usize) -> usize {
         debug_assert!(self.graph.is_seen(v));
-        if !self.is_done(v) {
+        if !self.is_closed(v) {
             return v;
         }
         // Pop dead jumps
@@ -118,14 +118,14 @@ impl JumpStateGraph {
     }
 
     /*
-        Merge the path from vertex v to the Unvisited vertex it currently points
+        Merge the path from vertex v to the Open vertex it currently points
         to.
     */
     fn merge_path_from(&mut self, v: usize) {
         let to_merge: Vec<usize> = {
             iter::successors(Some(v), |&w| {
                 // println!("{} {:?} {}", w, self.get_status(w));
-                if self.is_done(w) {
+                if self.is_closed(w) {
                     Some(self.get_first_jump(w))
                 } else {
                     None
@@ -140,7 +140,7 @@ impl JumpStateGraph {
     }
 
     /*
-        Initialize function for a newly done vertex, to find an univisted
+        Initialize function for a newly closed vertex, to find an univisted
         vertex.
     */
     fn initialize_jumps(&mut self, v: usize) {
@@ -176,17 +176,17 @@ impl JumpStateGraph {
             .graph
             .iter_bck_edges(v)
             .filter(|&u| {
-                self.is_done(u)
+                self.is_closed(u)
                     && self.graph.is_same_vertex(self.get_first_jump(u), v)
             })
             .collect();
         // println!("Found Dead: {}", v);
-        // First set to_recurse as unvisited so that recursive calls won't mess
+        // First set to_recurse as open so that recursive calls won't mess
         // with them
         for &u in &to_recurse {
             // println!("  Recursing on: {}", u);
             self.clear_jumps(u);
-            self.set_status(u, Status::Unvisited);
+            self.set_status(u, Status::Open);
         }
         // Then go through and initialize jumps for each one
         for &u in &to_recurse {
@@ -204,7 +204,7 @@ impl StateGraph for JumpStateGraph {
         self.graph.ensure_edge(v1, v2);
         self.push_reserve(v1, v2);
     }
-    fn mark_done_unchecked(&mut self, v: usize) {
+    fn mark_closed_unchecked(&mut self, v: usize) {
         // println!("# Marking Done: {}", v);
         self.initialize_jumps(v);
     }

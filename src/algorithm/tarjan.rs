@@ -152,7 +152,7 @@ impl TarjanStateGraph {
             .graph
             .topo_search_bck(
                 iter::once(v),
-                |u| !self.is_done(u),
+                |u| !self.is_closed(u),
                 |w| self.is_dead(w),
             )
             .collect();
@@ -171,7 +171,7 @@ impl StateGraph for TarjanStateGraph {
         self.graph.ensure_edge(v1, v2);
         self.update_levels_iterative(v1, v2);
     }
-    fn mark_done_unchecked(&mut self, v: usize) {
+    fn mark_closed_unchecked(&mut self, v: usize) {
         self.set_status(v, Status::Unknown);
         self.check_dead_iterative(v);
     }

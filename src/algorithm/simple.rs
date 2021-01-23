@@ -22,16 +22,16 @@ pub struct SimpleStateGraph {
 }
 impl SimpleStateGraph {
     fn merge_vertices(&mut self, v1: usize, v2: usize) {
-        debug_assert!(self.is_done(v1));
-        debug_assert!(self.is_done(v2));
+        debug_assert!(self.is_closed(v1));
+        debug_assert!(self.is_closed(v2));
         debug_assert!(v1 != v2);
         self.graph.merge(v1, v2);
     }
     fn merge_all_cycles(&mut self, v: usize) {
         // Merge all cycles through v (assuming no other cycles in Done states)
-        debug_assert!(self.is_done(v));
+        debug_assert!(self.is_closed(v));
         let fwd_reachable: HashSet<usize> =
-            self.graph.dfs_fwd(iter::once(v), |w| !self.is_done(w)).collect();
+            self.graph.dfs_fwd(iter::once(v), |w| !self.is_closed(w)).collect();
         let bi_reachable: HashSet<usize> = self
             .graph
             .dfs_bck(iter::once(v), |u| !fwd_reachable.contains(&u))
@@ -47,7 +47,7 @@ impl SimpleStateGraph {
             .graph
             .topo_search_bck(
                 iter::once(v),
-                |u| !self.is_done(u),
+                |u| !self.is_closed(u),
                 |w| self.is_dead(w),
             )
             .collect();
@@ -64,7 +64,7 @@ impl StateGraph for SimpleStateGraph {
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
         self.graph.ensure_edge(v1, v2);
     }
-    fn mark_done_unchecked(&mut self, v: usize) {
+    fn mark_closed_unchecked(&mut self, v: usize) {
         self.graph.overwrite_vertex(v, Status::Unknown);
         self.merge_all_cycles(v);
         self.check_dead_iterative(v);
