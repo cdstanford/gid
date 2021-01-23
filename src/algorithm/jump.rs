@@ -25,47 +25,55 @@ pub struct JumpStateGraph {
     additional_time: DebugCounter,
 }
 impl JumpStateGraph {
+    /* Node label manipulation */
+    fn get_node(&self, v: usize) -> &Node {
+        debug_assert!(self.is_seen(v));
+        self.graph.get_label(v).unwrap()
+    }
+    fn get_node_mut(&mut self, v: usize) -> &mut Node {
+        debug_assert!(self.is_seen(v));
+        self.graph.get_label_mut(v).unwrap()
+    }
+    // Status getters / setters
     fn set_status(&mut self, v: usize, status: Status) {
         // println!("  Set status: {} {:?}", v, status);
         debug_assert!(self.is_seen(v));
-        self.graph.get_label_mut(v).unwrap().status = status;
+        self.get_node_mut(v).status = status;
     }
-
-    /* Reserve edges getters / setters */
+    // Reserve edges getters / setters
     fn push_reserve(&mut self, v: usize, w: usize) {
         debug_assert!(self.is_seen(v));
         debug_assert!(!self.is_closed(v));
-        self.graph.get_label_mut(v).unwrap().reserve.push(w);
+        self.get_node_mut(v).reserve.push(w);
     }
     fn pop_reserve(&mut self, v: usize) -> Option<usize> {
         debug_assert!(!self.is_closed(v));
-        self.graph.get_label_mut(v).unwrap().reserve.pop()
+        self.get_node_mut(v).reserve.pop()
     }
-
-    /* Jump list getters / setters */
+    // Jump list getters / setters
     fn get_nth_jump(&self, v: usize, n: usize) -> usize {
         debug_assert!(self.is_closed(v));
-        debug_assert!(self.graph.get_label(v).unwrap().jumps.len() > n);
-        self.graph.get_label(v).unwrap().jumps[n]
+        debug_assert!(self.get_node(v).jumps.len() > n);
+        self.get_node(v).jumps[n]
     }
     fn get_first_jump(&self, v: usize) -> usize {
         // println!("get_first_jump: {} {}", v, self.is_closed(v));
         debug_assert!(self.is_closed(v));
-        debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
+        debug_assert!(!self.get_node(v).jumps.is_empty());
         self.get_nth_jump(v, 0)
     }
     fn get_last_jump(&self, v: usize) -> usize {
         // Get the current last element in the jumps list.
         debug_assert!(self.is_closed(v));
-        debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
-        *self.graph.get_label(v).unwrap().jumps.last().unwrap()
+        debug_assert!(!self.get_node(v).jumps.is_empty());
+        *self.get_node(v).jumps.last().unwrap()
     }
     fn get_num_jumps(&self, v: usize) -> usize {
         // Get the length of the jumps list
         // (open vertices implicitly have no jumps)
         if self.is_closed(v) {
-            debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
-            self.graph.get_label(v).unwrap().jumps.len()
+            debug_assert!(!self.get_node(v).jumps.is_empty());
+            self.get_node(v).jumps.len()
         } else {
             0
         }
@@ -74,20 +82,20 @@ impl JumpStateGraph {
         // Remove the current last element in the jumps list.
         // println!("  Popping last jump: {}", v);
         debug_assert!(self.is_closed(v));
-        debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
-        self.graph.get_label_mut(v).unwrap().jumps.pop();
+        debug_assert!(!self.get_node(v).jumps.is_empty());
+        self.get_node_mut(v).jumps.pop();
     }
     fn clear_jumps(&mut self, v: usize) {
         // println!("  Clearing jumps: {}", v);
         debug_assert!(self.is_closed(v));
-        debug_assert!(!self.graph.get_label(v).unwrap().jumps.is_empty());
-        self.graph.get_label_mut(v).unwrap().jumps.clear();
+        debug_assert!(!self.get_node(v).jumps.is_empty());
+        self.get_node_mut(v).jumps.clear();
     }
     fn push_last_jump(&mut self, v: usize, w: usize) {
         // Add a last element to the jumps list.
         // println!("  Pushing jump: {}, {}", v, w);
         debug_assert!(self.is_closed(v));
-        self.graph.get_label_mut(v).unwrap().jumps.push(w);
+        self.get_node_mut(v).jumps.push(w);
     }
 
     /*
@@ -158,12 +166,7 @@ impl JumpStateGraph {
             } else {
                 // No further work, set jump and return
                 // println!("  (setting jump and returning)");
-                debug_assert!(self
-                    .graph
-                    .get_label(v)
-                    .unwrap()
-                    .jumps
-                    .is_empty());
+                debug_assert!(self.get_node(v).jumps.is_empty());
                 self.set_status(v, Status::Unknown);
                 self.push_last_jump(v, w);
                 return;
@@ -172,15 +175,13 @@ impl JumpStateGraph {
         // No more edges -- v is dead.
         // Recurse on all edges backwards from v.
         self.set_status(v, Status::Dead);
+        // println!("Found Dead: {}", v);
         let to_recurse: Vec<usize> = self
             .graph
             .iter_bck_edges(v)
-            .filter(|&u| {
-                self.is_closed(u)
-                    && self.graph.is_same_vertex(self.get_first_jump(u), v)
-            })
+            .filter(|&u| self.is_closed(u))
+            .filter(|&u| self.graph.is_same_vertex(self.get_first_jump(u), v))
             .collect();
-        // println!("Found Dead: {}", v);
         // First set to_recurse as open so that recursive calls won't mess
         // with them
         for &u in &to_recurse {
@@ -205,7 +206,7 @@ impl StateGraph for JumpStateGraph {
         self.push_reserve(v1, v2);
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
-        // println!("# Marking Done: {}", v);
+        // println!("# Marking Closed: {}", v);
         self.initialize_jumps(v);
     }
     fn get_status(&self, v: usize) -> Option<Status> {

@@ -11,7 +11,7 @@
     As with all the implementations, we rely as much as possible on the core
     graph functionality in graph::DiGraph.
     However, there is still a fair amount of code duplication between here and
-    simple.rs, that could be improved.
+    simple.rs, which could be improved.
 */
 
 use crate::graph::DiGraph;

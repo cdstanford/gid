@@ -28,7 +28,7 @@ impl SimpleStateGraph {
         self.graph.merge(v1, v2);
     }
     fn merge_all_cycles(&mut self, v: usize) {
-        // Merge all cycles through v (assuming no other cycles in Done states)
+        // Merge all cycles through v (assuming no other cycles in closed states)
         debug_assert!(self.is_closed(v));
         let fwd_reachable: HashSet<usize> =
             self.graph.dfs_fwd(iter::once(v), |w| !self.is_closed(w)).collect();
