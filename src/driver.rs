@@ -4,11 +4,10 @@
     graph interface, and collecting/viewing/checking the output.
 */
 
+use super::algorithm::{
+    JumpStateGraph, NaiveStateGraph, SimpleStateGraph, TarjanStateGraph,
+};
 use super::interface::{Example, StateGraph};
-use super::jump::JumpStateGraph;
-use super::naive::NaiveStateGraph;
-use super::simple::SimpleStateGraph;
-use super::tarjan::TarjanStateGraph;
 use std::fmt::{self, Debug};
 use std::str::FromStr;
 use structopt::StructOpt;

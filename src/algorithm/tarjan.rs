@@ -14,8 +14,8 @@
     simple.rs, that could be improved.
 */
 
-use super::graph::DiGraph;
-use super::interface::{StateGraph, Status};
+use crate::graph::DiGraph;
+use crate::interface::{StateGraph, Status};
 use std::collections::HashSet;
 use std::iter;
 

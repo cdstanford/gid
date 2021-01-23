@@ -4,9 +4,9 @@
     of states ahead at once.
 */
 
-use super::debug_counter::DebugCounter;
-use super::graph::DiGraph;
-use super::interface::{StateGraph, Status};
+use crate::debug_counter::DebugCounter;
+use crate::graph::DiGraph;
+use crate::interface::{StateGraph, Status};
 use std::iter;
 
 #[derive(Debug, Default, PartialEq)]
