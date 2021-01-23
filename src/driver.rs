@@ -10,7 +10,14 @@ use super::algorithm::{
 use super::interface::{Example, StateGraph};
 use std::fmt::{self, Debug};
 use std::str::FromStr;
+use std::time::Duration;
 use structopt::StructOpt;
+
+/*
+    Constants
+*/
+// Timeout to use when running asserted unit tests
+const UNIT_TEST_TIMEOUT_SECS: u64 = 5;
 
 /*
     Exposed enum for which state graph implementation to use
@@ -51,69 +58,101 @@ impl fmt::Display for Algorithm {
     Run examples or test cases
 */
 
-fn run_core<G: StateGraph>(alg_name: &str, prefix: &str) -> bool {
+fn run_core<G: StateGraph>(
+    alg_name: &str,
+    prefix: &str,
+    timeout: Duration,
+) -> bool {
     let example = Example::load_from(prefix);
 
     println!("===== {} =====", example.0);
 
     println!("Running {} algorithm...", alg_name);
     let mut graph = G::new();
-    let (output, correct) = example.run(&mut graph);
+    let result = example.run_with_timeout(&mut graph, timeout);
 
-    if cfg!(debug_assertions) {
-        println!("=== Statistics ===");
-        println!("Time: {}", graph.get_time());
-        println!("Space: {}", graph.get_space());
-    }
+    if let Some((output, correct)) = result {
+        if cfg!(debug_assertions) {
+            println!("=== Statistics ===");
+            println!("Time: {}", graph.get_time());
+            println!("Space: {}", graph.get_space());
+        }
 
-    println!("=== Output ===");
-    println!("{:?}", output);
+        println!("=== Output ===");
+        println!("{:?}", output);
 
-    if correct {
-        println!("Success: output is as expected");
-        true
+        if correct {
+            println!("Success: output is as expected");
+            true
+        } else {
+            println!("Failed: output is incorrect!");
+            println!("=== Expected ===");
+            println!("{:?}", example.2);
+            false
+        }
     } else {
-        println!("Failed: output is incorrect!");
-        println!("=== Expected ===");
-        println!("{:?}", example.2);
+        println!("Timed Out");
         false
     }
 }
 
-pub fn run_example(prefix: &str, algorithm: Algorithm) -> bool {
+pub fn run_example(
+    prefix: &str,
+    algorithm: Algorithm,
+    timeout_secs: u64,
+) -> bool {
+    let timeout = Duration::from_secs(timeout_secs);
     match algorithm {
-        Algorithm::Naive => run_core::<NaiveStateGraph>("Naive", prefix),
-        Algorithm::Simple => run_core::<SimpleStateGraph>("Simple", prefix),
-        Algorithm::Tarjan => run_core::<TarjanStateGraph>("Tarjan", prefix),
-        Algorithm::Jump => run_core::<JumpStateGraph>("Jump", prefix),
+        Algorithm::Naive => {
+            run_core::<NaiveStateGraph>("Naive", prefix, timeout)
+        }
+        Algorithm::Simple => {
+            run_core::<SimpleStateGraph>("Simple", prefix, timeout)
+        }
+        Algorithm::Tarjan => {
+            run_core::<TarjanStateGraph>("Tarjan", prefix, timeout)
+        }
+        Algorithm::Jump => run_core::<JumpStateGraph>("Jump", prefix, timeout),
     }
 }
 
 pub fn assert_example(prefix: &str) {
-    assert!(run_example(prefix, Algorithm::Naive));
-    assert!(run_example(prefix, Algorithm::Simple));
-    assert!(run_example(prefix, Algorithm::Tarjan));
-    assert!(run_example(prefix, Algorithm::Jump));
+    let timeout_secs = UNIT_TEST_TIMEOUT_SECS;
+    assert!(run_example(prefix, Algorithm::Naive, timeout_secs));
+    assert!(run_example(prefix, Algorithm::Simple, timeout_secs));
+    assert!(run_example(prefix, Algorithm::Tarjan, timeout_secs));
+    assert!(run_example(prefix, Algorithm::Jump, timeout_secs));
 }
 
 /*
     Performance comparison
 */
-fn get_stats<G: StateGraph>(prefix: &str) -> (usize, usize) {
+fn get_stats<G: StateGraph>(
+    prefix: &str,
+    timeout: Duration,
+) -> Option<(usize, usize)> {
     if !cfg!(debug_assertions) {
         panic!("Must be in debug mode to track time/space counters");
     }
     let example = Example::load_from(prefix);
     let mut graph = G::new();
-    let (_output, correct) = example.run(&mut graph);
-    assert!(correct);
-    (graph.get_time(), graph.get_space())
+    example.run_with_timeout(&mut graph, timeout).map(|(_output, correct)| {
+        assert!(correct);
+        (graph.get_time(), graph.get_space())
+    })
 }
-
-pub fn run_compare(prefix: &str) {
-    println!("=== Time and Space Statistics: {} ===", prefix);
-    println!("Naive: {:?}", get_stats::<NaiveStateGraph>(prefix));
-    println!("Simple: {:?}", get_stats::<SimpleStateGraph>(prefix));
-    println!("Tarjan: {:?}", get_stats::<TarjanStateGraph>(prefix));
-    println!("Jump: {:?}", get_stats::<JumpStateGraph>(prefix));
+fn format_stats<G: StateGraph>(prefix: &str, timeout: Duration) -> String {
+    if let Some((time, space)) = get_stats::<G>(prefix, timeout) {
+        format!("time {}, space {}", time, space)
+    } else {
+        "Timeout".to_string()
+    }
+}
+pub fn run_compare(prefix: &str, timeout_secs: u64) {
+    let timeout = Duration::from_secs(timeout_secs);
+    println!("=== Debug Counter Statistics: {} ===", prefix);
+    println!("Naive: {}", format_stats::<NaiveStateGraph>(prefix, timeout));
+    println!("Simple: {}", format_stats::<SimpleStateGraph>(prefix, timeout));
+    println!("Tarjan: {}", format_stats::<TarjanStateGraph>(prefix, timeout));
+    println!("Jump: {}", format_stats::<JumpStateGraph>(prefix, timeout));
 }

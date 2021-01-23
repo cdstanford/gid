@@ -13,10 +13,13 @@ use structopt::StructOpt;
 )]
 struct Args {
     ex_name: String,
+
+    #[structopt(short, long, default_value = "10")]
+    timeout: u64,
 }
 impl Args {
     fn run(&self) {
-        driver::run_compare(&self.ex_name);
+        driver::run_compare(&self.ex_name, self.timeout);
     }
 }
 

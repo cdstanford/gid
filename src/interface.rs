@@ -4,11 +4,15 @@
 
     Different data structure and algorithms for the same problem can then
     implement this interface.
+
+    Also includes the Example struct for running specific test cases on
+    an implementation of the trait.
 */
 
 use super::util;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::time::{Duration, SystemTime};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Status {
@@ -182,10 +186,40 @@ impl Example {
 
     // Run the example input on the graph, returning the output and whether
     // it matches the expected output.
+    // run_with_timeout additionally enforces a timeout (Duration), although
+    // only at the granularity of transactions.
     pub fn run<G: StateGraph>(&self, graph: &mut G) -> (ExampleOutput, bool) {
         for &t in &self.1 .0 {
             graph.process(t);
         }
+        self.collect_output(graph)
+    }
+    pub fn run_with_timeout<G: StateGraph>(
+        &self,
+        graph: &mut G,
+        timeout: Duration,
+    ) -> Option<(ExampleOutput, bool)> {
+        let start = SystemTime::now();
+        for &t in &self.1 .0 {
+            let time_elapsed = start.elapsed().unwrap_or_else(|err| {
+                panic!(
+                    "Getting system time elapsed failed \
+                    (perhaps system clock was reset): {}",
+                    err
+                )
+            });
+            if time_elapsed > timeout {
+                // Timeout
+                return None;
+            }
+            graph.process(t);
+        }
+        Some(self.collect_output(graph))
+    }
+    fn collect_output<G: StateGraph>(
+        &self,
+        graph: &mut G,
+    ) -> (ExampleOutput, bool) {
         let mut result = ExampleOutput::new();
         for &v in &graph.vec_states() {
             result.add(v, graph.get_status(v).unwrap());
