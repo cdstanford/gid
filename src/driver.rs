@@ -141,18 +141,27 @@ fn get_stats<G: StateGraph>(
         (graph.get_time(), graph.get_space())
     })
 }
-fn format_stats<G: StateGraph>(prefix: &str, timeout: Duration) -> String {
-    if let Some((time, space)) = get_stats::<G>(prefix, timeout) {
-        format!("time {}, space {}", time, space)
-    } else {
-        "Timeout".to_string()
+fn format_stats(stats: Option<(usize, usize)>) -> String {
+    match stats {
+        Some((time, space)) => format!("time {}, space {}", time, space),
+        None => "Timeout".to_string(),
     }
 }
-pub fn run_compare(prefix: &str, timeout_secs: u64) {
+pub fn run_compare(
+    prefix: &str,
+    timeout_secs: u64,
+) -> Vec<Option<(usize, usize)>> {
     let timeout = Duration::from_secs(timeout_secs);
-    println!("=== Debug Counter Statistics: {} ===", prefix);
-    println!("Naive: {}", format_stats::<NaiveStateGraph>(prefix, timeout));
-    println!("Simple: {}", format_stats::<SimpleStateGraph>(prefix, timeout));
-    println!("Tarjan: {}", format_stats::<TarjanStateGraph>(prefix, timeout));
-    println!("Jump: {}", format_stats::<JumpStateGraph>(prefix, timeout));
+    let naive = get_stats::<NaiveStateGraph>(prefix, timeout);
+    let simple = get_stats::<SimpleStateGraph>(prefix, timeout);
+    let tarjan = get_stats::<TarjanStateGraph>(prefix, timeout);
+    let jump = get_stats::<JumpStateGraph>(prefix, timeout);
+
+    println!("=== Debug Counter Stats: {} ===", prefix);
+    println!("Naive: {}", format_stats(naive));
+    println!("Simple: {}", format_stats(simple));
+    println!("Tarjan: {}", format_stats(tarjan));
+    println!("Jump: {}", format_stats(jump));
+
+    vec![naive, simple, tarjan, jump]
 }
