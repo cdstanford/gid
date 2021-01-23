@@ -27,7 +27,7 @@ impl NaiveStateGraph {
             self.graph.iter_vertices().partition(|&v| self.is_closed(v));
         let not_dead: HashSet<usize> = self
             .graph
-            .dfs_bck(open.iter().copied(), |v| !closed.contains(&v))
+            .dfs_bck(open.iter().copied(), |v| closed.contains(&v))
             .collect();
 
         // Mark not-not-dead states as dead

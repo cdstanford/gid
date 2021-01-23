@@ -163,53 +163,53 @@ where
     pub fn dfs_fwd<'a>(
         &'a self,
         sources: impl Iterator<Item = V> + 'a,
-        exclude: impl (Fn(V) -> bool) + Clone + 'a,
+        include: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
         // Depth-first search forward from 'sources', NOT including 'sources',
-        // and excluding vertices in the graph matching the predicate 'exclude'.
+        // and excluding vertices in the graph not satisfying 'include'.
         // Precondition: everything in 'sources' should be seen
         DepthFirstSearch::new(sources, move |v| {
-            let exclude = exclude.clone();
-            self.iter_fwd_edges(v).filter(move |&w| !exclude(w))
+            let include = include.clone();
+            self.iter_fwd_edges(v).filter(move |&w| include(w))
         })
     }
     pub fn dfs_bck<'a>(
         &'a self,
         sources: impl Iterator<Item = V> + 'a,
-        exclude: impl (Fn(V) -> bool) + Clone + 'a,
+        include: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
         // Depth-first search backward from 'sources', NOT including 'sources',
-        // and excluding vertices in the graph matching the predicate 'exclude'.
+        // and excluding vertices in the graph not satisfying 'include'.
         // Precondition: everything in 'sources' should be seen
         DepthFirstSearch::new(sources, move |v| {
-            let exclude = exclude.clone();
-            self.iter_bck_edges(v).filter(move |&w| !exclude(w))
+            let include = include.clone();
+            self.iter_bck_edges(v).filter(move |&w| include(w))
         })
     }
     pub fn topo_search_bck<'a>(
         &'a self,
         candidate_starts: impl Iterator<Item = V> + 'a,
-        exclude_bck: impl (Fn(V) -> bool) + Clone + 'a,
-        exclude_fwd: impl (Fn(V) -> bool) + Clone + 'a,
+        include_bck: impl (Fn(V) -> bool) + Clone + 'a,
+        include_fwd: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
         // Visit vertices starting from candidate_starts in a topologically
         // sorted order going backwards. The guarantee is that for each vertex
-        // v returned by the search, all forward vertices from v (other than
-        // those in 'exclude_fwd') have already been returned, and v is either
+        // v returned by the search, all forward vertices from v (restricted to
+        // those in 'include_fwd') have already been returned, and v is either
         // in 'candidate_starts' or a backward vertex from an already returned
-        // vertex (excluding those in 'exclude_bck').
+        // vertex (restricted to those in 'include_bck').
         // The search includes 'candidate_starts' if they qualify for these
         // conditions.
         // See search::TopologicalSearch for more details.
         TopologicalSearch::new(
             candidate_starts,
             move |v| {
-                let exclude_bck = exclude_bck.clone();
-                self.iter_bck_edges(v).filter(move |&w| !exclude_bck(w))
+                let include_bck = include_bck.clone();
+                self.iter_bck_edges(v).filter(move |&w| include_bck(w))
             },
             move |v| {
-                let exclude_fwd = exclude_fwd.clone();
-                self.iter_fwd_edges(v).filter(move |&w| !exclude_fwd(w))
+                let include_fwd = include_fwd.clone();
+                self.iter_fwd_edges(v).filter(move |&w| include_fwd(w))
             },
         )
     }

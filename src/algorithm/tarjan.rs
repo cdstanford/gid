@@ -90,7 +90,7 @@ impl TarjanStateGraph {
             .graph
             .dfs_bck(iter::once(v1), |u| {
                 debug_assert!(self.get_level(u) <= level1);
-                self.get_level(u) < level1
+                self.get_level(u) == level1
             })
             .take(self.delta())
         {
@@ -121,7 +121,7 @@ impl TarjanStateGraph {
                 .graph
                 .dfs_fwd(iter::once(v2), |w| {
                     debug_assert!(self.get_level(w) >= level2);
-                    !set_bck.contains(&w) && self.get_level(w) >= new_level
+                    set_bck.contains(&w) || self.get_level(w) < new_level
                 })
                 .collect();
 
@@ -150,7 +150,7 @@ impl TarjanStateGraph {
                 .graph
                 .dfs_fwd(iter::once(v2), |w| {
                     debug_assert!(self.get_level(w) >= level1);
-                    self.get_level(w) > level1
+                    self.get_level(w) == level1
                 })
                 .chain(iter::once(v2))
                 .collect();
@@ -158,7 +158,7 @@ impl TarjanStateGraph {
             debug_assert!(fwd_reachable.contains(&v2));
             let bi_reachable: HashSet<usize> = self
                 .graph
-                .dfs_bck(iter::once(v1), |u| !fwd_reachable.contains(&u))
+                .dfs_bck(iter::once(v1), |u| fwd_reachable.contains(&u))
                 .chain(iter::once(v1))
                 .collect();
             debug_assert!(bi_reachable.contains(&v1));
@@ -179,8 +179,8 @@ impl TarjanStateGraph {
             .graph
             .topo_search_bck(
                 iter::once(v),
-                |u| !self.is_closed(u),
-                |w| self.is_dead(w),
+                |u| self.is_closed(u),
+                |w| !self.is_dead(w),
             )
             .collect();
         debug_assert!(now_dead.is_empty() || now_dead.contains(&v));

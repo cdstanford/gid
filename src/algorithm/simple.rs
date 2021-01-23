@@ -31,10 +31,10 @@ impl SimpleStateGraph {
         // Merge all cycles through v (assuming no other cycles in closed states)
         debug_assert!(self.is_closed(v));
         let fwd_reachable: HashSet<usize> =
-            self.graph.dfs_fwd(iter::once(v), |w| !self.is_closed(w)).collect();
+            self.graph.dfs_fwd(iter::once(v), |w| self.is_closed(w)).collect();
         let bi_reachable: HashSet<usize> = self
             .graph
-            .dfs_bck(iter::once(v), |u| !fwd_reachable.contains(&u))
+            .dfs_bck(iter::once(v), |u| fwd_reachable.contains(&u))
             .collect();
         for &u in &bi_reachable {
             debug_assert!(u != v);
@@ -47,8 +47,8 @@ impl SimpleStateGraph {
             .graph
             .topo_search_bck(
                 iter::once(v),
-                |u| !self.is_closed(u),
-                |w| self.is_dead(w),
+                |u| self.is_closed(u),
+                |w| !self.is_dead(w),
             )
             .collect();
         debug_assert!(now_dead.is_empty() || now_dead.contains(&v));
