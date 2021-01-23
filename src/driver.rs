@@ -114,5 +114,6 @@ pub fn run_compare(prefix: &str) {
     println!("=== Time and Space Statistics: {} ===", prefix);
     println!("Naive: {:?}", get_stats::<NaiveStateGraph>(prefix));
     println!("Simple: {:?}", get_stats::<SimpleStateGraph>(prefix));
+    println!("Tarjan: {:?}", get_stats::<TarjanStateGraph>(prefix));
     println!("Jump: {:?}", get_stats::<JumpStateGraph>(prefix));
 }
