@@ -235,9 +235,12 @@ impl Example {
         let name = prefix.to_string();
         Self { name, input, expected }
     }
-    // pub fn len(&self) -> usize {
-    //     self.input.0.len()
-    // }
+    pub fn len(&self) -> usize {
+        self.input.0.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.input.0.is_empty()
+    }
     pub fn load_from(prefix: &str) -> Self {
         // May panic if file(s) do not exist
         let infile = PathBuf::from(infile_from_prefix(prefix));

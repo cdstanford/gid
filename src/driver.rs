@@ -139,19 +139,22 @@ pub fn assert_example(prefix: &str) {
 
 pub fn run_compare_csv_header() -> String {
     let header = if cfg!(debug_assertions) {
-        "name, \
+        "name, size, \
         time (naive), time (simple), time (tarjan), time (jump), \
         space (naive), space (simple), space (tarjan), space (jump)"
     } else {
-        "name, \
+        "name, size, \
         time (naive), time (simple), time (tarjan), time (jump)"
     };
     header.to_string()
 }
 pub fn run_compare(prefix: &str, timeout_secs: u64) -> String {
-    println!("===== {} =====", prefix);
-
     // Returns results in CSV format
+
+    println!("===== {} =====", prefix);
+    let size = Example::load_from(prefix).len();
+    println!("Example size: {}, timeout: {}s", size, timeout_secs);
+
     let timeout = Duration::from_secs(timeout_secs);
     let naive = run_core(prefix, Algorithm::Naive, timeout, false);
     let simple = run_core(prefix, Algorithm::Simple, timeout, false);
@@ -159,8 +162,9 @@ pub fn run_compare(prefix: &str, timeout_secs: u64) -> String {
     let jump = run_core(prefix, Algorithm::Jump, timeout, false);
 
     let result = format!(
-        "{}, {}, {}, {}, {}",
+        "{}, {}, {}, {}, {}, {}",
         prefix,
+        size,
         naive.time_str(),
         simple.time_str(),
         tarjan.time_str(),
