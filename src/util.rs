@@ -2,6 +2,7 @@
     Utility for file I/O and JSON serialization
 */
 
+use chrono::offset::Local;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::fmt::Debug;
@@ -9,7 +10,7 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::Path;
 
-pub fn path_reader<P>(path: P) -> BufReader<File>
+fn path_reader<P>(path: P) -> BufReader<File>
 where
     P: AsRef<Path> + Debug,
 {
@@ -18,7 +19,7 @@ where
     }))
 }
 
-pub fn path_writer<P>(path: P) -> BufWriter<File>
+fn path_writer<P>(path: P) -> BufWriter<File>
 where
     P: AsRef<Path> + Debug,
 {
@@ -49,4 +50,21 @@ where
     writeln!(&mut writer).unwrap_or_else(|err| {
         format!("Could not append newline to file: {:?} -- {}", &path, err);
     });
+}
+
+pub fn lines_to_file<P>(path: P, lines: Vec<String>)
+where
+    P: AsRef<Path> + Debug,
+{
+    let mut writer = path_writer(&path);
+    for line in &lines {
+        writeln!(writer, "{}", line).unwrap();
+    }
+}
+
+// Current datetime for use in file names
+pub fn current_datetime_str() -> String {
+    let out = Local::now().format("%Y-%m-%d-%H%M%S").to_string();
+    println!("Current Datetime: {:?}", out);
+    out
 }

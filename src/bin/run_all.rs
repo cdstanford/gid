@@ -9,8 +9,10 @@
 */
 
 use state_graph::driver;
+use state_graph::util;
 use structopt::StructOpt;
 
+const RESULTS_PATH: &str = "results/";
 const ALL_EXAMPLES: &[&str] = &[
     "1",
     "2",
@@ -77,13 +79,19 @@ struct Args {
 }
 impl Args {
     fn run(&self) {
-        let mut results = Vec::new();
+        println!("===== Run All =====");
+        let datetime = util::current_datetime_str();
+        let mut result_lines = Vec::new();
+        result_lines.push(driver::run_compare_csv_header());
         for prefix in ALL_EXAMPLES {
             let result = driver::run_compare(prefix, self.timeout);
-            results.push(result);
+            result_lines.push(result);
         }
-        println!("========== RESULTS ==========");
-        println!("{:?}", results);
+        println!("===== Results =====");
+        let filepath =
+            format!("{}{}_debug_t{}.csv", RESULTS_PATH, datetime, self.timeout);
+        util::lines_to_file(&filepath, result_lines);
+        println!("Results saved to: {}", filepath);
     }
 }
 

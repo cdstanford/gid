@@ -127,30 +127,51 @@ pub fn assert_example(prefix: &str) {
 /*
     Performance comparison
 */
-fn get_stats<G: StateGraph>(
-    prefix: &str,
-    timeout: Duration,
-) -> Option<(usize, usize)> {
+
+struct DebugStats(Option<(usize, usize)>);
+impl DebugStats {
+    fn format(&self) -> String {
+        match self.0 {
+            Some((time, space)) => format!("time {}, space {}", time, space),
+            None => "Timeout".to_string(),
+        }
+    }
+    fn time_str(&self) -> String {
+        match self.0 {
+            Some((time, _space)) => time.to_string(),
+            None => "Timeout".to_string(),
+        }
+    }
+    fn space_str(&self) -> String {
+        match self.0 {
+            Some((_time, space)) => space.to_string(),
+            None => "Timeout".to_string(),
+        }
+    }
+}
+
+fn get_stats<G: StateGraph>(prefix: &str, timeout: Duration) -> DebugStats {
     if !cfg!(debug_assertions) {
         panic!("Must be in debug mode to track time/space counters");
     }
     let example = Example::load_from(prefix);
     let mut graph = G::new();
-    example.run_with_timeout(&mut graph, timeout).map(|(_output, correct)| {
-        assert!(correct);
-        (graph.get_time(), graph.get_space())
-    })
+    let result = example.run_with_timeout(&mut graph, timeout).map(
+        |(_output, correct)| {
+            assert!(correct);
+            (graph.get_time(), graph.get_space())
+        },
+    );
+    DebugStats(result)
 }
-fn format_stats(stats: Option<(usize, usize)>) -> String {
-    match stats {
-        Some((time, space)) => format!("time {}, space {}", time, space),
-        None => "Timeout".to_string(),
-    }
+pub fn run_compare_csv_header() -> String {
+    "name, \
+    time (naive), time (simple), time (tarjan), time (jump), \
+    space (naive), space (simple), space (tarjan), space (jump)"
+        .to_string()
 }
-pub fn run_compare(
-    prefix: &str,
-    timeout_secs: u64,
-) -> Vec<Option<(usize, usize)>> {
+pub fn run_compare(prefix: &str, timeout_secs: u64) -> String {
+    // Returns results in CSV format
     let timeout = Duration::from_secs(timeout_secs);
     let naive = get_stats::<NaiveStateGraph>(prefix, timeout);
     let simple = get_stats::<SimpleStateGraph>(prefix, timeout);
@@ -158,10 +179,21 @@ pub fn run_compare(
     let jump = get_stats::<JumpStateGraph>(prefix, timeout);
 
     println!("=== Debug Counter Stats: {} ===", prefix);
-    println!("Naive: {}", format_stats(naive));
-    println!("Simple: {}", format_stats(simple));
-    println!("Tarjan: {}", format_stats(tarjan));
-    println!("Jump: {}", format_stats(jump));
+    println!("Naive: {}", naive.format());
+    println!("Simple: {}", simple.format());
+    println!("Tarjan: {}", tarjan.format());
+    println!("Jump: {}", jump.format());
 
-    vec![naive, simple, tarjan, jump]
+    format!(
+        "{}, {}, {}, {}, {}, {}, {}, {}, {}",
+        prefix,
+        naive.time_str(),
+        simple.time_str(),
+        tarjan.time_str(),
+        jump.time_str(),
+        naive.space_str(),
+        simple.space_str(),
+        tarjan.space_str(),
+        jump.space_str(),
+    )
 }
