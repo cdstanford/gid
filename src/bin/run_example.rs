@@ -21,7 +21,7 @@ struct Args {
 }
 impl Args {
     fn run(self) {
-        driver::run_example(&self.ex_name, self.algorithm, self.timeout);
+        driver::run_single_example(&self.ex_name, self.algorithm, self.timeout);
     }
 }
 

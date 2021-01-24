@@ -9,6 +9,7 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::path::Path;
+use std::time::{Duration, SystemTime};
 
 fn path_reader<P>(path: P) -> BufReader<File>
 where
@@ -62,9 +63,21 @@ where
     }
 }
 
+/*
+    Time-related functions
+*/
+
+// Time elapsed with error message
+pub fn time_since(t: &SystemTime) -> Duration {
+    t.elapsed().unwrap_or_else(|err| {
+        panic!(
+            "Getting system time elapsed failed (was system clock reset?): {}",
+            err
+        )
+    })
+}
+
 // Current datetime for use in file names
 pub fn current_datetime_str() -> String {
-    let out = Local::now().format("%Y-%m-%d-%H%M%S").to_string();
-    println!("Current Datetime: {:?}", out);
-    out
+    Local::now().format("%Y-%m-%d-%H%M%S").to_string()
 }

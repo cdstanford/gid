@@ -162,15 +162,82 @@ fn infile_from_prefix(prefix: &str) -> String {
 fn expectedfile_from_prefix(prefix: &str) -> String {
     format!("examples/{}_out.json", prefix)
 }
-pub struct Example(pub String, pub ExampleInput, pub ExampleOutput);
+pub struct Example {
+    pub name: String,
+    pub input: ExampleInput,
+    pub expected: ExampleOutput,
+}
+pub struct DebugStats {
+    output: ExampleOutput,
+    correct: bool,
+    time: usize,
+    space: usize,
+}
+pub struct ReleaseStats {
+    output: ExampleOutput,
+    correct: bool,
+    time: Duration,
+}
+pub enum ExampleResult {
+    Timeout,
+    Debug(DebugStats),
+    Release(ReleaseStats),
+}
+impl ExampleResult {
+    pub fn is_correct(&self) -> bool {
+        match self {
+            Self::Timeout => false,
+            Self::Debug(res) => res.correct,
+            Self::Release(res) => res.correct,
+        }
+    }
+    pub fn summary(&self) -> String {
+        if let Self::Timeout = self {
+            "Timeout".to_string()
+        } else if !self.is_correct() {
+            "Wrong Output".to_string()
+        } else if let Self::Debug(res) = self {
+            format!("time {}, space {}", res.time, res.space)
+        } else if let Self::Release(res) = self {
+            format!("time {}ms", res.time.as_millis())
+        } else {
+            unreachable!()
+        }
+    }
+    pub fn time_str(&self) -> String {
+        match self {
+            Self::Timeout => "Timeout".to_string(),
+            Self::Debug(res) => format!("{}", res.time),
+            Self::Release(res) => format!("{}", res.time.as_millis()),
+        }
+    }
+    pub fn space_str(&self) -> String {
+        match self {
+            Self::Timeout => "Timeout".to_string(),
+            Self::Debug(res) => format!("{}", res.space),
+            Self::Release(_) => "Unknown (not tracked)".to_string(),
+        }
+    }
+    pub fn output_str(&self) -> String {
+        match self {
+            Self::Timeout => "Timeout".to_string(),
+            Self::Debug(res) => format!("{:?}", res.output),
+            Self::Release(res) => format!("{:?}", res.output),
+        }
+    }
+}
 impl Example {
     pub fn new(
         prefix: &str,
         input: ExampleInput,
-        output: ExampleOutput,
+        expected: ExampleOutput,
     ) -> Self {
-        Self(prefix.to_string(), input, output)
+        let name = prefix.to_string();
+        Self { name, input, expected }
     }
+    // pub fn len(&self) -> usize {
+    //     self.input.0.len()
+    // }
     pub fn load_from(prefix: &str) -> Self {
         // May panic if file(s) do not exist
         let infile = PathBuf::from(infile_from_prefix(prefix));
@@ -180,52 +247,54 @@ impl Example {
         Self::new(prefix, input, output)
     }
     pub fn save(&self) {
-        util::to_json_file(infile_from_prefix(&self.0), &self.1);
-        util::to_json_file(expectedfile_from_prefix(&self.0), &self.2);
+        util::to_json_file(infile_from_prefix(&self.name), &self.input);
+        util::to_json_file(
+            expectedfile_from_prefix(&self.name),
+            &self.expected,
+        );
     }
 
     // Run the example input on the graph, returning the output and whether
     // it matches the expected output.
-    // run_with_timeout additionally enforces a timeout (Duration), although
+    // Additionally enforces a timeout (Duration), although
     // only at the granularity of transactions.
-    pub fn run<G: StateGraph>(&self, graph: &mut G) -> (ExampleOutput, bool) {
-        for &t in &self.1 .0 {
-            graph.process(t);
-        }
-        self.collect_output(graph)
-    }
     pub fn run_with_timeout<G: StateGraph>(
         &self,
         graph: &mut G,
         timeout: Duration,
-    ) -> Option<(ExampleOutput, bool)> {
+    ) -> ExampleResult {
         let start = SystemTime::now();
-        for &t in &self.1 .0 {
-            let time_elapsed = start.elapsed().unwrap_or_else(|err| {
-                panic!(
-                    "Getting system time elapsed failed \
-                    (perhaps system clock was reset): {}",
-                    err
-                )
-            });
+        for &t in &self.input.0 {
+            let time_elapsed = util::time_since(&start);
             if time_elapsed > timeout {
-                // Timeout
-                return None;
+                return ExampleResult::Timeout;
             }
             graph.process(t);
         }
-        Some(self.collect_output(graph))
+        let total_elapsed = util::time_since(&start);
+        let (output, correct) = self.collect_output(graph);
+        if cfg!(debug_assertions) {
+            let time = graph.get_time();
+            let space = graph.get_space();
+            ExampleResult::Debug(DebugStats { output, correct, time, space })
+        } else {
+            ExampleResult::Release(ReleaseStats {
+                output,
+                correct,
+                time: total_elapsed,
+            })
+        }
     }
     fn collect_output<G: StateGraph>(
         &self,
         graph: &mut G,
     ) -> (ExampleOutput, bool) {
-        let mut result = ExampleOutput::new();
+        let mut output = ExampleOutput::new();
         for &v in &graph.vec_states() {
-            result.add(v, graph.get_status(v).unwrap());
+            output.add(v, graph.get_status(v).unwrap());
         }
-        result.finalize();
-        let matches = result == self.2;
-        (result, matches)
+        output.finalize();
+        let correct = output == self.expected;
+        (output, correct)
     }
 }

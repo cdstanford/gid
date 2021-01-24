@@ -20,7 +20,7 @@ fn gen_line(n: usize) -> Example {
         unknown: vec![],
         open: vec![],
     };
-    Example(format!("line_{}", n), ex_in, expect)
+    Example::new(&format!("line_{}", n), ex_in, expect)
 }
 
 fn gen_liveline(n: usize) -> Example {
@@ -34,7 +34,7 @@ fn gen_liveline(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    Example(format!("liveline_{}", n), ex_in, expect)
+    Example::new(&format!("liveline_{}", n), ex_in, expect)
 }
 
 fn gen_reverseline(n: usize) -> Example {
@@ -49,7 +49,7 @@ fn gen_reverseline(n: usize) -> Example {
         unknown: vec![],
         open: vec![],
     };
-    Example(format!("reverseline_{}", n), ex_in, expect)
+    Example::new(&format!("reverseline_{}", n), ex_in, expect)
 }
 
 fn gen_reverseliveline(n: usize) -> Example {
@@ -63,7 +63,7 @@ fn gen_reverseliveline(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    Example(format!("reverseliveline_{}", n), ex_in, expect)
+    Example::new(&format!("reverseliveline_{}", n), ex_in, expect)
 }
 
 fn gen_loop(n: usize) -> Example {
@@ -74,7 +74,7 @@ fn gen_loop(n: usize) -> Example {
     }
     let expect =
         ExampleOutput { dead: (0..n).collect(), unknown: vec![], open: vec![] };
-    Example(format!("loop_{}", n), ex_in, expect)
+    Example::new(&format!("loop_{}", n), ex_in, expect)
 }
 
 fn gen_liveloop(n: usize) -> Example {
@@ -91,7 +91,7 @@ fn gen_liveloop(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    Example(format!("liveloop_{}", n), ex_in, expect)
+    Example::new(&format!("liveloop_{}", n), ex_in, expect)
 }
 
 fn gen_reverseloop(n: usize) -> Example {
@@ -102,7 +102,7 @@ fn gen_reverseloop(n: usize) -> Example {
     }
     let expect =
         ExampleOutput { dead: (0..n).collect(), unknown: vec![], open: vec![] };
-    Example(format!("reverseloop_{}", n), ex_in, expect)
+    Example::new(&format!("reverseloop_{}", n), ex_in, expect)
 }
 
 fn gen_reverseliveloop(n: usize) -> Example {
@@ -119,7 +119,7 @@ fn gen_reverseliveloop(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    Example(format!("reverseliveloop_{}", n), ex_in, expect)
+    Example::new(&format!("reverseliveloop_{}", n), ex_in, expect)
 }
 
 fn main() {
