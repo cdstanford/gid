@@ -131,3 +131,43 @@ fn test_reverseliveloop() {
     driver::assert_example(&generated("reverseliveloop_20"));
     driver::assert_example(&generated("reverseliveloop_100"));
 }
+
+/*
+    Regex Examples
+    (No expected output -- compares for agreement across algorithms)
+*/
+
+#[test]
+fn test_regex_comp() {
+    driver::assert_example("examples/regex/complement/comp1_inclusion_unsat");
+    driver::assert_example("examples/regex/complement/comp2_inclusion_sat");
+    // Failing test -- TODO Debug!
+    // driver::assert_example("examples/regex/complement/simple_complement_unsat");
+}
+
+#[test]
+fn test_regex_date() {
+    driver::assert_example("examples/regex/date/date_minimal_sat");
+    driver::assert_example("examples/regex/date/date_minimal_unsat");
+}
+
+#[test]
+fn test_regex_loop() {
+    driver::assert_example("examples/regex/loop/deadloop1_sat");
+    driver::assert_example("examples/regex/loop/deadloop2_sat");
+    driver::assert_example("examples/regex/loop/deadloop3_unsat");
+    driver::assert_example("examples/regex/loop/evil1_unsat");
+    driver::assert_example("examples/regex/loop/evil2_inter_unsat");
+    driver::assert_example("examples/regex/loop/evil2_sat");
+    driver::assert_example("examples/regex/loop/nestedloop1_unsat");
+    driver::assert_example("examples/regex/loop/nestedloop2_sat");
+    driver::assert_example("examples/regex/loop/nestedloop2_unsat");
+}
+
+#[test]
+fn test_regex_sgeasy() {
+    driver::assert_example("examples/regex/state_graph_easy/diamond_chain_10");
+    driver::assert_example("examples/regex/state_graph_easy/inter_1_2_3");
+    driver::assert_example("examples/regex/state_graph_easy/inter_star_3_3");
+    driver::assert_example("examples/regex/state_graph_easy/long_3");
+}
