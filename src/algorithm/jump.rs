@@ -207,6 +207,7 @@ impl StateGraph for JumpStateGraph {
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
         // println!("# Marking Closed: {}", v);
+        self.graph.ensure_vertex(v);
         self.initialize_jumps(v);
     }
     fn get_status(&self, v: usize) -> Option<Status> {

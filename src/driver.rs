@@ -96,7 +96,9 @@ fn run_core(
         println!("{}", result.output_str());
         println!("=== Result ===");
         if result.is_correct() {
-            println!("Output is correct.");
+            if example.expected.is_some() {
+                println!("Output is correct.");
+            }
             println!("Stastics: {}", result.summary());
         } else {
             println!("Output is incorrect!");

@@ -32,6 +32,27 @@ fn test_3() {
     driver::assert_example(&handwritten("3"));
 }
 #[test]
+fn test_4() {
+    // TODO: Jump is failing this test!
+    driver::assert_example(&handwritten("4"));
+}
+#[test]
+fn test_5() {
+    driver::assert_example(&handwritten("5"));
+}
+#[test]
+fn test_6() {
+    driver::assert_example(&handwritten("6"));
+}
+#[test]
+fn test_7() {
+    driver::assert_example(&handwritten("7"));
+}
+#[test]
+fn test_8() {
+    driver::assert_example(&handwritten("8"));
+}
+#[test]
 fn test_tree() {
     driver::assert_example(&handwritten("tree_3"));
 }

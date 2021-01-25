@@ -200,6 +200,7 @@ impl StateGraph for TarjanStateGraph {
         self.pending_edges.entry(v1).or_default().push(v2);
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
+        self.graph.ensure_vertex(v);
         self.set_status(v, Status::Unknown);
         for w in self.pending_edges.remove(&v).unwrap_or_default().drain(..) {
             self.edge_counter += 1;
