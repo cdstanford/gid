@@ -130,23 +130,26 @@ pub fn assert_example(basename: &str) {
     let example = Example::load_from(basename);
     let timeout = Duration::from_secs(UNIT_TEST_TIMEOUT_SECS);
 
-    let naive = run_core(&example, Algorithm::Naive, timeout, true);
-    let simple = run_core(&example, Algorithm::Simple, timeout, true);
-    let tarjan = run_core(&example, Algorithm::Tarjan, timeout, true);
-    let jump = run_core(&example, Algorithm::Jump, timeout, true);
-
     // If example has expected output, check each algorithm is correct
     // separately. Otherwise, compare them with respect to each other.
     if example.expected.is_some() {
         println!("Asserting each algorithm output matches expected...");
+        let naive = run_core(&example, Algorithm::Naive, timeout, true);
         assert!(naive.is_correct());
+        let simple = run_core(&example, Algorithm::Simple, timeout, true);
         assert!(simple.is_correct());
+        let tarjan = run_core(&example, Algorithm::Tarjan, timeout, true);
         assert!(tarjan.is_correct());
+        let jump = run_core(&example, Algorithm::Jump, timeout, true);
         assert!(jump.is_correct());
     } else {
-        println!("No expected output found -- asserting algorithms agree...");
+        println!("Asserting each algorithm output matches naive...");
+        let naive = run_core(&example, Algorithm::Naive, timeout, true);
+        let simple = run_core(&example, Algorithm::Simple, timeout, true);
         assert_eq!(naive.unwrap_output(), simple.unwrap_output());
+        let tarjan = run_core(&example, Algorithm::Tarjan, timeout, true);
         assert_eq!(naive.unwrap_output(), tarjan.unwrap_output());
+        let jump = run_core(&example, Algorithm::Jump, timeout, true);
         assert_eq!(naive.unwrap_output(), jump.unwrap_output());
     }
 }
