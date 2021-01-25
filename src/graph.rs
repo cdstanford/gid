@@ -6,6 +6,7 @@
     - adding vertices with names of type V, labeled by type T
     - merging vertices in O(1) time (the two vertex names are now aliases)
       (requires a merge function T x T -> T)
+      Note: this is a simple graph. self-loops are ignored after a merge.
     - iterating through the edges at a vertex (O(1) per edge)
       Note: this iterates over original edges; currently doesn't
       support "cleaning" edges by removing duplicates and self-loops
@@ -58,7 +59,7 @@ impl<V, T> Default for DiGraph<V, T> {
 }
 impl<V, T> DiGraph<V, T>
 where
-    V: Copy + Clone + Eq + Hash + PartialEq,
+    V: Copy + Clone + Debug + Eq + Hash + PartialEq,
     T: Debug + PartialEq,
 {
     /*
@@ -176,10 +177,13 @@ where
         // Depth-first search forward from 'sources', NOT including 'sources',
         // and excluding vertices in the graph not satisfying 'include'.
         // Precondition: everything in 'sources' should be seen
-        DepthFirstSearch::new(sources, move |v| {
-            let include = include.clone();
-            self.iter_fwd_edges(v).filter(move |&w| include(w))
-        })
+        DepthFirstSearch::new(
+            sources.map(move |v| self.get_canon_vertex(v)),
+            move |v| {
+                let include = include.clone();
+                self.iter_fwd_edges(v).filter(move |&w| include(w))
+            },
+        )
     }
     pub fn dfs_bck<'a>(
         &'a self,
@@ -189,10 +193,13 @@ where
         // Depth-first search backward from 'sources', NOT including 'sources',
         // and excluding vertices in the graph not satisfying 'include'.
         // Precondition: everything in 'sources' should be seen
-        DepthFirstSearch::new(sources, move |v| {
-            let include = include.clone();
-            self.iter_bck_edges(v).filter(move |&w| include(w))
-        })
+        DepthFirstSearch::new(
+            sources.map(move |v| self.get_canon_vertex(v)),
+            move |v| {
+                let include = include.clone();
+                self.iter_bck_edges(v).filter(move |&w| include(w))
+            },
+        )
     }
     pub fn topo_search_bck<'a>(
         &'a self,
@@ -208,9 +215,11 @@ where
         // vertex (restricted to those in 'include_bck').
         // The search includes 'candidate_starts' if they qualify for these
         // conditions.
+        // Remember that self-loops in the graph are ignored after a merge, so
+        // these conditions skip self-loop edges.
         // See search::TopologicalSearch for more details.
         TopologicalSearch::new(
-            candidate_starts,
+            candidate_starts.map(move |v| self.get_canon_vertex(v)),
             move |v| {
                 let include_bck = include_bck.clone();
                 self.iter_bck_edges(v).filter(move |&w| include_bck(w))
@@ -307,7 +316,7 @@ where
 */
 impl<V, T> DiGraph<V, T>
 where
-    V: Copy + Clone + Eq + Hash + PartialEq,
+    V: Copy + Clone + Debug + Eq + Hash + PartialEq,
     T: Debug + Default + PartialEq,
 {
     pub fn ensure_vertex(&mut self, v: V) {

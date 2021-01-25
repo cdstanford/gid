@@ -61,8 +61,7 @@ fn test_10() {
 }
 #[test]
 fn test_11() {
-    // Failing test -- TODO Debug!
-    // driver::assert_example(&handwritten("11"));
+    driver::assert_example(&handwritten("11"));
 }
 #[test]
 fn test_tree() {
@@ -146,8 +145,7 @@ fn test_reverseliveloop() {
 fn test_regex_comp() {
     driver::assert_example("examples/regex/complement/comp1_inclusion_unsat");
     driver::assert_example("examples/regex/complement/comp2_inclusion_sat");
-    // Failing test -- TODO Debug!
-    // driver::assert_example("examples/regex/complement/simple_complement_unsat");
+    driver::assert_example("examples/regex/complement/simple_complement_unsat");
 }
 
 #[test]

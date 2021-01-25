@@ -3,6 +3,7 @@
 */
 
 use std::collections::{HashMap, HashSet};
+use std::fmt::Debug;
 use std::hash::Hash;
 use std::iter::Peekable;
 
@@ -14,9 +15,10 @@ use std::iter::Peekable;
     type V reachable using the 'next' function, not including those in 'start',
     and including each item only once.
 */
+#[derive(Debug)]
 pub struct DepthFirstSearch<V, I, F>
 where
-    V: Copy + Eq + Hash + PartialEq,
+    V: Copy + Debug + Eq + Hash + PartialEq,
     I: Iterator<Item = V>,
     F: Fn(V) -> I,
 {
@@ -26,7 +28,7 @@ where
 }
 impl<V, I, F> DepthFirstSearch<V, I, F>
 where
-    V: Copy + Eq + Hash + PartialEq,
+    V: Copy + Debug + Eq + Hash + PartialEq,
     F: Fn(V) -> I,
     I: Iterator<Item = V>,
 {
@@ -42,7 +44,7 @@ where
 }
 impl<V, I, F> Iterator for DepthFirstSearch<V, I, F>
 where
-    V: Copy + Eq + Hash + PartialEq,
+    V: Copy + Debug + Eq + Hash + PartialEq,
     F: Fn(V) -> I,
     I: Iterator<Item = V>,
 {
@@ -83,6 +85,7 @@ where
     find a set of nodes closed under the prev_nodes relation, starting from
     one phantom node which points to all nodes in 'start'.
 */
+#[derive(Debug)]
 pub struct TopologicalSearch<V, I0, I1, I2, F1, F2>
 where
     V: Copy + Eq + Hash + PartialEq,
@@ -109,7 +112,7 @@ where
 }
 impl<V, I0, I1, I2, F1, F2> TopologicalSearch<V, I0, I1, I2, F1, F2>
 where
-    V: Copy + Eq + Hash + PartialEq,
+    V: Copy + Debug + Eq + Hash + PartialEq,
     I0: Iterator<Item = V>,
     I1: Iterator<Item = V>,
     I2: Iterator<Item = V>,
@@ -132,7 +135,9 @@ where
     fn can_visit(&mut self, v: V) -> bool {
         // Check if v is ready to be visited (i.e. all prev nodes visited)
         // (and update tracking of which prev node is waiting to be visited)
+        // println!("[topsearch] can we visit {:?}?", v);
         if self.visited.contains(&v) {
+            // println!("[topsearch] already visited {:?}", v);
             return false;
         }
         let iter_bck = {
@@ -141,14 +146,22 @@ where
             temp1.entry(v).or_insert_with(|| (temp2)(v).peekable())
         };
         while let Some(u) = iter_bck.peek() {
+            // println!("[topsearch] peeking at {:?}", u);
             if !self.visited.contains(&u) {
+                println!(
+                    "[topsearch] not ready to visit {:?}: must first visit {:?}",
+                    v, u
+                );
                 return false;
             }
+            // println!("[topsearch] already visited {:?}", u);
             iter_bck.next();
         }
+        // println!("[topsearch] ready to visit {:?}", v);
         true
     }
     fn visit(&mut self, v: V) -> Option<V> {
+        // println!("[topsearch] visiting {:?}", v);
         self.visited.insert(v);
         self.frontier_fwd.push((self.next_nodes)(v));
         Some(v)
@@ -157,7 +170,7 @@ where
 impl<V, I0, I1, I2, F1, F2> Iterator
     for TopologicalSearch<V, I0, I1, I2, F1, F2>
 where
-    V: Copy + Eq + Hash + PartialEq,
+    V: Copy + Debug + Eq + Hash + PartialEq,
     I0: Iterator<Item = V>,
     I1: Iterator<Item = V>,
     I2: Iterator<Item = V>,
@@ -166,8 +179,10 @@ where
 {
     type Item = V;
     fn next(&mut self) -> Option<V> {
+        // println!("[topsearch] NEXT");
         loop {
             while let Some(mut i) = self.frontier_fwd.pop() {
+                // println!("[topsearch] trying frontier");
                 while let Some(v) = i.next() {
                     if self.can_visit(v) {
                         self.frontier_fwd.push(i);
@@ -176,10 +191,12 @@ where
                 }
             }
             if let Some(v) = self.start.next() {
+                // println!("[topsearch] trying start candidate: {:?}", v);
                 if self.can_visit(v) {
                     return self.visit(v);
                 }
             } else {
+                // println!("[topsearch] nothing left, returning None");
                 return None;
             }
         }

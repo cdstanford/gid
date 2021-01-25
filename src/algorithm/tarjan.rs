@@ -146,6 +146,8 @@ impl TarjanStateGraph {
             debug_assert_eq!(level1, level2);
             debug_assert!(v1 != v2);
             // This part is roughly the same as merge_all_cycles in simple.rs
+            let v1 = self.graph.get_canon_vertex(v1);
+            let v2 = self.graph.get_canon_vertex(v2);
             let fwd_reachable: HashSet<usize> = self
                 .graph
                 .dfs_fwd(iter::once(v2), |w| {
@@ -154,19 +156,15 @@ impl TarjanStateGraph {
                 })
                 .chain(iter::once(v2))
                 .collect();
-            debug_assert!(
-                fwd_reachable.contains(&self.graph.get_canon_vertex(v1))
-            );
-            debug_assert!(fwd_reachable.contains(&v2));
+            debug_assert!(fwd_reachable.contains(&(v1)));
+            debug_assert!(fwd_reachable.contains(&(v2)));
             let bi_reachable: HashSet<usize> = self
                 .graph
                 .dfs_bck(iter::once(v1), |u| fwd_reachable.contains(&u))
                 .chain(iter::once(v1))
                 .collect();
-            debug_assert!(bi_reachable.contains(&v1));
-            debug_assert!(
-                bi_reachable.contains(&self.graph.get_canon_vertex(v2))
-            );
+            debug_assert!(bi_reachable.contains(&(v1)));
+            debug_assert!(bi_reachable.contains(&(v2)));
             for &u in &bi_reachable {
                 debug_assert_eq!(self.get_status(v1), Some(Status::Unknown));
                 if u != v1 {
@@ -187,7 +185,10 @@ impl TarjanStateGraph {
                 |w| !self.is_dead(w),
             )
             .collect();
-        debug_assert!(now_dead.is_empty() || now_dead.contains(&v));
+        debug_assert!(
+            now_dead.is_empty()
+                || now_dead.contains(&self.graph.get_canon_vertex(v))
+        );
         for &u in now_dead.iter() {
             self.set_status(u, Status::Dead);
         }

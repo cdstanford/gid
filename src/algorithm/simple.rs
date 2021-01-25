@@ -22,12 +22,14 @@ pub struct SimpleStateGraph {
 }
 impl SimpleStateGraph {
     fn merge_vertices(&mut self, v1: usize, v2: usize) {
+        // println!("  Merging: {} {}", v1, v2);
         debug_assert!(self.is_closed(v1));
         debug_assert!(self.is_closed(v2));
         debug_assert!(v1 != v2);
         self.graph.merge(v1, v2);
     }
     fn merge_all_cycles(&mut self, v: usize) {
+        // println!("  Merging cycles through: {}", v);
         // Merge all cycles through v (assuming no other cycles in closed states)
         debug_assert!(self.is_closed(v));
         let fwd_reachable: HashSet<usize> =
@@ -37,12 +39,14 @@ impl SimpleStateGraph {
             .dfs_bck(iter::once(v), |u| fwd_reachable.contains(&u))
             .collect();
         for &u in &bi_reachable {
+            // println!("  Found bireachable: {}", u);
             debug_assert!(u != v);
             self.merge_vertices(u, v);
         }
     }
     fn check_dead_iterative(&mut self, v: usize) {
         // Check if v is dead and recurse on back edges.
+        // println!("  Checking if dead iteratively from: {}", v);
         let now_dead: HashSet<usize> = self
             .graph
             .topo_search_bck(
@@ -51,8 +55,12 @@ impl SimpleStateGraph {
                 |w| !self.is_dead(w),
             )
             .collect();
-        debug_assert!(now_dead.is_empty() || now_dead.contains(&v));
+        debug_assert!(
+            now_dead.is_empty()
+                || now_dead.contains(&self.graph.get_canon_vertex(v))
+        );
         for &u in now_dead.iter() {
+            // println!("  Marking dead: {}", u);
             self.graph.overwrite_vertex(u, Status::Dead);
         }
     }
@@ -62,9 +70,11 @@ impl StateGraph for SimpleStateGraph {
         Default::default()
     }
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
+        // println!("Adding transition: {} {}", v1, v2);
         self.graph.ensure_edge(v1, v2);
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
+        // println!("Marking closed: {}", v);
         self.graph.overwrite_vertex(v, Status::Unknown);
         self.merge_all_cycles(v);
         self.check_dead_iterative(v);
