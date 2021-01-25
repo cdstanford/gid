@@ -2,7 +2,6 @@
     Simplest binary: run a state graph algorithm on an example input
 */
 
-use state_graph::constants::EX_TOPDIR;
 use state_graph::driver::{self, Algorithm};
 use structopt::StructOpt;
 
@@ -12,10 +11,9 @@ use structopt::StructOpt;
     about = "Run a state graph algorithm on an example input."
 )]
 struct Args {
-    // e.g. "examples/handwritten"
-    dir: String,
-    // e.g. "2"
-    ex_name: String,
+    // Path to example without file extension.
+    // e.g. "examples/handwritten/2"
+    basename: String,
 
     #[structopt(short, long, default_value = "Naive")]
     algorithm: Algorithm,
@@ -25,10 +23,8 @@ struct Args {
 }
 impl Args {
     fn run(self) {
-        let dir_path = format!("{}/{}", EX_TOPDIR, self.dir);
         driver::run_single_example(
-            &dir_path,
-            &self.ex_name,
+            &self.basename,
             self.algorithm,
             self.timeout,
         );

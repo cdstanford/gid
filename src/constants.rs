@@ -3,6 +3,12 @@
 */
 
 /*
+    File extensions
+*/
+pub const EXAMPLE_IN_EXT: &str = "_in.json";
+pub const EXAMPLE_EXPECT_EXT: &str = "_expect.json";
+
+/*
     Directories for example files
 */
 pub const EX_TOPDIR: &str = "examples";

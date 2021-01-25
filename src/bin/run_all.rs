@@ -28,8 +28,9 @@ impl Args {
         println!("Timeout: {}s", self.timeout);
         let mut result_lines = Vec::new();
         result_lines.push(driver::run_compare_csv_header());
-        for (dir, prefix) in ALL_EXAMPLES {
-            let result = driver::run_compare(dir, prefix, self.timeout);
+        for (dir, example) in ALL_EXAMPLES {
+            let basename = format!("{}/{}", dir, example);
+            let result = driver::run_compare(&basename, self.timeout);
             result_lines.push(result);
         }
         println!("======= Results =======");

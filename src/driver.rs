@@ -111,12 +111,11 @@ fn run_core(
 }
 
 pub fn run_single_example(
-    dir: &str,
-    prefix: &str,
+    basename: &str,
     algorithm: Algorithm,
     timeout_secs: u64,
 ) {
-    let example = Example::load_from(dir, prefix);
+    let example = Example::load_from(basename);
     let timeout = Duration::from_secs(timeout_secs);
     run_core(&example, algorithm, timeout, true);
 }
@@ -125,8 +124,8 @@ pub fn run_single_example(
     Assertion for unit testing
 */
 
-pub fn assert_example(dir: &str, prefix: &str) {
-    let example = Example::load_from(dir, prefix);
+pub fn assert_example(basename: &str) {
+    let example = Example::load_from(basename);
     // only makes sense to test example if expected output exists
     assert!(example.expected.is_some());
     let timeout = Duration::from_secs(UNIT_TEST_TIMEOUT_SECS);
@@ -151,10 +150,10 @@ pub fn run_compare_csv_header() -> String {
     };
     header.to_string()
 }
-pub fn run_compare(dir: &str, prefix: &str, timeout_secs: u64) -> String {
+pub fn run_compare(basename: &str, timeout_secs: u64) -> String {
     // Returns results in CSV format
 
-    let example = Example::load_from(dir, prefix);
+    let example = Example::load_from(basename);
     println!("===== {} =====", example.name());
     println!("Example size: {}, timeout: {}s", example.len(), timeout_secs);
 

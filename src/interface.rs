@@ -9,6 +9,7 @@
     an implementation of the trait.
 */
 
+use super::constants::{EXAMPLE_EXPECT_EXT, EXAMPLE_IN_EXT};
 use super::util;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -224,32 +225,28 @@ impl ExampleResult {
     }
 }
 
-fn infile_path(dir: &str, prefix: &str) -> String {
-    format!("{}/{}_in.json", dir, prefix)
+fn infile_path(basename: &str) -> PathBuf {
+    PathBuf::from(format!("{}{}", basename, EXAMPLE_IN_EXT))
 }
-fn expectedfile_path(dir: &str, prefix: &str) -> String {
-    format!("{}/{}_out.json", dir, prefix)
+fn expectfile_path(basename: &str) -> PathBuf {
+    PathBuf::from(format!("{}{}", basename, EXAMPLE_EXPECT_EXT))
 }
 pub struct Example {
-    pub dir: String,
-    pub prefix: String,
+    pub basename: String, // path to example, without the extension
     pub input: ExampleInput,
     pub expected: Option<ExampleOutput>,
 }
 impl Example {
     pub fn new(
-        dir: &str,
-        prefix: &str,
+        basename: &str,
         input: ExampleInput,
         expected: Option<ExampleOutput>,
     ) -> Self {
-        let dir = dir.to_string();
-        let prefix = prefix.to_string();
-        Self { dir, prefix, input, expected }
+        let basename = basename.to_string();
+        Self { basename, input, expected }
     }
-    pub fn name(&self) -> String {
-        // human-readable name
-        format!("{}:{}", self.dir, self.prefix)
+    pub fn name(&self) -> &str {
+        &self.basename
     }
     pub fn len(&self) -> usize {
         self.input.0.len()
@@ -257,24 +254,22 @@ impl Example {
     pub fn is_empty(&self) -> bool {
         self.input.0.is_empty()
     }
-    pub fn load_from(dir: &str, prefix: &str) -> Self {
-        // May panic if file(s) do not exist
-        let infile = PathBuf::from(infile_path(dir, prefix));
-        let expectfile = PathBuf::from(expectedfile_path(dir, prefix));
+    pub fn load_from(basename: &str) -> Self {
+        // Panics if infile (self.infile_path()) does not exist
+        let infile = infile_path(basename);
+        let expectfile = expectfile_path(basename);
         let input = util::from_json_file(&infile);
         let expected = if util::file_exists(&expectfile) {
             util::from_json_file(&expectfile)
         } else {
             None
         };
-        Self::new(dir, prefix, input, expected)
+        Self::new(basename, input, expected)
     }
     pub fn save(&self) {
-        let in_path = infile_path(&self.dir, &self.prefix);
-        util::to_json_file(in_path, &self.input);
+        util::to_json_file(infile_path(&self.basename), &self.input);
         if let Some(expect) = &self.expected {
-            let expected_path = expectedfile_path(&self.dir, &self.prefix);
-            util::to_json_file(expected_path, &expect);
+            util::to_json_file(expectfile_path(&self.basename), &expect);
         }
     }
 

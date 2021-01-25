@@ -21,8 +21,8 @@ fn paramed_example<P: Display>(
     ex_in: ExampleInput,
     expect: ExampleOutput,
 ) -> Example {
-    let prefix = format!("{}_{}", basename, param);
-    Example::new(GEN_DIRECTORY, &prefix, ex_in, Some(expect))
+    let basename = format!("{}/{}_{}", GEN_DIRECTORY, basename, param);
+    Example::new(&basename, ex_in, Some(expect))
 }
 
 /*
