@@ -101,7 +101,7 @@ fn run_core(
         } else {
             println!("Output is incorrect!");
             println!("=== Expected Output ===");
-            println!("{:?}", example.expected);
+            println!("{:?}", example.expected.as_ref().unwrap());
         }
     } else {
         println!("{}: {}", alg, result.summary());
@@ -127,6 +127,8 @@ pub fn run_single_example(
 
 pub fn assert_example(dir: &str, prefix: &str) {
     let example = Example::load_from(dir, prefix);
+    // only makes sense to test example if expected output exists
+    assert!(example.expected.is_some());
     let timeout = Duration::from_secs(UNIT_TEST_TIMEOUT_SECS);
     assert!(run_core(&example, Algorithm::Naive, timeout, true).is_correct());
     assert!(run_core(&example, Algorithm::Simple, timeout, true).is_correct());

@@ -30,6 +30,7 @@ impl Default for Status {
 pub enum Transaction {
     Add(usize, usize),
     Close(usize),
+    Live(usize), // Currently a no-op
 }
 
 /*
@@ -91,6 +92,10 @@ pub trait StateGraph: Sized {
         assert!(!self.is_closed(v));
         self.mark_closed_unchecked(v);
     }
+    fn mark_live(&mut self, v: usize) {
+        // TODO
+        self.mark_closed(v);
+    }
 
     // Some conveniences
     fn is_seen(&self, v: usize) -> bool {
@@ -108,6 +113,7 @@ pub trait StateGraph: Sized {
         match t {
             Transaction::Add(v1, v2) => self.add_transition(v1, v2),
             Transaction::Close(v1) => self.mark_closed(v1),
+            Transaction::Live(v1) => self.mark_live(v1),
         }
     }
 }
@@ -153,21 +159,11 @@ impl ExampleOutput {
 }
 
 /*
-    Example struct: represents a single test case, which can be read from a file
-    or saved to a file
+    Example struct which represents a single test case.
+    Can be loaded from a file, saved to a file, or
+    run to produce a results and stats object, ExampleResult.
 */
-fn infile_path(dir: &str, prefix: &str) -> String {
-    format!("{}/{}_in.json", dir, prefix)
-}
-fn expectedfile_path(dir: &str, prefix: &str) -> String {
-    format!("{}/{}_out.json", dir, prefix)
-}
-pub struct Example {
-    pub dir: String,
-    pub prefix: String,
-    pub input: ExampleInput,
-    pub expected: ExampleOutput,
-}
+
 pub struct DebugStats {
     output: ExampleOutput,
     correct: bool,
@@ -227,12 +223,25 @@ impl ExampleResult {
         }
     }
 }
+
+fn infile_path(dir: &str, prefix: &str) -> String {
+    format!("{}/{}_in.json", dir, prefix)
+}
+fn expectedfile_path(dir: &str, prefix: &str) -> String {
+    format!("{}/{}_out.json", dir, prefix)
+}
+pub struct Example {
+    pub dir: String,
+    pub prefix: String,
+    pub input: ExampleInput,
+    pub expected: Option<ExampleOutput>,
+}
 impl Example {
     pub fn new(
         dir: &str,
         prefix: &str,
         input: ExampleInput,
-        expected: ExampleOutput,
+        expected: Option<ExampleOutput>,
     ) -> Self {
         let dir = dir.to_string();
         let prefix = prefix.to_string();
@@ -251,16 +260,22 @@ impl Example {
     pub fn load_from(dir: &str, prefix: &str) -> Self {
         // May panic if file(s) do not exist
         let infile = PathBuf::from(infile_path(dir, prefix));
-        let outfile = PathBuf::from(expectedfile_path(dir, prefix));
+        let expectfile = PathBuf::from(expectedfile_path(dir, prefix));
         let input = util::from_json_file(&infile);
-        let output = util::from_json_file(&outfile);
-        Self::new(dir, prefix, input, output)
+        let expected = if util::file_exists(&expectfile) {
+            util::from_json_file(&expectfile)
+        } else {
+            None
+        };
+        Self::new(dir, prefix, input, expected)
     }
     pub fn save(&self) {
         let in_path = infile_path(&self.dir, &self.prefix);
-        let expected_path = expectedfile_path(&self.dir, &self.prefix);
         util::to_json_file(in_path, &self.input);
-        util::to_json_file(expected_path, &self.expected);
+        if let Some(expect) = &self.expected {
+            let expected_path = expectedfile_path(&self.dir, &self.prefix);
+            util::to_json_file(expected_path, &expect);
+        }
     }
 
     // Run the example input on the graph, returning the output and whether
@@ -303,7 +318,12 @@ impl Example {
             output.add(v, graph.get_status(v).unwrap());
         }
         output.finalize();
-        let correct = output == self.expected;
-        (output, correct)
+        if let Some(expect) = &self.expected {
+            let correct = &output == expect;
+            (output, correct)
+        } else {
+            // If no expected output, just count as correct
+            (output, true)
+        }
     }
 }

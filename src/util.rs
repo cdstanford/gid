@@ -29,6 +29,13 @@ where
     }))
 }
 
+pub fn file_exists<P>(path: P) -> bool
+where
+    P: AsRef<Path> + Debug,
+{
+    path.as_ref().exists()
+}
+
 pub fn from_json_file<P, T>(path: P) -> T
 where
     P: AsRef<Path> + Debug,
