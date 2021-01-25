@@ -154,7 +154,9 @@ impl TarjanStateGraph {
                 })
                 .chain(iter::once(v2))
                 .collect();
-            debug_assert!(fwd_reachable.contains(&v1));
+            debug_assert!(
+                fwd_reachable.contains(&self.graph.get_canon_vertex(v1))
+            );
             debug_assert!(fwd_reachable.contains(&v2));
             let bi_reachable: HashSet<usize> = self
                 .graph
@@ -162,7 +164,9 @@ impl TarjanStateGraph {
                 .chain(iter::once(v1))
                 .collect();
             debug_assert!(bi_reachable.contains(&v1));
-            debug_assert!(bi_reachable.contains(&v2));
+            debug_assert!(
+                bi_reachable.contains(&self.graph.get_canon_vertex(v2))
+            );
             for &u in &bi_reachable {
                 debug_assert_eq!(self.get_status(v1), Some(Status::Unknown));
                 if u != v1 {

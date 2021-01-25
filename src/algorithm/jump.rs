@@ -7,7 +7,7 @@
 use crate::debug_counter::DebugCounter;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
-use std::collections::LinkedList;
+use std::collections::{HashSet, LinkedList};
 use std::iter;
 
 #[derive(Debug, Default, PartialEq)]
@@ -188,7 +188,7 @@ impl JumpStateGraph {
         // Recurse on all edges backwards from v.
         self.set_status(v, Status::Dead);
         // println!("Found Dead: {}", v);
-        let to_recurse: Vec<usize> = self
+        let to_recurse: HashSet<usize> = self
             .graph
             .iter_bck_edges(v)
             .filter(|&u| self.is_closed(u))

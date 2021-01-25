@@ -95,6 +95,14 @@ where
         let id2 = self.get_canon_id(v2);
         v1 == v2 || id1.is_some() && id1 == id2
     }
+    pub fn get_canon_vertex(&self, v: V) -> V {
+        match self.get_canon_id(v) {
+            Some(CanonicalID(id)) => {
+                *self.id_vertices.get(&UniqueID(id)).unwrap()
+            }
+            None => v,
+        }
+    }
     pub fn iter_vertices(&self) -> impl Iterator<Item = V> + '_ {
         // For merged vertices, includes only one copy
         self.labels
