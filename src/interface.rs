@@ -156,14 +156,15 @@ impl ExampleOutput {
     Example struct: represents a single test case, which can be read from a file
     or saved to a file
 */
-fn infile_from_prefix(prefix: &str) -> String {
-    format!("examples/{}_in.json", prefix)
+fn infile_path(dir: &str, prefix: &str) -> String {
+    format!("{}/{}_in.json", dir, prefix)
 }
-fn expectedfile_from_prefix(prefix: &str) -> String {
-    format!("examples/{}_out.json", prefix)
+fn expectedfile_path(dir: &str, prefix: &str) -> String {
+    format!("{}/{}_out.json", dir, prefix)
 }
 pub struct Example {
-    pub name: String,
+    pub dir: String,
+    pub prefix: String,
     pub input: ExampleInput,
     pub expected: ExampleOutput,
 }
@@ -228,12 +229,18 @@ impl ExampleResult {
 }
 impl Example {
     pub fn new(
+        dir: &str,
         prefix: &str,
         input: ExampleInput,
         expected: ExampleOutput,
     ) -> Self {
-        let name = prefix.to_string();
-        Self { name, input, expected }
+        let dir = dir.to_string();
+        let prefix = prefix.to_string();
+        Self { dir, prefix, input, expected }
+    }
+    pub fn name(&self) -> String {
+        // human-readable name
+        format!("{}:{}", self.dir, self.prefix)
     }
     pub fn len(&self) -> usize {
         self.input.0.len()
@@ -241,20 +248,19 @@ impl Example {
     pub fn is_empty(&self) -> bool {
         self.input.0.is_empty()
     }
-    pub fn load_from(prefix: &str) -> Self {
+    pub fn load_from(dir: &str, prefix: &str) -> Self {
         // May panic if file(s) do not exist
-        let infile = PathBuf::from(infile_from_prefix(prefix));
-        let outfile = PathBuf::from(expectedfile_from_prefix(prefix));
+        let infile = PathBuf::from(infile_path(dir, prefix));
+        let outfile = PathBuf::from(expectedfile_path(dir, prefix));
         let input = util::from_json_file(&infile);
         let output = util::from_json_file(&outfile);
-        Self::new(prefix, input, output)
+        Self::new(dir, prefix, input, output)
     }
     pub fn save(&self) {
-        util::to_json_file(infile_from_prefix(&self.name), &self.input);
-        util::to_json_file(
-            expectedfile_from_prefix(&self.name),
-            &self.expected,
-        );
+        let in_path = infile_path(&self.dir, &self.prefix);
+        let expected_path = expectedfile_path(&self.dir, &self.prefix);
+        util::to_json_file(in_path, &self.input);
+        util::to_json_file(expected_path, &self.expected);
     }
 
     // Run the example input on the graph, returning the output and whether

@@ -59,15 +59,13 @@ impl fmt::Display for Algorithm {
 */
 
 fn run_core(
-    prefix: &str,
+    example: &Example,
     alg: Algorithm,
     timeout: Duration,
     verbose: bool,
 ) -> ExampleResult {
-    let example = Example::load_from(prefix);
-
     if verbose {
-        println!("===== {} =====", example.name);
+        println!("===== {} =====", example.name());
         println!(
             "Running algorithm '{}' with timeout {}s...",
             alg,
@@ -113,24 +111,27 @@ fn run_core(
 }
 
 pub fn run_single_example(
+    dir: &str,
     prefix: &str,
     algorithm: Algorithm,
     timeout_secs: u64,
 ) {
+    let example = Example::load_from(dir, prefix);
     let timeout = Duration::from_secs(timeout_secs);
-    run_core(prefix, algorithm, timeout, true);
+    run_core(&example, algorithm, timeout, true);
 }
 
 /*
     Assertion for unit testing
 */
 
-pub fn assert_example(prefix: &str) {
+pub fn assert_example(dir: &str, prefix: &str) {
+    let example = Example::load_from(dir, prefix);
     let timeout = Duration::from_secs(UNIT_TEST_TIMEOUT_SECS);
-    assert!(run_core(prefix, Algorithm::Naive, timeout, true).is_correct());
-    assert!(run_core(prefix, Algorithm::Simple, timeout, true).is_correct());
-    assert!(run_core(prefix, Algorithm::Tarjan, timeout, true).is_correct());
-    assert!(run_core(prefix, Algorithm::Jump, timeout, true).is_correct());
+    assert!(run_core(&example, Algorithm::Naive, timeout, true).is_correct());
+    assert!(run_core(&example, Algorithm::Simple, timeout, true).is_correct());
+    assert!(run_core(&example, Algorithm::Tarjan, timeout, true).is_correct());
+    assert!(run_core(&example, Algorithm::Jump, timeout, true).is_correct());
 }
 
 /*
@@ -148,23 +149,23 @@ pub fn run_compare_csv_header() -> String {
     };
     header.to_string()
 }
-pub fn run_compare(prefix: &str, timeout_secs: u64) -> String {
+pub fn run_compare(dir: &str, prefix: &str, timeout_secs: u64) -> String {
     // Returns results in CSV format
 
-    println!("===== {} =====", prefix);
-    let size = Example::load_from(prefix).len();
-    println!("Example size: {}, timeout: {}s", size, timeout_secs);
+    let example = Example::load_from(dir, prefix);
+    println!("===== {} =====", example.name());
+    println!("Example size: {}, timeout: {}s", example.len(), timeout_secs);
 
     let timeout = Duration::from_secs(timeout_secs);
-    let naive = run_core(prefix, Algorithm::Naive, timeout, false);
-    let simple = run_core(prefix, Algorithm::Simple, timeout, false);
-    let tarjan = run_core(prefix, Algorithm::Tarjan, timeout, false);
-    let jump = run_core(prefix, Algorithm::Jump, timeout, false);
+    let naive = run_core(&example, Algorithm::Naive, timeout, false);
+    let simple = run_core(&example, Algorithm::Simple, timeout, false);
+    let tarjan = run_core(&example, Algorithm::Tarjan, timeout, false);
+    let jump = run_core(&example, Algorithm::Jump, timeout, false);
 
     let result = format!(
         "{}, {}, {}, {}, {}, {}",
-        prefix,
-        size,
+        example.name(),
+        example.len(),
         naive.time_str(),
         simple.time_str(),
         tarjan.time_str(),

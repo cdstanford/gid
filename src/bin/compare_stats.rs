@@ -3,6 +3,7 @@
     and compare stats.
 */
 
+use state_graph::constants::EX_TOPDIR;
 use state_graph::driver;
 use structopt::StructOpt;
 
@@ -12,6 +13,9 @@ use structopt::StructOpt;
     about = "Run all state graph algorithms on an example input, compare stats."
 )]
 struct Args {
+    // e.g. "examples/handwritten"
+    dir: String,
+    // e.g. "2"
     ex_name: String,
 
     #[structopt(short, long, default_value = "10")]
@@ -19,7 +23,8 @@ struct Args {
 }
 impl Args {
     fn run(&self) {
-        driver::run_compare(&self.ex_name, self.timeout);
+        let dir_path = format!("{}/{}", EX_TOPDIR, self.dir);
+        driver::run_compare(&dir_path, &self.ex_name, self.timeout);
     }
 }
 

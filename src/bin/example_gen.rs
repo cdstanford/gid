@@ -7,6 +7,27 @@
 use state_graph::interface::{
     Example, ExampleInput, ExampleOutput, Transaction,
 };
+use std::fmt::Display;
+
+/*
+    Utility functions
+*/
+
+const GEN_DIRECTORY: &str = "examples/generated";
+
+fn paramed_example<P: Display>(
+    basename: &str,
+    param: P,
+    ex_in: ExampleInput,
+    expect: ExampleOutput,
+) -> Example {
+    let prefix = format!("{}_{}", basename, param);
+    Example::new(GEN_DIRECTORY, &prefix, ex_in, expect)
+}
+
+/*
+    Example generators
+*/
 
 fn gen_line(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
@@ -20,7 +41,7 @@ fn gen_line(n: usize) -> Example {
         unknown: vec![],
         open: vec![],
     };
-    Example::new(&format!("line_{}", n), ex_in, expect)
+    paramed_example("line", n, ex_in, expect)
 }
 
 fn gen_liveline(n: usize) -> Example {
@@ -34,7 +55,7 @@ fn gen_liveline(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    Example::new(&format!("liveline_{}", n), ex_in, expect)
+    paramed_example("liveline", n, ex_in, expect)
 }
 
 fn gen_reverseline(n: usize) -> Example {
@@ -49,7 +70,7 @@ fn gen_reverseline(n: usize) -> Example {
         unknown: vec![],
         open: vec![],
     };
-    Example::new(&format!("reverseline_{}", n), ex_in, expect)
+    paramed_example("reverseline", n, ex_in, expect)
 }
 
 fn gen_reverseliveline(n: usize) -> Example {
@@ -63,7 +84,7 @@ fn gen_reverseliveline(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    Example::new(&format!("reverseliveline_{}", n), ex_in, expect)
+    paramed_example("reverseliveline", n, ex_in, expect)
 }
 
 fn gen_loop(n: usize) -> Example {
@@ -74,7 +95,7 @@ fn gen_loop(n: usize) -> Example {
     }
     let expect =
         ExampleOutput { dead: (0..n).collect(), unknown: vec![], open: vec![] };
-    Example::new(&format!("loop_{}", n), ex_in, expect)
+    paramed_example("loop", n, ex_in, expect)
 }
 
 fn gen_liveloop(n: usize) -> Example {
@@ -91,7 +112,7 @@ fn gen_liveloop(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    Example::new(&format!("liveloop_{}", n), ex_in, expect)
+    paramed_example("liveloop", n, ex_in, expect)
 }
 
 fn gen_reverseloop(n: usize) -> Example {
@@ -102,7 +123,7 @@ fn gen_reverseloop(n: usize) -> Example {
     }
     let expect =
         ExampleOutput { dead: (0..n).collect(), unknown: vec![], open: vec![] };
-    Example::new(&format!("reverseloop_{}", n), ex_in, expect)
+    paramed_example("reverseloop", n, ex_in, expect)
 }
 
 fn gen_reverseliveloop(n: usize) -> Example {
@@ -119,8 +140,12 @@ fn gen_reverseliveloop(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    Example::new(&format!("reverseliveloop_{}", n), ex_in, expect)
+    paramed_example("reverseliveloop", n, ex_in, expect)
 }
+
+/*
+    Entrypoint
+*/
 
 fn main() {
     for &i in &[3, 10, 20, 100, 1000, 10000] {

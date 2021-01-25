@@ -1,72 +1,13 @@
 /*
-    Run all state graph algorithms on every example input.
+    Run all state graph algorithms on every known example input.
 
-    The list of known examples is unfortunately maintained in several places:
-    there is the actual folder examples/ containing everything, a list in
-    example_gen of which are generated automatically by that binary, a
-    partial list in test_examples of only those examples used as unit tests,
-    and finally a list here of those examples included in run_all.
+    See constants::ALL_EXAMPLES for the list of known examples.
 */
 
+use state_graph::constants::{ALL_EXAMPLES, RESULTS_DIR};
 use state_graph::driver;
 use state_graph::util;
 use structopt::StructOpt;
-
-const RESULTS_DIR: &str = "results";
-const ALL_EXAMPLES: &[&str] = &[
-    "1",
-    "2",
-    "3",
-    "line_3",
-    "line_10",
-    "line_20",
-    "line_100",
-    "line_1000",
-    "line_10000",
-    "liveline_3",
-    "liveline_10",
-    "liveline_20",
-    "liveline_100",
-    "liveline_1000",
-    "liveline_10000",
-    "liveloop_3",
-    "liveloop_10",
-    "liveloop_20",
-    "liveloop_100",
-    "liveloop_1000",
-    "liveloop_10000",
-    "loop_3",
-    "loop_10",
-    "loop_20",
-    "loop_100",
-    "loop_1000",
-    "loop_10000",
-    "reverseline_3",
-    "reverseline_10",
-    "reverseline_20",
-    "reverseline_100",
-    "reverseline_1000",
-    "reverseline_10000",
-    "reverseliveline_3",
-    "reverseliveline_10",
-    "reverseliveline_20",
-    "reverseliveline_100",
-    "reverseliveline_1000",
-    "reverseliveline_10000",
-    "reverseliveloop_3",
-    "reverseliveloop_10",
-    "reverseliveloop_20",
-    "reverseliveloop_100",
-    "reverseliveloop_1000",
-    "reverseliveloop_10000",
-    "reverseloop_3",
-    "reverseloop_10",
-    "reverseloop_20",
-    "reverseloop_100",
-    "reverseloop_1000",
-    "reverseloop_10000",
-    "tree_3",
-];
 
 #[derive(Debug, StructOpt)]
 #[structopt(
@@ -87,8 +28,8 @@ impl Args {
         println!("Timeout: {}s", self.timeout);
         let mut result_lines = Vec::new();
         result_lines.push(driver::run_compare_csv_header());
-        for prefix in ALL_EXAMPLES {
-            let result = driver::run_compare(prefix, self.timeout);
+        for (dir, prefix) in ALL_EXAMPLES {
+            let result = driver::run_compare(dir, prefix, self.timeout);
             result_lines.push(result);
         }
         println!("======= Results =======");
