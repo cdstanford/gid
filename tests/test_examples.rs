@@ -56,6 +56,10 @@ fn test_9() {
     driver::assert_example(&handwritten("9"));
 }
 #[test]
+fn test_10() {
+    driver::assert_example(&handwritten("10"));
+}
+#[test]
 fn test_tree() {
     driver::assert_example(&handwritten("tree_3"));
 }
