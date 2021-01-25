@@ -50,6 +50,7 @@ pub const ALL_EXAMPLES: &[(&str, &str)] = &[
     (EX_DIR_HANDWRITTEN, "6"),
     (EX_DIR_HANDWRITTEN, "7"),
     (EX_DIR_HANDWRITTEN, "8"),
+    (EX_DIR_HANDWRITTEN, "9"),
     (EX_DIR_HANDWRITTEN, "tree_3"),
     (EX_DIR_GENERATED, "line_3"),
     (EX_DIR_GENERATED, "line_10"),
