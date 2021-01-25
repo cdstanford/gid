@@ -33,7 +33,6 @@ fn test_3() {
 }
 #[test]
 fn test_4() {
-    // TODO: Jump is failing this test!
     driver::assert_example(&handwritten("4"));
 }
 #[test]

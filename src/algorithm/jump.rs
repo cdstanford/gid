@@ -7,6 +7,7 @@
 use crate::debug_counter::DebugCounter;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
+use std::collections::LinkedList;
 use std::iter;
 
 #[derive(Debug, Default, PartialEq)]
@@ -15,8 +16,18 @@ struct Node {
     // First is a real edge, and the ith is approximately 2^i edges forward.
     jumps: Vec<usize>,
     // reserve list: draining copy of fwd_edges. When depleted, node is dead.
-    reserve: Vec<usize>,
+    reserve: LinkedList<usize>,
     status: Status,
+}
+fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
+    // Note: result will be Status::Open!
+    let mut result: Node = Default::default();
+    debug_assert!(n1.status == Status::Unknown || n1.status == Status::Open);
+    debug_assert!(n2.status == Status::Unknown || n2.status == Status::Open);
+    debug_assert_eq!(result.status, Status::Open);
+    result.reserve.append(&mut n1.reserve);
+    result.reserve.append(&mut n2.reserve);
+    result
 }
 
 #[derive(Debug, Default)]
@@ -44,11 +55,12 @@ impl JumpStateGraph {
     fn push_reserve(&mut self, v: usize, w: usize) {
         debug_assert!(self.is_seen(v));
         debug_assert!(!self.is_closed(v));
-        self.get_node_mut(v).reserve.push(w);
+        self.get_node_mut(v).reserve.push_back(w);
     }
     fn pop_reserve(&mut self, v: usize) -> Option<usize> {
+        debug_assert!(self.is_seen(v));
         debug_assert!(!self.is_closed(v));
-        self.get_node_mut(v).reserve.pop()
+        self.get_node_mut(v).reserve.pop_back()
     }
     // Jump list getters / setters
     fn get_nth_jump(&self, v: usize, n: usize) -> usize {
@@ -143,7 +155,7 @@ impl JumpStateGraph {
         };
         for &w in &to_merge {
             // println!("  Merging: {}, {}", v, w);
-            self.graph.merge_using(v, w, |_label1, _label2| Default::default());
+            self.graph.merge_using(v, w, merge_nodes);
         }
     }
 
