@@ -32,6 +32,7 @@ pub enum Transaction {
     Add(usize, usize),
     Close(usize),
     Live(usize), // Currently a no-op
+    NotReachable(usize), // Currently a no-op
 }
 
 /*
@@ -114,7 +115,8 @@ pub trait StateGraph: Sized {
         match t {
             Transaction::Add(v1, v2) => self.add_transition(v1, v2),
             Transaction::Close(v1) => self.mark_closed(v1),
-            Transaction::Live(v1) => self.mark_live(v1),
+            Transaction::Live(_v1) => (), // TODO: Currently a no-op
+            Transaction::NotReachable(_v1) => (), // TODO: Currently a no-op
         }
     }
 }
