@@ -1,2 +1,3 @@
-# idse
-A data structure for incremental dead state elimination in an abstract transition system.
+# Guided Incremental Digraphs
+
+A data structure for incremental live and dead state detection in an abstract transition system.
