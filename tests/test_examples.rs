@@ -89,19 +89,19 @@ fn test_reverseline() {
 }
 
 #[test]
-fn test_liveline() {
-    driver::assert_example(&generated("liveline_3"));
-    driver::assert_example(&generated("liveline_10"));
-    driver::assert_example(&generated("liveline_20"));
-    driver::assert_example(&generated("liveline_100"));
+fn test_unkline() {
+    driver::assert_example(&generated("unkline_3"));
+    driver::assert_example(&generated("unkline_10"));
+    driver::assert_example(&generated("unkline_20"));
+    driver::assert_example(&generated("unkline_100"));
 }
 
 #[test]
-fn test_reverseliveline() {
-    driver::assert_example(&generated("reverseliveline_3"));
-    driver::assert_example(&generated("reverseliveline_10"));
-    driver::assert_example(&generated("reverseliveline_20"));
-    driver::assert_example(&generated("reverseliveline_100"));
+fn test_reverseunkline() {
+    driver::assert_example(&generated("reverseunkline_3"));
+    driver::assert_example(&generated("reverseunkline_10"));
+    driver::assert_example(&generated("reverseunkline_20"));
+    driver::assert_example(&generated("reverseunkline_100"));
 }
 
 #[test]
@@ -113,11 +113,11 @@ fn test_loop() {
 }
 
 #[test]
-fn test_liveloop() {
-    driver::assert_example(&generated("liveloop_3"));
-    driver::assert_example(&generated("liveloop_10"));
-    driver::assert_example(&generated("liveloop_20"));
-    driver::assert_example(&generated("liveloop_100"));
+fn test_unkloop() {
+    driver::assert_example(&generated("unkloop_3"));
+    driver::assert_example(&generated("unkloop_10"));
+    driver::assert_example(&generated("unkloop_20"));
+    driver::assert_example(&generated("unkloop_100"));
 }
 
 #[test]
@@ -129,11 +129,11 @@ fn test_reverseloop() {
 }
 
 #[test]
-fn test_reverseliveloop() {
-    driver::assert_example(&generated("reverseliveloop_3"));
-    driver::assert_example(&generated("reverseliveloop_10"));
-    driver::assert_example(&generated("reverseliveloop_20"));
-    driver::assert_example(&generated("reverseliveloop_100"));
+fn test_reverseunkloop() {
+    driver::assert_example(&generated("reverseunkloop_3"));
+    driver::assert_example(&generated("reverseunkloop_10"));
+    driver::assert_example(&generated("reverseunkloop_20"));
+    driver::assert_example(&generated("reverseunkloop_100"));
 }
 
 /*

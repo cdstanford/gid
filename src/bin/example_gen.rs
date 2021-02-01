@@ -45,7 +45,7 @@ fn gen_line(n: usize) -> Example {
     paramed_example("line", n, ex_in, expect)
 }
 
-fn gen_liveline(n: usize) -> Example {
+fn gen_unkline(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..n {
         ex_in.push(Transaction::Add(i, i + 1));
@@ -57,7 +57,7 @@ fn gen_liveline(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    paramed_example("liveline", n, ex_in, expect)
+    paramed_example("unkline", n, ex_in, expect)
 }
 
 fn gen_reverseline(n: usize) -> Example {
@@ -76,7 +76,7 @@ fn gen_reverseline(n: usize) -> Example {
     paramed_example("reverseline", n, ex_in, expect)
 }
 
-fn gen_reverseliveline(n: usize) -> Example {
+fn gen_reverseunkline(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in (0..n).rev() {
         ex_in.push(Transaction::Add(i, i + 1));
@@ -88,7 +88,7 @@ fn gen_reverseliveline(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    paramed_example("reverseliveline", n, ex_in, expect)
+    paramed_example("reverseunkline", n, ex_in, expect)
 }
 
 fn gen_loop(n: usize) -> Example {
@@ -106,7 +106,7 @@ fn gen_loop(n: usize) -> Example {
     paramed_example("loop", n, ex_in, expect)
 }
 
-fn gen_liveloop(n: usize) -> Example {
+fn gen_unkloop(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..n {
         ex_in.push(Transaction::Add(i, (i + 1) % n));
@@ -121,7 +121,7 @@ fn gen_liveloop(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    paramed_example("liveloop", n, ex_in, expect)
+    paramed_example("unkloop", n, ex_in, expect)
 }
 
 fn gen_reverseloop(n: usize) -> Example {
@@ -139,7 +139,7 @@ fn gen_reverseloop(n: usize) -> Example {
     paramed_example("reverseloop", n, ex_in, expect)
 }
 
-fn gen_reverseliveloop(n: usize) -> Example {
+fn gen_reverseunkloop(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in (0..n).rev() {
         ex_in.push(Transaction::Add(i, (i + 1) % n));
@@ -154,7 +154,7 @@ fn gen_reverseliveloop(n: usize) -> Example {
         unknown: (0..n).collect(),
         open: vec![n],
     };
-    paramed_example("reverseliveloop", n, ex_in, expect)
+    paramed_example("reverseunkloop", n, ex_in, expect)
 }
 
 /*
@@ -165,11 +165,11 @@ fn main() {
     for &i in &[3, 10, 20, 100, 1000, 10000] {
         gen_line(i).save();
         gen_reverseline(i).save();
-        gen_liveline(i).save();
-        gen_reverseliveline(i).save();
+        gen_unkline(i).save();
+        gen_reverseunkline(i).save();
         gen_loop(i).save();
-        gen_liveloop(i).save();
+        gen_unkloop(i).save();
         gen_reverseloop(i).save();
-        gen_reverseliveloop(i).save();
+        gen_reverseunkloop(i).save();
     }
 }
