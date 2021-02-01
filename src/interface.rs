@@ -12,6 +12,7 @@
 use super::constants::{EXAMPLE_EXPECT_EXT, EXAMPLE_IN_EXT};
 use super::util;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
@@ -75,9 +76,6 @@ pub trait StateGraph: Sized {
     // v to an Open state (Unknown), or there is no such path (Dead).
     // If the state is not seen, return None.
     fn get_status(&self, v: usize) -> Option<Status>;
-
-    // Return a vector of all states that have been seen.
-    fn vec_states(&self) -> Vec<usize>;
 
     // Statistics -- only work in debug mode
     // space should be true memory, up to a constant, and time should be true
@@ -155,6 +153,28 @@ impl ExampleInput {
     }
     pub fn push(&mut self, t: Transaction) {
         self.0.push(t);
+    }
+    pub fn get_states(&self) -> HashSet<usize> {
+        let mut result = HashSet::new();
+        for &t in &self.0 {
+            match t {
+                Transaction::Add(v1, v2) => {
+                    result.insert(v1);
+                    result.insert(v2);
+                }
+                Transaction::Close(v1) => {
+                    result.insert(v1);
+                }
+                Transaction::Live(v1) => {
+                    result.insert(v1);
+                }
+                Transaction::NotReachable(v1, v2) => {
+                    result.insert(v1);
+                    result.insert(v2);
+                }
+            }
+        }
+        result
     }
 }
 
@@ -343,7 +363,7 @@ impl Example {
         graph: &mut G,
     ) -> (ExampleOutput, bool) {
         let mut output = ExampleOutput::new();
-        for &v in &graph.vec_states() {
+        for &v in self.input.get_states().iter() {
             output.add(v, graph.get_status(v).unwrap());
         }
         output.finalize();

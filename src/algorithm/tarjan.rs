@@ -226,9 +226,6 @@ impl StateGraph for TarjanStateGraph {
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).map(|l| l.0)
     }
-    fn vec_states(&self) -> Vec<usize> {
-        self.graph.iter_vertices_all().collect()
-    }
     fn get_space(&self) -> usize {
         self.graph.get_space()
     }
