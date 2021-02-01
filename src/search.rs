@@ -148,10 +148,8 @@ where
         while let Some(u) = iter_bck.peek() {
             // println!("[topsearch] peeking at {:?}", u);
             if !self.visited.contains(&u) {
-                println!(
-                    "[topsearch] not ready to visit {:?}: must first visit {:?}",
-                    v, u
-                );
+                // println!("[topsearch] not ready to visit {:?}", v);
+                // println!("[topsearch] (must first visit {:?})", u);
                 return false;
             }
             // println!("[topsearch] already visited {:?}", u);
