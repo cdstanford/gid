@@ -1,20 +1,20 @@
-  237 ./src/algorithm/jump.rs
+  240 ./src/algorithm/jump.rs
     9 ./src/algorithm/mod.rs
-   65 ./src/algorithm/naive.rs
-   94 ./src/algorithm/simple.rs
-  232 ./src/algorithm/tarjan.rs
+   68 ./src/algorithm/naive.rs
+   98 ./src/algorithm/simple.rs
+  235 ./src/algorithm/tarjan.rs
    30 ./src/bin/compare_stats.rs
-  161 ./src/bin/example_gen.rs
+  175 ./src/bin/example_gen.rs
    48 ./src/bin/run_all.rs
    36 ./src/bin/run_example.rs
-  142 ./src/constants.rs
+  146 ./src/constants.rs
    46 ./src/debug_counter.rs
   206 ./src/driver.rs
   334 ./src/graph.rs
-  331 ./src/interface.rs
+  378 ./src/interface.rs
     8 ./src/lib.rs
-  204 ./src/search.rs
+  202 ./src/search.rs
    90 ./src/util.rs
    74 ./target/debug/build/proc-macro-nested-8b8a987756e47153/out/count.rs
-  176 ./tests/test_examples.rs
- 2523 total
+  193 ./tests/test_examples.rs
+ 2616 total
