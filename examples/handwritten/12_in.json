@@ -1,0 +1,11 @@
+[
+    {"Add": [0,2]},
+    {"Add": [1,2]},
+    {"Close": 1},
+    {"Close": 2},
+    {"NotReachable": [2,1]},
+    {"NotReachable": [2,0]},
+    {"NotReachable": [1,0]},
+    {"NotReachable": [0,1]},
+    {"Close": 0}
+]

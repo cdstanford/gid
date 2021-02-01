@@ -364,7 +364,7 @@ impl Example {
     ) -> (ExampleOutput, bool) {
         let mut output = ExampleOutput::new();
         for &v in self.input.get_states().iter() {
-            output.add(v, graph.get_status(v).unwrap());
+            output.add(v, graph.get_status(v).unwrap_or(Status::Open));
         }
         output.finalize();
         if let Some(expect) = &self.expected {
