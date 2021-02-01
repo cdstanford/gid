@@ -217,6 +217,12 @@ impl StateGraph for TarjanStateGraph {
         debug_assert!(!self.pending_edges.contains_key(&v));
         self.check_dead_iterative(v);
     }
+    fn mark_live_unchecked(&mut self, _v: usize) {
+        // TODO: Placeholder no-op
+    }
+    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
+        // Ignore NotReachable
+    }
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).map(|l| l.0)
     }

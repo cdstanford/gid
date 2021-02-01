@@ -37,6 +37,7 @@ fn gen_line(n: usize) -> Example {
     }
     ex_in.push(Transaction::Close(n));
     let expect = ExampleOutput {
+        live: vec![],
         dead: (0..(n + 1)).collect(),
         unknown: vec![],
         open: vec![],
@@ -51,6 +52,7 @@ fn gen_liveline(n: usize) -> Example {
         ex_in.push(Transaction::Close(i));
     }
     let expect = ExampleOutput {
+        live: vec![],
         dead: vec![],
         unknown: (0..n).collect(),
         open: vec![n],
@@ -66,6 +68,7 @@ fn gen_reverseline(n: usize) -> Example {
     }
     ex_in.push(Transaction::Close(n));
     let expect = ExampleOutput {
+        live: vec![],
         dead: (0..(n + 1)).collect(),
         unknown: vec![],
         open: vec![],
@@ -80,6 +83,7 @@ fn gen_reverseliveline(n: usize) -> Example {
         ex_in.push(Transaction::Close(i));
     }
     let expect = ExampleOutput {
+        live: vec![],
         dead: vec![],
         unknown: (0..n).collect(),
         open: vec![n],
@@ -93,8 +97,12 @@ fn gen_loop(n: usize) -> Example {
         ex_in.push(Transaction::Add(i, (i + 1) % n));
         ex_in.push(Transaction::Close(i));
     }
-    let expect =
-        ExampleOutput { dead: (0..n).collect(), unknown: vec![], open: vec![] };
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: (0..n).collect(),
+        unknown: vec![],
+        open: vec![],
+    };
     paramed_example("loop", n, ex_in, expect)
 }
 
@@ -108,6 +116,7 @@ fn gen_liveloop(n: usize) -> Example {
         ex_in.push(Transaction::Close(i));
     }
     let expect = ExampleOutput {
+        live: vec![],
         dead: vec![],
         unknown: (0..n).collect(),
         open: vec![n],
@@ -121,8 +130,12 @@ fn gen_reverseloop(n: usize) -> Example {
         ex_in.push(Transaction::Add(i, (i + 1) % n));
         ex_in.push(Transaction::Close(i));
     }
-    let expect =
-        ExampleOutput { dead: (0..n).collect(), unknown: vec![], open: vec![] };
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: (0..n).collect(),
+        unknown: vec![],
+        open: vec![],
+    };
     paramed_example("reverseloop", n, ex_in, expect)
 }
 
@@ -136,6 +149,7 @@ fn gen_reverseliveloop(n: usize) -> Example {
         ex_in.push(Transaction::Close(i));
     }
     let expect = ExampleOutput {
+        live: vec![],
         dead: vec![],
         unknown: (0..n).collect(),
         open: vec![n],

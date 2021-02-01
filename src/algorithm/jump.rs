@@ -222,6 +222,12 @@ impl StateGraph for JumpStateGraph {
         self.graph.ensure_vertex(v);
         self.initialize_jumps(v);
     }
+    fn mark_live_unchecked(&mut self, _v: usize) {
+        // TODO: Placeholder no-op
+    }
+    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
+        // TODO: Placeholder no-op
+    }
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).map(|l| l.status)
     }

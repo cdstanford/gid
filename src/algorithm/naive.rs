@@ -50,6 +50,12 @@ impl StateGraph for NaiveStateGraph {
         self.graph.overwrite_vertex(v, Status::Unknown);
         self.recalculate_dead_states();
     }
+    fn mark_live_unchecked(&mut self, _v: usize) {
+        // TODO: Placeholder no-op
+    }
+    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
+        // Ignore NotReachable
+    }
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).copied()
     }

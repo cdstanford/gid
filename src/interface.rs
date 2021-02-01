@@ -17,6 +17,7 @@ use std::time::{Duration, SystemTime};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Status {
+    Live,
     Dead,
     Unknown,
     Open,
@@ -31,8 +32,8 @@ impl Default for Status {
 pub enum Transaction {
     Add(usize, usize),
     Close(usize),
-    Live(usize), // Currently a no-op
-    NotReachable(usize), // Currently a no-op
+    Live(usize),
+    NotReachable(usize, usize),
 }
 
 /*
@@ -44,11 +45,14 @@ pub trait StateGraph: Sized {
         Functions that need to be implemented.
 
         For convenience, the main functions are unchecked:
-        - add_transition_unchecked can assume both its vertices are distinct and that the
-          source is Open.
+        - add_transition_unchecked can assume both its vertices are distinct
+          and that the source is Open.
         - mark_closed_unchecked can assume that its vertex is Open.
+        - mark_live_unchecked can assume that its vertex is Open.
+        - not_reachable_unchecked can assume that the two vertices are distinct.
 
-        Derived checked versions are then provided as safe wrappers around these.
+        Derived checked versions are then provided as safer wrappers around
+        these.
     */
 
     // Constructor
@@ -60,6 +64,12 @@ pub trait StateGraph: Sized {
 
     // Mark an open state as closed.
     fn mark_closed_unchecked(&mut self, v: usize);
+
+    // Mark an open state as live.
+    fn mark_live_unchecked(&mut self, v: usize);
+
+    // Indicate non-reachability between two nodes.
+    fn not_reachable_unchecked(&mut self, v1: usize, v2: usize);
 
     // Return whether v is Open, or v is Closed but there is a path from
     // v to an Open state (Unknown), or there is no such path (Dead).
@@ -85,26 +95,38 @@ pub trait StateGraph: Sized {
     // over the unchecked versions as they validate that the sequence of
     // inputs is correct.
     fn add_transition(&mut self, v1: usize, v2: usize) {
-        assert!(!self.is_closed(v1));
-        if v1 != v2 {
+        assert!(self.is_open(v1) || self.is_live(v1));
+        if self.is_open(v1) && v1 != v2 {
             self.add_transition_unchecked(v1, v2);
         }
     }
     fn mark_closed(&mut self, v: usize) {
-        assert!(!self.is_closed(v));
-        self.mark_closed_unchecked(v);
+        assert!(self.is_open(v) || self.is_live(v));
+        if self.is_open(v) {
+            self.mark_closed_unchecked(v);
+        }
     }
     fn mark_live(&mut self, v: usize) {
-        // TODO
-        self.mark_closed(v);
+        assert!(self.is_open(v));
+        self.mark_live_unchecked(v);
+    }
+    fn not_reachable(&mut self, v1: usize, v2: usize) {
+        assert!(v1 != v2);
+        self.not_reachable_unchecked(v1, v2);
     }
 
     // Some conveniences
     fn is_seen(&self, v: usize) -> bool {
         self.get_status(v).is_some()
     }
+    fn is_open(&self, v: usize) -> bool {
+        self.get_status(v).map_or(true, |st| st == Status::Open)
+    }
     fn is_closed(&self, v: usize) -> bool {
-        self.get_status(v).map_or(false, |st| st != Status::Open)
+        !self.is_open(v)
+    }
+    fn is_live(&self, v: usize) -> bool {
+        self.get_status(v) == Some(Status::Live)
     }
     fn is_dead(&self, v: usize) -> bool {
         self.get_status(v) == Some(Status::Dead)
@@ -115,8 +137,8 @@ pub trait StateGraph: Sized {
         match t {
             Transaction::Add(v1, v2) => self.add_transition(v1, v2),
             Transaction::Close(v1) => self.mark_closed(v1),
-            Transaction::Live(_v1) => (), // TODO: Currently a no-op
-            Transaction::NotReachable(_v1) => (), // TODO: Currently a no-op
+            Transaction::Live(v1) => self.mark_live(v1),
+            Transaction::NotReachable(v1, v2) => self.not_reachable(v1, v2),
         }
     }
 }
@@ -138,6 +160,7 @@ impl ExampleInput {
 
 #[derive(Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExampleOutput {
+    pub live: Vec<usize>,
     pub dead: Vec<usize>,
     pub unknown: Vec<usize>,
     pub open: Vec<usize>,
@@ -148,6 +171,7 @@ impl ExampleOutput {
     }
     pub fn add(&mut self, v: usize, st: Status) {
         match st {
+            Status::Live => self.live.push(v),
             Status::Dead => self.dead.push(v),
             Status::Unknown => self.unknown.push(v),
             Status::Open => self.open.push(v),
@@ -155,6 +179,7 @@ impl ExampleOutput {
     }
     pub fn finalize(&mut self) {
         // should be called prior to saving, printing, etc.
+        self.live.sort_unstable();
         self.dead.sort_unstable();
         self.unknown.sort_unstable();
         self.open.sort_unstable();
