@@ -7,7 +7,8 @@
 use super::algorithm::{
     JumpStateGraph, NaiveStateGraph, SimpleStateGraph, TarjanStateGraph,
 };
-use super::interface::{Example, ExampleResult, StateGraph};
+use super::example::{Example, ExampleResult};
+use super::interface::StateGraph;
 use std::fmt::{self, Debug};
 use std::str::FromStr;
 use std::time::Duration;

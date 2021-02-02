@@ -4,17 +4,18 @@
    98 ./src/algorithm/simple.rs
   235 ./src/algorithm/tarjan.rs
    30 ./src/bin/compare_stats.rs
-  175 ./src/bin/example_gen.rs
+  174 ./src/bin/example_gen.rs
    48 ./src/bin/run_all.rs
    36 ./src/bin/run_example.rs
   146 ./src/constants.rs
    46 ./src/debug_counter.rs
-  206 ./src/driver.rs
+  207 ./src/driver.rs
+  253 ./src/example.rs
   334 ./src/graph.rs
-  378 ./src/interface.rs
-    8 ./src/lib.rs
+  137 ./src/interface.rs
+    9 ./src/lib.rs
   202 ./src/search.rs
    90 ./src/util.rs
    74 ./target/debug/build/proc-macro-nested-8b8a987756e47153/out/count.rs
   193 ./tests/test_examples.rs
- 2616 total
+ 2629 total

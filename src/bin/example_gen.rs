@@ -4,9 +4,8 @@
     I am using the examples both for unit testing and performance analysis.
 */
 
-use state_graph::interface::{
-    Example, ExampleInput, ExampleOutput, Transaction,
-};
+use state_graph::example::{Example, ExampleInput, ExampleOutput};
+use state_graph::interface::Transaction;
 use std::fmt::Display;
 
 /*
