@@ -15,7 +15,7 @@ struct Node {
     // jump list: nonempty for closed vertices.
     // First is a real edge, and the ith is approximately 2^i edges forward.
     jumps: Vec<usize>,
-    // reserve list: draining copy of fwd_edges. When depleted, node is dead.
+    // reserve list: forward edges not added to graph.
     reserve: LinkedList<usize>,
     status: Status,
 }
@@ -50,6 +50,11 @@ impl JumpStateGraph {
         // println!("  Set status: {} {:?}", v, status);
         debug_assert!(self.is_seen(v));
         self.get_node_mut(v).status = status;
+        // Mark live in particular deletes jumps and reserve edges.
+        if status == Status::Live {
+            self.get_node_mut(v).jumps.clear();
+            self.get_node_mut(v).reserve.clear();
+        }
     }
     // Reserve edges getters / setters
     fn push_reserve(&mut self, v: usize, w: usize) {
@@ -180,6 +185,7 @@ impl JumpStateGraph {
                 // println!("  (setting jump and returning)");
                 debug_assert!(self.get_node(v).jumps.is_empty());
                 self.set_status(v, Status::Unknown);
+                self.graph.ensure_edge_fwd(v, w);
                 self.push_last_jump(v, w);
                 return;
             }
@@ -191,7 +197,7 @@ impl JumpStateGraph {
         let to_recurse: HashSet<usize> = self
             .graph
             .iter_bck_edges(v)
-            .filter(|&u| self.is_closed(u))
+            .filter(|&u| self.is_unknown(u))
             .filter(|&u| self.graph.is_same_vertex(self.get_first_jump(u), v))
             .collect();
         // First set to_recurse as open so that recursive calls won't mess
@@ -207,6 +213,25 @@ impl JumpStateGraph {
             self.initialize_jumps(u);
         }
     }
+
+    /*
+        Calculate new live states
+    */
+    fn calculate_new_live_states(&mut self, v: usize) {
+        // Same fn as in Naive
+        if self.is_live(v) {
+            let new_live: HashSet<usize> = self
+                .graph
+                .dfs_bck(iter::once(v), |u| {
+                    debug_assert!(!self.is_dead(u));
+                    !self.is_live(u)
+                })
+                .collect();
+            for &u in new_live.iter() {
+                self.set_status(u, Status::Live);
+            }
+        }
+    }
 }
 impl StateGraph for JumpStateGraph {
     fn new() -> Self {
@@ -214,16 +239,21 @@ impl StateGraph for JumpStateGraph {
     }
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
         // println!("# Adding transition: {}, {}", v1, v2);
-        self.graph.ensure_edge(v1, v2);
-        self.push_reserve(v1, v2);
+        self.graph.ensure_edge_bck(v1, v2);
+        self.calculate_new_live_states(v2);
+        if !self.is_live(v1) {
+            self.push_reserve(v1, v2);
+        }
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
         // println!("# Marking Closed: {}", v);
         self.graph.ensure_vertex(v);
         self.initialize_jumps(v);
     }
-    fn mark_live_unchecked(&mut self, _v: usize) {
-        // TODO: Placeholder no-op
+    fn mark_live_unchecked(&mut self, v: usize) {
+        self.graph.ensure_vertex(v);
+        self.set_status(v, Status::Live);
+        self.calculate_new_live_states(v);
     }
     fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
         // TODO: Placeholder no-op
