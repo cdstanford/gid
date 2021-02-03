@@ -139,10 +139,10 @@ pub fn assert_example(basename: &str) {
         assert!(naive.is_correct());
         let simple = run_core(&example, Algorithm::Simple, timeout, true);
         assert!(simple.is_correct());
-        /*
-        Temporarily disable
         let tarjan = run_core(&example, Algorithm::Tarjan, timeout, true);
         assert!(tarjan.is_correct());
+        /*
+        Temporarily disable
         let jump = run_core(&example, Algorithm::Jump, timeout, true);
         assert!(jump.is_correct());
         */
@@ -151,10 +151,10 @@ pub fn assert_example(basename: &str) {
         let naive = run_core(&example, Algorithm::Naive, timeout, true);
         let simple = run_core(&example, Algorithm::Simple, timeout, true);
         assert_eq!(naive.unwrap_output(), simple.unwrap_output());
-        /*
-        Temporarily disable
         let tarjan = run_core(&example, Algorithm::Tarjan, timeout, true);
         assert_eq!(naive.unwrap_output(), tarjan.unwrap_output());
+        /*
+        Temporarily disable
         let jump = run_core(&example, Algorithm::Jump, timeout, true);
         assert_eq!(naive.unwrap_output(), jump.unwrap_output());
         */

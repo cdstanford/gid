@@ -70,7 +70,10 @@ impl SimpleStateGraph {
         if self.is_live(v) {
             let new_live: HashSet<usize> = self
                 .graph
-                .dfs_bck(iter::once(v), |u| !self.is_live(u))
+                .dfs_bck(iter::once(v), |u| {
+                    debug_assert!(!self.is_dead(u));
+                    !self.is_live(u)
+                })
                 .collect();
             for &u in new_live.iter() {
                 self.graph.overwrite_vertex(u, Status::Live);

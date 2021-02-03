@@ -80,6 +80,18 @@ fn test_15() {
     driver::assert_example(&handwritten("15"));
 }
 #[test]
+fn test_16() {
+    driver::assert_example(&handwritten("16"));
+}
+#[test]
+fn test_17() {
+    driver::assert_example(&handwritten("17"));
+}
+#[test]
+fn test_18() {
+    driver::assert_example(&handwritten("18"));
+}
+#[test]
 fn test_tree() {
     driver::assert_example(&handwritten("tree_3"));
 }

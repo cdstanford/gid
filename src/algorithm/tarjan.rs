@@ -32,7 +32,7 @@ impl Default for Level {
 pub struct TarjanStateGraph {
     graph: DiGraph<usize, (Status, Level)>,
     // edges from open states, not yet added to the graph
-    pending_edges: HashMap<usize, Vec<usize>>,
+    pending_edges_fwd: HashMap<usize, Vec<usize>>,
     // count of graph edges
     edge_counter: usize,
 }
@@ -44,6 +44,7 @@ impl TarjanStateGraph {
 
     /* Vertex label getters / setters */
     fn set_status(&mut self, v: usize, status: Status) {
+        // println!("Setting status: {} {:?}", v, status);
         debug_assert!(self.is_seen(v));
         self.graph.get_label_mut(v).unwrap().0 = status;
     }
@@ -52,11 +53,14 @@ impl TarjanStateGraph {
         self.graph.get_label(v).unwrap().1
     }
     fn set_level(&mut self, v: usize, level: Level) {
+        // println!("Setting level: {} {:?}", v, level);
         debug_assert!(self.is_seen(v));
         self.graph.get_label_mut(v).unwrap().1 = level;
     }
 
     fn update_levels_iterative(&mut self, v1: usize, v2: usize) {
+        // println!("Updating levels: {} {}", v1, v2);
+        // println!("Graph: {:?}", self.graph);
         // Update levels after adding an edge (v1, v2),
         // AND ensure acyclic by merging cycles.
         // This is the main algorithm, as described in the Tarjan paper.
@@ -70,6 +74,8 @@ impl TarjanStateGraph {
         //   stopping earlier after Delta edges.
 
         debug_assert_eq!(self.get_status(v1), Some(Status::Unknown));
+        debug_assert!(self.get_status(v2).is_some());
+        debug_assert!(self.get_status(v2) != Some(Status::Live));
         debug_assert!(
             self.is_closed(v2) || self.graph.iter_fwd_edges(v2).count() == 0
         );
@@ -89,12 +95,16 @@ impl TarjanStateGraph {
         for u in self
             .graph
             .dfs_bck(iter::once(v1), |u| {
+                // println!("Step 2 DFS back trying: {}", u);
                 debug_assert!(self.get_level(u) <= level1);
-                self.get_level(u) == level1
+                debug_assert!(!self.is_dead(u));
+                self.is_unknown(u) && self.get_level(u) == level1
             })
             .take(self.delta())
         {
+            // println!("Step 2 DFS back visiting: {}", u);
             if self.graph.is_same_vertex(u, v2) {
+                // println!("Step 2 found cycle through: {}", u);
                 found_cycle = true;
             }
             set_bck.insert(u);
@@ -107,11 +117,17 @@ impl TarjanStateGraph {
 
         // ===== STEP 3: Search Forward =====
         if count == self.delta() || level2 < level1 {
+            // println!("Step 3 enabled");
             // search didn't complete OR level(v2) is too low
             let new_level = {
                 if count == self.delta() {
+                    // println!("  (reason: search didn't complete)");
+                    // println!("  (search count = delta = {})", count);
+                    // println!("  (new level: {:?})", Level(level1.0 + 1));
                     Level(level1.0 + 1)
                 } else {
+                    // println!("  (reason: level(v2) is too low)");
+                    // println!("  (level(v2) = {:?} < {:?})", level2, level1);
                     level1
                 }
             };
@@ -120,13 +136,17 @@ impl TarjanStateGraph {
             let level_to_increase: Vec<usize> = self
                 .graph
                 .dfs_fwd(iter::once(v2), |w| {
+                    // println!("Step 3 DFS fwd trying: {}", w);
                     debug_assert!(self.get_level(w) >= level2);
                     set_bck.contains(&w) || self.get_level(w) < new_level
                 })
+                // .inspect(|&w| println!("Step 3 DFS fwd visiting: {}", w))
                 .collect();
 
             for &w in &level_to_increase {
+                // println!("Step 3 increasing level {} to {:?}", w, new_level);
                 if set_bck.contains(&w) {
+                    // println!("Step 3 found cycle through: {}", w);
                     found_cycle = true;
                 }
                 self.set_level(w, new_level);
@@ -143,6 +163,7 @@ impl TarjanStateGraph {
 
         // ===== STEP 4: Form Component =====
         if found_cycle {
+            // println!("Step 4 enabled (reason: found cycle)");
             debug_assert_eq!(level1, level2);
             debug_assert!(v1 != v2);
             // This part is roughly the same as merge_all_cycles in simple.rs
@@ -181,7 +202,7 @@ impl TarjanStateGraph {
             .graph
             .topo_search_bck(
                 iter::once(v),
-                |u| self.is_closed(u),
+                |u| self.is_u_or_d(u),
                 |w| !self.is_dead(w),
             )
             .collect();
@@ -193,6 +214,21 @@ impl TarjanStateGraph {
             self.set_status(u, Status::Dead);
         }
     }
+    fn calculate_new_live_states(&mut self, v: usize) {
+        // Same fn as in Naive
+        if self.is_live(v) {
+            let new_live: HashSet<usize> = self
+                .graph
+                .dfs_bck(iter::once(v), |u| {
+                    debug_assert!(!self.is_dead(u));
+                    !self.is_live(u)
+                })
+                .collect();
+            for &u in new_live.iter() {
+                self.set_status(u, Status::Live);
+            }
+        }
+    }
 }
 impl StateGraph for TarjanStateGraph {
     fn new() -> Self {
@@ -202,23 +238,29 @@ impl StateGraph for TarjanStateGraph {
         self.graph.ensure_vertex(v1);
         self.graph.ensure_vertex(v2);
         debug_assert_eq!(self.get_status(v1), Some(Status::Open));
-        self.pending_edges.entry(v1).or_default().push(v2);
+        self.pending_edges_fwd.entry(v1).or_default().push(v2);
+        self.graph.ensure_edge_bck(v1, v2);
+        self.edge_counter += 1;
+        self.calculate_new_live_states(v2);
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
         self.graph.ensure_vertex(v);
         self.set_status(v, Status::Unknown);
-        for w in self.pending_edges.remove(&v).unwrap_or_default().drain(..) {
-            self.edge_counter += 1;
+        // Add pending fwd-edges
+        let mut to_add = self.pending_edges_fwd.remove(&v).unwrap_or_default();
+        for w in to_add.drain(..) {
             debug_assert!(self.is_seen(w));
-            self.graph.ensure_edge(v, w);
+            self.graph.ensure_edge_fwd(v, w);
             self.update_levels_iterative(v, w);
             debug_assert_eq!(self.get_status(v), Some(Status::Unknown));
         }
-        debug_assert!(!self.pending_edges.contains_key(&v));
+        debug_assert!(!self.pending_edges_fwd.contains_key(&v));
         self.check_dead_iterative(v);
     }
-    fn mark_live_unchecked(&mut self, _v: usize) {
-        // TODO: Placeholder no-op
+    fn mark_live_unchecked(&mut self, v: usize) {
+        self.graph.ensure_vertex(v);
+        self.set_status(v, Status::Live);
+        self.calculate_new_live_states(v);
     }
     fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
         // Ignore NotReachable
