@@ -23,8 +23,8 @@ pub struct SimpleStateGraph {
 impl SimpleStateGraph {
     fn merge_vertices(&mut self, v1: usize, v2: usize) {
         // println!("  Merging: {} {}", v1, v2);
-        debug_assert!(self.is_closed(v1));
-        debug_assert!(self.is_closed(v2));
+        debug_assert!(self.is_u_or_d(v1));
+        debug_assert!(self.is_u_or_d(v2));
         debug_assert!(v1 != v2);
         self.graph.merge(v1, v2);
     }
@@ -32,9 +32,9 @@ impl SimpleStateGraph {
         // println!("  Merging cycles through: {}", v);
         // Merge all cycles through v
         // (assuming no other cycles in closed states)
-        debug_assert!(self.is_closed(v));
+        debug_assert!(self.is_u_or_d(v));
         let fwd_reachable: HashSet<usize> =
-            self.graph.dfs_fwd(iter::once(v), |w| self.is_closed(w)).collect();
+            self.graph.dfs_fwd(iter::once(v), |w| self.is_u_or_d(w)).collect();
         let bi_reachable: HashSet<usize> = self
             .graph
             .dfs_bck(iter::once(v), |u| fwd_reachable.contains(&u))
@@ -52,7 +52,7 @@ impl SimpleStateGraph {
             .graph
             .topo_search_bck(
                 iter::once(v),
-                |u| self.is_closed(u),
+                |u| self.is_u_or_d(u),
                 |w| !self.is_dead(w),
             )
             .collect();
@@ -65,6 +65,18 @@ impl SimpleStateGraph {
             self.graph.overwrite_vertex(u, Status::Dead);
         }
     }
+    fn calculate_new_live_states(&mut self, v: usize) {
+        // Same fn as in Naive
+        if self.is_live(v) {
+            let new_live: HashSet<usize> = self
+                .graph
+                .dfs_bck(iter::once(v), |u| !self.is_live(u))
+                .collect();
+            for &u in new_live.iter() {
+                self.graph.overwrite_vertex(u, Status::Live);
+            }
+        }
+    }
 }
 impl StateGraph for SimpleStateGraph {
     fn new() -> Self {
@@ -73,6 +85,7 @@ impl StateGraph for SimpleStateGraph {
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
         // println!("Adding transition: {} {}", v1, v2);
         self.graph.ensure_edge(v1, v2);
+        self.calculate_new_live_states(v2);
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
         // println!("Marking closed: {}", v);
@@ -80,8 +93,10 @@ impl StateGraph for SimpleStateGraph {
         self.merge_all_cycles(v);
         self.check_dead_iterative(v);
     }
-    fn mark_live_unchecked(&mut self, _v: usize) {
-        // TODO: Placeholder no-op
+    fn mark_live_unchecked(&mut self, v: usize) {
+        // println!("Marking live: {}", v);
+        self.graph.overwrite_vertex(v, Status::Live);
+        self.calculate_new_live_states(v);
     }
     fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
         // Ignore NotReachable

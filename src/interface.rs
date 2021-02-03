@@ -87,6 +87,8 @@ pub trait StateGraph: Sized {
     // The safe add_transition and mark_closed should generally be used
     // over the unchecked versions as they validate that the sequence of
     // inputs is correct.
+    // They also remove redundant additions that don't do anything, such
+    // as a self-loop edge or marking a live state closed.
     fn add_transition(&mut self, v1: usize, v2: usize) {
         assert!(self.is_open(v1) || self.is_live(v1));
         if self.is_open(v1) && v1 != v2 {
@@ -126,6 +128,9 @@ pub trait StateGraph: Sized {
     }
     fn is_closed(&self, v: usize) -> bool {
         !self.is_open(v)
+    }
+    fn is_u_or_d(&self, v: usize) -> bool {
+        self.is_dead(v) || self.is_unknown(v)
     }
 
     // Same as the above but using the Transaction enum

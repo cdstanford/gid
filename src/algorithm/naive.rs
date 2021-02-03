@@ -36,10 +36,8 @@ impl NaiveStateGraph {
         // uses a DFS, and is worst-case O(m).
 
         // Initialize
-        let (unkdead, openlive): (HashSet<usize>, HashSet<usize>) = self
-            .graph
-            .iter_vertices()
-            .partition(|&v| self.is_unknown(v) || self.is_dead(v));
+        let (unkdead, openlive): (HashSet<usize>, HashSet<usize>) =
+            self.graph.iter_vertices().partition(|&v| self.is_u_or_d(v));
         let not_dead: HashSet<usize> = self
             .graph
             .dfs_bck(openlive.iter().copied(), |v| unkdead.contains(&v))
