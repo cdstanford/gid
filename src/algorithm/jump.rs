@@ -10,13 +10,22 @@ use crate::interface::{StateGraph, Status};
 use std::collections::{HashSet, LinkedList};
 use std::iter;
 
+// Maximum amount of work when merging not-reachable sets
+const NOT_REACHABLE_MAX: usize = 10;
+
 #[derive(Debug, Default, PartialEq)]
 struct Node {
-    // jump list: nonempty for closed vertices.
+    // Jump list: nonempty for closed vertices.
     // First is a real edge, and the ith is approximately 2^i edges forward.
     jumps: Vec<usize>,
-    // reserve list: forward edges not added to graph.
+
+    // Reserve list: forward edges not added to graph.
     reserve: LinkedList<usize>,
+
+    // Not reachable set: nodes known to be not reachable from this node
+    not_reachable: HashSet<usize>,
+
+    // Categorized status, same as in other algorithms
     status: Status,
 }
 fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
@@ -27,6 +36,19 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
     debug_assert_eq!(result.status, Status::Open);
     result.reserve.append(&mut n1.reserve);
     result.reserve.append(&mut n2.reserve);
+    // Partially merge not_reachable sets
+    let (set1, set2) = (n1.not_reachable, n2.not_reachable);
+    let (set1, set2) =
+        if set1.len() < set2.len() { (set2, set1) } else { (set1, set2) };
+    result.not_reachable = set1;
+    for &v in set2.iter().take(NOT_REACHABLE_MAX) {
+        // Note: elements in set1 and set2 are not updated to the
+        // canonical vertex; so, when querying the set,
+        // it is better to query original vertex names rather than
+        // trying to call get_canon_vertex first
+        println!("Copying not reachable: {}", v);
+        result.not_reachable.insert(v);
+    }
     result
 }
 
@@ -114,32 +136,54 @@ impl JumpStateGraph {
         debug_assert!(self.is_closed(v));
         self.get_node_mut(v).jumps.push(w);
     }
+    // Not reachable getters and setters
+    fn is_not_reachable(&self, v: usize, w: usize) -> bool {
+        println!("Check not reachable: {} {}", v, w);
+        self.get_node(v).not_reachable.contains(&w)
+    }
+    fn add_not_reachable(&mut self, v: usize, w: usize) {
+        println!("Adding not reachable: {} {}", v, w);
+        self.get_node_mut(v).not_reachable.insert(w);
+    }
 
     /*
-        Main jump function
+        Main subroutine function: is-root
 
-        Jump from v to the Univisted vertex it currently points to.
-        The assumption / invariant is that although some jumps
+        Check if the univisted vertex root corresponding to v (unique open
+        vertex reachable from v via forward-edges) equals end.
+
+        This is the function that both uses/updates the jump list, and the
+        function that uses the not-reachable list.
+
+        Uses the jump list to get there more quickly than just one edge at a
+        time. The assumed invariant is that although some jumps
         may be obsolete, there is always an open vertex that
         is pointed to once obsolete jumps are removed.
+
+        Also shortcuts using the NotReachable sets if it can determine
+        early that w is not reachable from v.
     */
-    fn jump(&mut self, v: usize) -> usize {
-        debug_assert!(self.graph.is_seen(v));
-        if !self.is_closed(v) {
-            return v;
+    fn is_root(&mut self, v: usize, end: usize) -> bool {
+        debug_assert!(self.is_unknown(v) || self.is_open(v));
+        debug_assert!(self.is_open(end));
+        if self.is_open(v) {
+            self.graph.is_same_vertex(v, end)
+        } else if self.is_not_reachable(v, end) {
+            false
+        } else {
+            // Pop dead jumps
+            while self.is_dead(self.get_last_jump(v)) {
+                self.pop_last_jump(v);
+            }
+            // Get result and update jumps list
+            let w = self.get_last_jump(v);
+            let result = self.is_root(w, end);
+            if self.get_num_jumps(v) <= self.get_num_jumps(w) {
+                let new_jump = self.get_nth_jump(w, self.get_num_jumps(v) - 1);
+                self.push_last_jump(v, new_jump);
+            }
+            result
         }
-        // Pop dead jumps
-        while self.is_dead(self.get_last_jump(v)) {
-            self.pop_last_jump(v);
-        }
-        // Get result and update jumps list
-        let w = self.get_last_jump(v);
-        let result = self.jump(w);
-        if self.get_num_jumps(v) <= self.get_num_jumps(w) {
-            let new_jump = self.get_nth_jump(w, self.get_num_jumps(v) - 1);
-            self.push_last_jump(v, new_jump);
-        }
-        result
     }
 
     /*
@@ -174,9 +218,7 @@ impl JumpStateGraph {
             if self.is_dead(w) {
                 // println!("  (dead)");
                 continue;
-            }
-            let w_end = self.jump(w);
-            if self.graph.is_same_vertex(v, w_end) {
+            } else if self.is_root(w, v) {
                 // Merge cycle and continue
                 // println!("  (merging {} -> {} -> ... -> {})", v, w, w_end);
                 self.merge_path_from(w);
@@ -255,8 +297,10 @@ impl StateGraph for JumpStateGraph {
         self.set_status(v, Status::Live);
         self.calculate_new_live_states(v);
     }
-    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
-        // TODO: Placeholder no-op
+    fn not_reachable_unchecked(&mut self, v1: usize, v2: usize) {
+        self.graph.ensure_vertex(v1);
+        // Could do self.graph.ensure_vertex(v2), but not necessary
+        self.add_not_reachable(v1, v2);
     }
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).map(|l| l.status)

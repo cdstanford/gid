@@ -1,4 +1,4 @@
-  270 ./src/algorithm/jump.rs
+  314 ./src/algorithm/jump.rs
     9 ./src/algorithm/mod.rs
    86 ./src/algorithm/naive.rs
   116 ./src/algorithm/simple.rs
@@ -18,4 +18,4 @@
    90 ./src/util.rs
    74 ./target/debug/build/proc-macro-nested-8b8a987756e47153/out/count.rs
   204 ./tests/test_examples.rs
- 2795 total
+ 2839 total
