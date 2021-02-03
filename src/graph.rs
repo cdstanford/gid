@@ -1,16 +1,22 @@
 /*
-    A simple directed graph implementation that is used by the different
+    A directed graph implementation that is used by the different
     implementations of the state graph interface.
 
     Supports:
-    - adding vertices with names of type V, labeled by type T
-    - merging vertices in O(1) time (the two vertex names are now aliases)
+    - Adding vertices with names of type V, labeled by type T
+    - Adding edges either in forward or backward direction.
+      Although the forward and backward may correspond in some implementations,
+      for some of the algorithms we want to support (jump and tarjan)
+      it is more flexible to add them separately.
+    - Merging vertices in O(1) time (the two vertex names are now aliases)
       (requires a merge function T x T -> T)
       Note: this is a simple graph. self-loops are ignored after a merge.
-    - iterating through the edges at a vertex (O(1) per edge)
+    - Iterating through the edges at a vertex (O(1) per edge)
       Note: this iterates over original edges; currently doesn't
       support "cleaning" edges by removing duplicates and self-loops
       in case of merged vertices.
+    - Generic search functions: DFS forward and backward, or topological
+      search backward. For more documentation on these, see search.rs.
 
     If T implements Default, additionally supports "ensure" functionality
     (i.e. add a vertex default if it doesn't exist already).
@@ -265,10 +271,11 @@ where
         self.time.inc();
         self.space.inc();
     }
-    fn add_edge_core(&mut self, v1: V, v2: V) {
-        // Panics if v1 or v2 is not seen
-        assert!(self.is_seen(v1));
-        assert!(self.is_seen(v2));
+    fn add_edge_fwd_core(&mut self, v1: V, v2: V) {
+        // Add fwd-edge v1 -> v2
+        // Precondition: v1 and v2 are seen
+        debug_assert!(self.is_seen(v1));
+        debug_assert!(self.is_seen(v2));
         let canon1 = self.get_canon_id_unwrapped(v1);
         let canon2 = self.get_canon_id_unwrapped(v2);
         if canon1 != canon2 {
@@ -276,6 +283,18 @@ where
                 .get_mut(&canon1)
                 .unwrap()
                 .push_back(UniqueID(canon2.0));
+            self.space.inc();
+        }
+        self.time.inc();
+    }
+    fn add_edge_bck_core(&mut self, v1: V, v2: V) {
+        // Add back-edge v2 -> v1 corresponding to fwd-edge v1 -> v2
+        // Precondition: v1 and v2 are seen
+        debug_assert!(self.is_seen(v1));
+        debug_assert!(self.is_seen(v2));
+        let canon1 = self.get_canon_id_unwrapped(v1);
+        let canon2 = self.get_canon_id_unwrapped(v2);
+        if canon1 != canon2 {
             self.bck_edges
                 .get_mut(&canon2)
                 .unwrap()
@@ -321,14 +340,31 @@ where
 {
     pub fn ensure_vertex(&mut self, v: V) {
         // if not already seen, adds the default value
-        if !self.is_seen(v) {
+        if self.is_seen(v) {
+            // increment time since there was a function call
+            self.time.inc();
+        } else {
             self.add_vertex_core(v, Default::default());
         }
+    }
+    pub fn ensure_edge_fwd(&mut self, v1: V, v2: V) {
+        // add a fwd-edge, ensuring the vertices exist first
+        self.ensure_vertex(v1);
+        self.ensure_vertex(v2);
+        self.add_edge_fwd_core(v1, v2);
+    }
+    pub fn ensure_edge_bck(&mut self, v1: V, v2: V) {
+        // add a bck-edge corresponding to fwd-edge from v1 to v2,
+        // ensuring the vertices exist first
+        self.ensure_vertex(v1);
+        self.ensure_vertex(v2);
+        self.add_edge_bck_core(v1, v2);
     }
     pub fn ensure_edge(&mut self, v1: V, v2: V) {
         // add an edge, ensuring the vertices exist first
         self.ensure_vertex(v1);
         self.ensure_vertex(v2);
-        self.add_edge_core(v1, v2);
+        self.add_edge_fwd_core(v1, v2);
+        self.add_edge_bck_core(v1, v2);
     }
 }
