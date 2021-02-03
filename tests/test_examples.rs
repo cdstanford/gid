@@ -71,15 +71,14 @@ fn test_12() {
 fn test_13() {
     driver::assert_example(&handwritten("13"));
 }
-// TODO: Get Live tests working
-// #[test]
-// fn test_14() {
-//     driver::assert_example(&handwritten("14"));
-// }
-// #[test]
-// fn test_15() {
-//     driver::assert_example(&handwritten("15"));
-// }
+#[test]
+fn test_14() {
+    driver::assert_example(&handwritten("14"));
+}
+#[test]
+fn test_15() {
+    driver::assert_example(&handwritten("15"));
+}
 #[test]
 fn test_tree() {
     driver::assert_example(&handwritten("tree_3"));

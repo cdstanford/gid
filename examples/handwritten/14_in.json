@@ -10,5 +10,7 @@
     {"Live": 5},
     {"Live": 6},
     {"Close": 5},
-    {"Close": 7}
+    {"Close": 7},
+    {"Add": [8,4]},
+    {"Close": 8}
 ]

@@ -112,17 +112,20 @@ pub trait StateGraph: Sized {
     fn is_seen(&self, v: usize) -> bool {
         self.get_status(v).is_some()
     }
-    fn is_open(&self, v: usize) -> bool {
-        self.get_status(v).map_or(true, |st| st == Status::Open)
-    }
-    fn is_closed(&self, v: usize) -> bool {
-        !self.is_open(v)
-    }
     fn is_live(&self, v: usize) -> bool {
         self.get_status(v) == Some(Status::Live)
     }
     fn is_dead(&self, v: usize) -> bool {
         self.get_status(v) == Some(Status::Dead)
+    }
+    fn is_unknown(&self, v: usize) -> bool {
+        self.get_status(v) == Some(Status::Unknown)
+    }
+    fn is_open(&self, v: usize) -> bool {
+        self.get_status(v).map_or(true, |st| st == Status::Open)
+    }
+    fn is_closed(&self, v: usize) -> bool {
+        !self.is_open(v)
     }
 
     // Same as the above but using the Transaction enum

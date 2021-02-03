@@ -9,12 +9,25 @@
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
 use std::collections::HashSet;
+use std::iter;
 
 #[derive(Debug, Default)]
 pub struct NaiveStateGraph {
     graph: DiGraph<usize, Status>,
 }
 impl NaiveStateGraph {
+    fn calculate_new_live_states(&mut self, v: usize) {
+        // Mark all states Live backwards from v, but not including v
+        if self.is_live(v) {
+            let new_live: HashSet<usize> = self
+                .graph
+                .dfs_bck(iter::once(v), |u| !self.is_live(u))
+                .collect();
+            for &u in new_live.iter() {
+                self.graph.overwrite_vertex(u, Status::Live);
+            }
+        }
+    }
     fn recalculate_dead_states(&mut self) {
         // Recalculate the subset of closed states that are dead: states
         // that can't reach an Open state (i.e. all reachable states are
@@ -23,15 +36,17 @@ impl NaiveStateGraph {
         // uses a DFS, and is worst-case O(m).
 
         // Initialize
-        let (closed, open): (HashSet<usize>, HashSet<usize>) =
-            self.graph.iter_vertices().partition(|&v| self.is_closed(v));
+        let (unkdead, openlive): (HashSet<usize>, HashSet<usize>) = self
+            .graph
+            .iter_vertices()
+            .partition(|&v| self.is_unknown(v) || self.is_dead(v));
         let not_dead: HashSet<usize> = self
             .graph
-            .dfs_bck(open.iter().copied(), |v| closed.contains(&v))
+            .dfs_bck(openlive.iter().copied(), |v| unkdead.contains(&v))
             .collect();
 
         // Mark not-not-dead states as dead
-        for &v in closed.iter() {
+        for &v in unkdead.iter() {
             debug_assert!(!(self.is_dead(v) && not_dead.contains(&v)));
             if !not_dead.contains(&v) {
                 self.graph.overwrite_vertex(v, Status::Dead);
@@ -45,13 +60,15 @@ impl StateGraph for NaiveStateGraph {
     }
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
         self.graph.ensure_edge(v1, v2);
+        self.calculate_new_live_states(v2);
     }
     fn mark_closed_unchecked(&mut self, v: usize) {
         self.graph.overwrite_vertex(v, Status::Unknown);
         self.recalculate_dead_states();
     }
-    fn mark_live_unchecked(&mut self, _v: usize) {
-        // TODO: Placeholder no-op
+    fn mark_live_unchecked(&mut self, v: usize) {
+        self.graph.overwrite_vertex(v, Status::Live);
+        self.calculate_new_live_states(v);
     }
     fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
         // Ignore NotReachable
