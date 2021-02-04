@@ -84,29 +84,31 @@ pub trait StateGraph: Sized {
         Derived (default) functions
     */
 
-    // The safe add_transition and mark_closed should generally be used
+    // The safe add_transition and mark_closed, etc. should generally be used
     // over the unchecked versions as they validate that the sequence of
     // inputs is correct.
     // They also remove redundant additions that don't do anything, such
     // as a self-loop edge or marking a live state closed.
     fn add_transition(&mut self, v1: usize, v2: usize) {
-        assert!(self.is_open(v1) || self.is_live(v1));
+        debug_assert!(self.is_open(v1) || self.is_live(v1));
         if self.is_open(v1) && v1 != v2 {
             self.add_transition_unchecked(v1, v2);
         }
     }
     fn mark_closed(&mut self, v: usize) {
-        assert!(self.is_open(v) || self.is_live(v));
+        debug_assert!(self.is_open(v) || self.is_live(v));
         if self.is_open(v) {
             self.mark_closed_unchecked(v);
         }
     }
     fn mark_live(&mut self, v: usize) {
-        assert!(self.is_open(v));
-        self.mark_live_unchecked(v);
+        debug_assert!(self.is_open(v) || self.is_live(v));
+        if self.is_open(v) {
+            self.mark_live_unchecked(v);
+        }
     }
     fn not_reachable(&mut self, v1: usize, v2: usize) {
-        assert!(v1 != v2);
+        debug_assert!(v1 != v2);
         self.not_reachable_unchecked(v1, v2);
     }
 
