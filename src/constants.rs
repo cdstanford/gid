@@ -19,6 +19,10 @@ pub const EX_DIR_REGEX_DATE: &str = "examples/regex/date";
 pub const EX_DIR_REGEX_LOOP: &str = "examples/regex/loop";
 pub const EX_DIR_REGEX_SGEASY: &str = "examples/regex/state_graph_easy";
 pub const EX_DIR_REGEX_SGHARD: &str = "examples/regex/state_graph_hard";
+pub const EX_DIR_REGEX_COUNT: &str = "examples/regex/counting";
+pub const EX_DIR_REGEX_BLOWUP: &str = "examples/regex/det_blowup";
+pub const EX_DIR_REGEX_INTER: &str = "examples/regex/intersection";
+pub const EX_DIR_REGEX_PASSW: &str = "examples/regex/password";
 pub const EX_DIR_RLIB_M1: &str = "examples/regex/regexlib/RegexMembership/sat";
 pub const EX_DIR_RLIB_INTER1: &str =
     "examples/regex/regexlib/RegexIntersection/sat";
@@ -26,9 +30,7 @@ pub const EX_DIR_RLIB_INTER2: &str =
     "examples/regex/regexlib/RegexIntersection/unsat";
 pub const EX_DIR_RLIB_SUB1: &str = "examples/regex/regexlib/RegexSubset/sat";
 pub const EX_DIR_RLIB_SUB2: &str = "examples/regex/regexlib/RegexSubset/unsat";
-// Disabled since it only contains one file and it is trivial:
-// pub const EX_DIR_RLIB_M2: &str =
-//     "examples/regex/regexlib/RegexMembership/unsat",
+// All the above folders in a list
 pub const ALL_EXAMPLE_DIRS: &[&str] = &[
     EX_DIR_GENERATED,
     EX_DIR_HANDWRITTEN,
@@ -42,7 +44,21 @@ pub const ALL_EXAMPLE_DIRS: &[&str] = &[
     EX_DIR_RLIB_INTER2,
     EX_DIR_RLIB_SUB1,
     EX_DIR_RLIB_SUB2,
+    EX_DIR_REGEX_COUNT,
+    EX_DIR_REGEX_BLOWUP,
+    EX_DIR_REGEX_INTER,
+    EX_DIR_REGEX_PASSW,
 ];
+
+#[test]
+fn validate_example_dirs() {
+    use std::path::Path;
+
+    for dir in ALL_EXAMPLE_DIRS {
+        println!("Checking path is directory: {}", dir);
+        assert!(Path::new(dir).is_dir());
+    }
+}
 
 // Parameters for unit tests
 pub const UNIT_TEST_TIMEOUT_SECS: u64 = 5;
