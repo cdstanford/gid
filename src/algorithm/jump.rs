@@ -138,11 +138,11 @@ impl JumpStateGraph {
     }
     // Not reachable getters and setters
     fn is_not_reachable(&self, v: usize, w: usize) -> bool {
-        println!("Check not reachable: {} {}", v, w);
+        // println!("Check not reachable: {} {}", v, w);
         self.get_node(v).not_reachable.contains(&w)
     }
     fn add_not_reachable(&mut self, v: usize, w: usize) {
-        println!("Adding not reachable: {} {}", v, w);
+        // println!("Adding not reachable: {} {}", v, w);
         self.get_node_mut(v).not_reachable.insert(w);
     }
 
