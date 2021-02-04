@@ -95,6 +95,14 @@ fn test_18() {
     assert_one(EX_DIR_HANDWRITTEN, "18");
 }
 #[test]
+fn test_19() {
+    assert_one(EX_DIR_HANDWRITTEN, "19");
+}
+#[test]
+fn test_20() {
+    assert_one(EX_DIR_HANDWRITTEN, "20");
+}
+#[test]
 fn test_tree() {
     assert_one(EX_DIR_HANDWRITTEN, "tree_3");
 }
