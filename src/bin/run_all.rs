@@ -4,7 +4,7 @@
     See constants::ALL_EXAMPLES for the list of known examples.
 */
 
-use state_graph::constants::{ALL_EXAMPLES, RESULTS_DIR};
+use state_graph::constants::{ALL_EXAMPLE_DIRS, RESULTS_DIR};
 use state_graph::driver;
 use state_graph::util;
 use structopt::StructOpt;
@@ -20,7 +20,7 @@ struct Args {
 }
 impl Args {
     fn run(&self) {
-        println!("======= Run All =======");
+        println!("========= Run All =========");
         let datetime = util::current_datetime_str();
         let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
         println!("Current Datetime: {:?}", datetime);
@@ -28,12 +28,14 @@ impl Args {
         println!("Timeout: {}s", self.timeout);
         let mut result_lines = Vec::new();
         result_lines.push(driver::run_compare_csv_header());
-        for (dir, example) in ALL_EXAMPLES {
-            let basename = format!("{}/{}", dir, example);
-            let result = driver::run_compare(&basename, self.timeout);
-            result_lines.push(result);
+        for dir in ALL_EXAMPLE_DIRS {
+            println!("======= directory: {} =======", dir);
+            for basename in driver::example_basenames_in_dir(dir) {
+                let result = driver::run_compare(&basename, self.timeout);
+                result_lines.push(result);
+            }
         }
-        println!("======= Results =======");
+        println!("========= Results =========");
         let filepath = format!(
             "{}/{}_{}_t{}.csv",
             RESULTS_DIR, datetime, mode, self.timeout
