@@ -7,7 +7,7 @@
 use super::algorithm::{
     JumpStateGraph, NaiveStateGraph, SimpleStateGraph, TarjanStateGraph,
 };
-use super::constants::{EXAMPLE_IN_EXT, UNIT_TEST_TIMEOUT_SECS};
+use super::constants::EXAMPLE_IN_EXT;
 use super::example::{Example, ExampleResult};
 use super::interface::StateGraph;
 use std::fmt::{self, Debug};
@@ -124,9 +124,9 @@ pub fn run_single_example(
     Assertion for unit testing
 */
 
-pub fn assert_example(basename: &str) {
+pub fn assert_example(basename: &str, timeout_secs: u64) {
     let example = Example::load_from(basename);
-    let timeout = Duration::from_secs(UNIT_TEST_TIMEOUT_SECS);
+    let timeout = Duration::from_secs(timeout_secs);
 
     // If example has expected output, check each algorithm is correct
     // separately. Otherwise, compare them with respect to each other.

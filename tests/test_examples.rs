@@ -2,19 +2,28 @@
     Test the unit tests in the examples/ directory.
 */
 
-use state_graph::constants::{EX_DIR_GENERATED, EX_DIR_HANDWRITTEN};
+use state_graph::constants::*;
 use state_graph::driver;
 
 /*
     Helper functions
 */
 fn assert_one(dir: &str, name: &str) {
-    driver::assert_example(&format!("{}/{}", dir, name));
+    driver::assert_example(
+        &format!("{}/{}", dir, name),
+        UNIT_TEST_TIMEOUT_SECS,
+    );
+}
+fn assert_expensive(dir: &str, name: &str) {
+    driver::assert_example(
+        &format!("{}/{}", dir, name),
+        UNIT_TEST_TIMEOUT_EXPENSIVE,
+    );
 }
 #[allow(dead_code)]
 fn assert_all(dir: &str) {
     for basename in driver::example_basenames_in_dir(dir) {
-        driver::assert_example(&basename);
+        driver::assert_example(&basename, UNIT_TEST_TIMEOUT_SECS);
     }
 }
 
@@ -175,6 +184,19 @@ fn test_reverseunkloop() {
     assert_one(EX_DIR_GENERATED, "reverseunkloop_100");
 }
 
+#[test]
+#[ignore]
+fn test_generated_expensive() {
+    assert_expensive(EX_DIR_GENERATED, "line_1000");
+    assert_expensive(EX_DIR_GENERATED, "reverseline_1000");
+    assert_expensive(EX_DIR_GENERATED, "unkline_1000");
+    assert_expensive(EX_DIR_GENERATED, "reverseunkline_1000");
+    assert_expensive(EX_DIR_GENERATED, "loop_1000");
+    assert_expensive(EX_DIR_GENERATED, "reverseloop_1000");
+    assert_expensive(EX_DIR_GENERATED, "unkloop_1000");
+    assert_expensive(EX_DIR_GENERATED, "reverseunkloop_1000");
+}
+
 /*
     Regex Examples
     (No expected output -- compares for agreement across algorithms)
@@ -182,34 +204,61 @@ fn test_reverseunkloop() {
 
 #[test]
 fn test_regex_comp() {
-    driver::assert_example("examples/regex/complement/comp1_inclusion_unsat");
-    driver::assert_example("examples/regex/complement/comp2_inclusion_sat");
-    driver::assert_example("examples/regex/complement/simple_complement_unsat");
+    assert_one(EX_DIR_REGEX_COMP, "comp1_inclusion_unsat");
+    assert_one(EX_DIR_REGEX_COMP, "comp2_inclusion_sat");
+    assert_one(EX_DIR_REGEX_COMP, "simple_complement_unsat");
 }
 
 #[test]
 fn test_regex_date() {
-    driver::assert_example("examples/regex/date/date_minimal_sat");
-    driver::assert_example("examples/regex/date/date_minimal_unsat");
+    assert_one(EX_DIR_REGEX_DATE, "date_minimal_sat");
+    assert_one(EX_DIR_REGEX_DATE, "date_minimal_unsat");
 }
 
 #[test]
 fn test_regex_loop() {
-    driver::assert_example("examples/regex/loop/deadloop1_sat");
-    driver::assert_example("examples/regex/loop/deadloop2_sat");
-    driver::assert_example("examples/regex/loop/deadloop3_unsat");
-    driver::assert_example("examples/regex/loop/evil1_unsat");
-    driver::assert_example("examples/regex/loop/evil2_inter_unsat");
-    driver::assert_example("examples/regex/loop/evil2_sat");
-    driver::assert_example("examples/regex/loop/nestedloop1_unsat");
-    driver::assert_example("examples/regex/loop/nestedloop2_sat");
-    driver::assert_example("examples/regex/loop/nestedloop2_unsat");
+    assert_one(EX_DIR_REGEX_LOOP, "deadloop1_sat");
+    assert_one(EX_DIR_REGEX_LOOP, "deadloop2_sat");
+    assert_one(EX_DIR_REGEX_LOOP, "deadloop3_unsat");
+    assert_one(EX_DIR_REGEX_LOOP, "evil1_unsat");
+    assert_one(EX_DIR_REGEX_LOOP, "evil2_inter_unsat");
+    assert_one(EX_DIR_REGEX_LOOP, "evil2_sat");
+    assert_one(EX_DIR_REGEX_LOOP, "nestedloop1_unsat");
+    assert_one(EX_DIR_REGEX_LOOP, "nestedloop2_sat");
+    assert_one(EX_DIR_REGEX_LOOP, "nestedloop2_unsat");
 }
 
 #[test]
 fn test_regex_sgeasy() {
-    driver::assert_example("examples/regex/state_graph_easy/diamond_chain_10");
-    driver::assert_example("examples/regex/state_graph_easy/inter_1_2_3");
-    driver::assert_example("examples/regex/state_graph_easy/inter_star_3_3");
-    driver::assert_example("examples/regex/state_graph_easy/long_3");
+    assert_one(EX_DIR_REGEX_SGEASY, "diamond_chain_10");
+    assert_one(EX_DIR_REGEX_SGEASY, "inter_1_2_3");
+    assert_one(EX_DIR_REGEX_SGEASY, "inter_star_3_3");
+    assert_one(EX_DIR_REGEX_SGEASY, "long_3");
+}
+
+#[test]
+#[ignore]
+fn test_regex_extra() {
+    // Medium-length tests, not really necessary to run normally
+    assert_one(EX_DIR_REGEX_COMP, "comp1_nonempty_trivial_sat");
+    assert_one(EX_DIR_REGEX_SGEASY, "diamond_chain_30");
+    assert_one(EX_DIR_REGEX_SGEASY, "inter_3_6_9");
+    assert_one(EX_DIR_REGEX_SGHARD, "inter_10_20_30");
+    assert_one(EX_DIR_REGEX_SGEASY, "inter_star_10_10");
+    assert_one(EX_DIR_REGEX_SGEASY, "inter_star_30_30");
+    assert_one(EX_DIR_REGEX_SGEASY, "long_10");
+    assert_one(EX_DIR_REGEX_SGHARD, "long_30");
+}
+
+#[test]
+#[ignore]
+fn test_regex_expensive() {
+    // Long expensive tests
+    assert_expensive(EX_DIR_REGEX_DATE, "date1_sat");
+    assert_expensive(EX_DIR_REGEX_DATE, "date2_sat");
+    assert_expensive(EX_DIR_REGEX_DATE, "date_unsat");
+    assert_expensive(EX_DIR_REGEX_SGEASY, "diamond_chain_100");
+    assert_expensive(EX_DIR_REGEX_SGHARD, "diamond_chain_300");
+    assert_expensive(EX_DIR_REGEX_SGHARD, "inter_30_60_90");
+    assert_expensive(EX_DIR_REGEX_SGHARD, "inter_star_100_100");
 }
