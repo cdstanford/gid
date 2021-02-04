@@ -29,5 +29,8 @@ pub const ALL_EXAMPLE_DIRS: &[&str] = &[
     // "examples/regex/regexlib/RegexMembership/unsat",
 ];
 
+// Parameter for unit tests
+pub const UNIT_TEST_TIMEOUT_SECS: u64 = 5;
+
 // Output directory used by run_all
 pub const RESULTS_DIR: &str = "results";

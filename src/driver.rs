@@ -7,7 +7,7 @@
 use super::algorithm::{
     JumpStateGraph, NaiveStateGraph, SimpleStateGraph, TarjanStateGraph,
 };
-use super::constants::EXAMPLE_IN_EXT;
+use super::constants::{EXAMPLE_IN_EXT, UNIT_TEST_TIMEOUT_SECS};
 use super::example::{Example, ExampleResult};
 use super::interface::StateGraph;
 use std::fmt::{self, Debug};
@@ -16,12 +16,6 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 use structopt::StructOpt;
-
-/*
-    Constants
-*/
-// Timeout to use when running asserted unit tests
-const UNIT_TEST_TIMEOUT_SECS: u64 = 5;
 
 /*
     Exposed enum for which state graph implementation to use
