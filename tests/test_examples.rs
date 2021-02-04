@@ -262,3 +262,82 @@ fn test_regex_expensive() {
     assert_expensive(EX_DIR_REGEX_SGHARD, "inter_30_60_90");
     assert_expensive(EX_DIR_REGEX_SGHARD, "inter_star_100_100");
 }
+
+/*
+    More Regex Examples -- from RegexLib
+    (No expected output -- compares for agreement across algorithms)
+*/
+
+#[test]
+fn test_regexlib_membership() {
+    assert_one(EX_DIR_RLIB_M1, "membership_0");
+    assert_one(EX_DIR_RLIB_M1, "membership_10");
+    assert_one(EX_DIR_RLIB_M1, "membership_34");
+    assert_one(EX_DIR_RLIB_M1, "membership_56");
+    assert_one(EX_DIR_RLIB_M1, "membership_94");
+    assert_one(EX_DIR_RLIB_M1, "membership_150");
+    assert_one(EX_DIR_RLIB_M1, "membership_191");
+    assert_one(EX_DIR_RLIB_M1, "membership_535");
+    assert_one(EX_DIR_RLIB_M1, "membership_829");
+    assert_one(EX_DIR_RLIB_M1, "membership_1153");
+    assert_one(EX_DIR_RLIB_M1, "membership_1395");
+    assert_one(EX_DIR_RLIB_M1, "membership_1568");
+    assert_one(EX_DIR_RLIB_M1, "membership_1625");
+    assert_one(EX_DIR_RLIB_M1, "membership_1780");
+    assert_one(EX_DIR_RLIB_M1, "membership_1919");
+}
+
+#[test]
+fn test_regexlib_inter() {
+    assert_one(EX_DIR_RLIB_INTER1, "intersect_0_0");
+    assert_one(EX_DIR_RLIB_INTER1, "intersect_1_5");
+    assert_one(EX_DIR_RLIB_INTER2, "intersect_0_3");
+    assert_one(EX_DIR_RLIB_INTER2, "intersect_1_4");
+    assert_one(EX_DIR_RLIB_INTER2, "intersect_2_8");
+    assert_one(EX_DIR_RLIB_INTER2, "intersect_3_6");
+    assert_one(EX_DIR_RLIB_INTER2, "intersect_3_8");
+    assert_one(EX_DIR_RLIB_INTER2, "intersect_5_7");
+    assert_one(EX_DIR_RLIB_INTER2, "intersect_5_8");
+}
+
+#[test]
+fn test_regex_subset() {
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_0_2");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_0_9");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_1_5");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_0_2");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_3_7");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_5_9");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_6_2");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_6_9");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_7_8");
+    assert_one(EX_DIR_RLIB_SUB1, "notsubset_9_8");
+    assert_one(EX_DIR_RLIB_SUB2, "notsubset_2_2");
+    assert_one(EX_DIR_RLIB_SUB2, "notsubset_6_6");
+    assert_one(EX_DIR_RLIB_SUB2, "notsubset_0_0");
+    assert_one(EX_DIR_RLIB_SUB2, "notsubset_9_9");
+}
+
+#[test]
+#[ignore]
+fn test_regexlib_medium() {
+    assert_expensive(EX_DIR_RLIB_M1, "membership_518");
+    assert_expensive(EX_DIR_RLIB_M1, "membership_553");
+    assert_expensive(EX_DIR_RLIB_M1, "membership_800");
+    assert_expensive(EX_DIR_RLIB_M1, "membership_807");
+    assert_expensive(EX_DIR_RLIB_M1, "membership_1749");
+    assert_expensive(EX_DIR_RLIB_INTER1, "intersect_6_7");
+    assert_expensive(EX_DIR_RLIB_INTER1, "intersect_6_8");
+    assert_expensive(EX_DIR_RLIB_INTER1, "intersect_8_9");
+    assert_expensive(EX_DIR_RLIB_INTER1, "intersect_7_8");
+    assert_expensive(EX_DIR_RLIB_INTER1, "intersect_8_8");
+    assert_expensive(EX_DIR_RLIB_SUB1, "notsubset_8_7");
+    assert_expensive(EX_DIR_RLIB_SUB1, "notsubset_8_6");
+    assert_expensive(EX_DIR_RLIB_SUB1, "notsubset_7_6");
+}
+
+#[test]
+#[ignore]
+fn test_regexlib_expensive() {
+    assert_expensive(EX_DIR_RLIB_M1, "membership_854");
+}
