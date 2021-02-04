@@ -96,8 +96,10 @@ impl TarjanStateGraph {
             .graph
             .dfs_bck(iter::once(v1), |u| {
                 // println!("Step 2 DFS back trying: {}", u);
-                debug_assert!(self.get_level(u) <= level1);
                 debug_assert!(!self.is_dead(u));
+                debug_assert!(
+                    !self.is_unknown(u) || self.get_level(u) <= level1
+                );
                 self.is_unknown(u) && self.get_level(u) == level1
             })
             .take(self.delta())
