@@ -8,6 +8,7 @@ use state_graph::driver;
 /*
     Helper functions
 */
+
 fn assert_one(dir: &str, name: &str) {
     driver::assert_example(
         &format!("{}/{}", dir, name),
@@ -20,7 +21,6 @@ fn assert_expensive(dir: &str, name: &str) {
         UNIT_TEST_TIMEOUT_EXPENSIVE,
     );
 }
-#[allow(dead_code)]
 fn assert_all(dir: &str) {
     for basename in driver::example_basenames_in_dir(dir) {
         driver::assert_example(&basename, UNIT_TEST_TIMEOUT_SECS);
@@ -204,15 +204,18 @@ fn test_generated_expensive() {
 
 #[test]
 fn test_regex_comp() {
-    assert_one(EX_DIR_REGEX_COMP, "comp1_inclusion_unsat");
-    assert_one(EX_DIR_REGEX_COMP, "comp2_inclusion_sat");
-    assert_one(EX_DIR_REGEX_COMP, "simple_complement_unsat");
+    assert_all(EX_DIR_REGEX_COMP);
 }
 
 #[test]
-fn test_regex_date() {
-    assert_one(EX_DIR_REGEX_DATE, "date_minimal_sat");
-    assert_one(EX_DIR_REGEX_DATE, "date_minimal_unsat");
+fn test_regex_inter() {
+    assert_all(EX_DIR_REGEX_INTER);
+}
+
+#[test]
+fn test_regex_count() {
+    assert_one(EX_DIR_REGEX_COUNT, "re_count_sat_easy");
+    assert_one(EX_DIR_REGEX_COUNT, "re_count_sat_medium");
 }
 
 #[test]
@@ -229,6 +232,28 @@ fn test_regex_loop() {
 }
 
 #[test]
+fn test_regex_detblowup() {
+    assert_one(EX_DIR_REGEX_BLOWUP, "det_blowup_sat_3");
+    assert_one(EX_DIR_REGEX_BLOWUP, "det_blowup_sat_5");
+    assert_one(EX_DIR_REGEX_BLOWUP, "det_blowup_sat_10");
+    assert_one(EX_DIR_REGEX_BLOWUP, "det_blowup_sat_100");
+    assert_one(EX_DIR_REGEX_BLOWUP, "det_blowup_unsat_1");
+    assert_one(EX_DIR_REGEX_BLOWUP, "det_blowup_unsat_3");
+    assert_one(EX_DIR_REGEX_BLOWUP, "det_blowup_unsat_5");
+    assert_one(EX_DIR_REGEX_BLOWUP, "det_blowup_unsat_10");
+    assert_one(EX_DIR_REGEX_BLOWUP, "digit05_unsat");
+    assert_one(EX_DIR_REGEX_BLOWUP, "digit10_unsat");
+    assert_one(EX_DIR_REGEX_BLOWUP, "digit15_unsat");
+    assert_one(EX_DIR_REGEX_BLOWUP, "digit20_unsat");
+}
+
+#[test]
+fn test_regex_date() {
+    assert_one(EX_DIR_REGEX_DATE, "date_minimal_sat");
+    assert_one(EX_DIR_REGEX_DATE, "date_minimal_unsat");
+}
+
+#[test]
 fn test_regex_sgeasy() {
     assert_one(EX_DIR_REGEX_SGEASY, "diamond_chain_10");
     assert_one(EX_DIR_REGEX_SGEASY, "inter_1_2_3");
@@ -237,30 +262,55 @@ fn test_regex_sgeasy() {
 }
 
 #[test]
+fn test_regex_password() {
+    assert_one(EX_DIR_REGEX_PASSW, "passw_sat1");
+    assert_one(EX_DIR_REGEX_PASSW, "passw_sat2");
+    assert_one(EX_DIR_REGEX_PASSW, "passw_sat3");
+    assert_one(EX_DIR_REGEX_PASSW, "passw_sat4");
+    assert_one(EX_DIR_REGEX_PASSW, "passw_unsat1");
+    assert_one(EX_DIR_REGEX_PASSW, "passw_unsat3");
+    assert_one(EX_DIR_REGEX_PASSW, "passw_very_complex_2_4_unsat");
+    assert_one(EX_DIR_REGEX_PASSW, "passw_very_complex_3_4_unsat");
+}
+
+#[test]
 #[ignore]
-fn test_regex_extra() {
+fn test_regex_medium() {
     // Medium-length tests, not really necessary to run normally
-    assert_one(EX_DIR_REGEX_COMP, "comp1_nonempty_trivial_sat");
-    assert_one(EX_DIR_REGEX_SGEASY, "diamond_chain_30");
-    assert_one(EX_DIR_REGEX_SGEASY, "inter_3_6_9");
-    assert_one(EX_DIR_REGEX_SGHARD, "inter_10_20_30");
-    assert_one(EX_DIR_REGEX_SGEASY, "inter_star_10_10");
-    assert_one(EX_DIR_REGEX_SGEASY, "inter_star_30_30");
-    assert_one(EX_DIR_REGEX_SGEASY, "long_10");
-    assert_one(EX_DIR_REGEX_SGHARD, "long_30");
+    assert_expensive(EX_DIR_REGEX_DATE, "date1_sat");
+    assert_expensive(EX_DIR_REGEX_DATE, "date2_sat");
+    assert_expensive(EX_DIR_REGEX_DATE, "date_unsat");
+    assert_expensive(EX_DIR_REGEX_BLOWUP, "det_blowup_sat_1000");
+    assert_expensive(EX_DIR_REGEX_SGEASY, "diamond_chain_30");
+    assert_expensive(EX_DIR_REGEX_SGEASY, "diamond_chain_100");
+    assert_expensive(EX_DIR_REGEX_SGHARD, "diamond_chain_300");
+    assert_expensive(EX_DIR_REGEX_SGEASY, "inter_3_6_9");
+    assert_expensive(EX_DIR_REGEX_SGHARD, "inter_10_20_30");
+    assert_expensive(EX_DIR_REGEX_SGHARD, "inter_30_60_90");
+    assert_expensive(EX_DIR_REGEX_SGEASY, "inter_star_10_10");
+    assert_expensive(EX_DIR_REGEX_SGEASY, "inter_star_30_30");
+    assert_expensive(EX_DIR_REGEX_SGHARD, "inter_star_100_100");
+    assert_expensive(EX_DIR_REGEX_SGEASY, "long_10");
+    assert_expensive(EX_DIR_REGEX_SGHARD, "long_30");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_4_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_5_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_6_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_7_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_8_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_9_10_sat");
 }
 
 #[test]
 #[ignore]
 fn test_regex_expensive() {
     // Long expensive tests
-    assert_expensive(EX_DIR_REGEX_DATE, "date1_sat");
-    assert_expensive(EX_DIR_REGEX_DATE, "date2_sat");
-    assert_expensive(EX_DIR_REGEX_DATE, "date_unsat");
-    assert_expensive(EX_DIR_REGEX_SGEASY, "diamond_chain_100");
-    assert_expensive(EX_DIR_REGEX_SGHARD, "diamond_chain_300");
-    assert_expensive(EX_DIR_REGEX_SGHARD, "inter_30_60_90");
-    assert_expensive(EX_DIR_REGEX_SGHARD, "inter_star_100_100");
+    assert_expensive(EX_DIR_REGEX_BLOWUP, "det_blowup_unsat_100");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_very_complex_1_7_unsat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_very_complex_2_7_unsat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_very_complex_3_7_unsat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_very_complex_4_7_unsat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_very_complex_5_7_unsat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_very_complex_6_7_unsat");
 }
 
 /*
@@ -321,6 +371,7 @@ fn test_regex_subset() {
 #[test]
 #[ignore]
 fn test_regexlib_medium() {
+    // Medium-length tests
     assert_expensive(EX_DIR_RLIB_M1, "membership_518");
     assert_expensive(EX_DIR_RLIB_M1, "membership_553");
     assert_expensive(EX_DIR_RLIB_M1, "membership_800");
@@ -339,5 +390,6 @@ fn test_regexlib_medium() {
 #[test]
 #[ignore]
 fn test_regexlib_expensive() {
+    // Long expensive tests
     assert_expensive(EX_DIR_RLIB_M1, "membership_854");
 }
