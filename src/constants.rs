@@ -20,6 +20,13 @@ pub const ALL_EXAMPLE_DIRS: &[&str] = &[
     "examples/regex/loop",
     "examples/regex/state_graph_easy",
     "examples/regex/state_graph_hard",
+    "examples/regex/regexlib/RegexMembership/sat",
+    "examples/regex/regexlib/RegexIntersection/sat",
+    "examples/regex/regexlib/RegexIntersection/unsat",
+    "examples/regex/regexlib/RegexSubset/sat",
+    "examples/regex/regexlib/RegexSubset/unsat",
+    // Disabled since it only contains one file and it is trivial:
+    // "examples/regex/regexlib/RegexMembership/unsat",
 ];
 
 // Output directory used by run_all
