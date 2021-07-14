@@ -1,0 +1,1 @@
+(explore-derivatives (re.++ (re.range "'" "'")(re.++ (re.union (re.range "d" "d")(re.union (re.range "l" "m") (re.range "r" "t"))) (re.union (re.range " " "!")(re.union (re.range ")" ")")(re.union (re.range "," ",")(re.union (re.range "." "/")(re.union (re.range "<" "<")(re.union (re.range "?" "?") (re.range "\x5c" "\x5c"))))))))))

@@ -1,0 +1,1 @@
+(explore-derivatives (re.++ (str.to_re "")(re.++ (re.union (re.++ (re.range "0" "1")(re.++ (re.range "." ".") (re.range "0" "9")))(re.union (re.++ (re.range "0" "1")(re.++ (re.range "," ",") (re.range "0" "9")))(re.union (str.to_re (seq.++ "2" (seq.++ "." (seq.++ "0" "")))) (str.to_re (seq.++ "2" (seq.++ "," (seq.++ "0" ""))))))) (str.to_re ""))))

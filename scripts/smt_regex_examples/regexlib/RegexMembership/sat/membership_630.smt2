@@ -1,0 +1,1 @@
+(explore-derivatives (re.++ (str.to_re "")(re.++ (str.to_re (seq.++ "$" (seq.++ "Y" (seq.++ "Y" (seq.++ "Y" (seq.++ "Y" (seq.++ "$" (seq.++ "$" (seq.++ "M" (seq.++ "M" (seq.++ "$" (seq.++ "$" (seq.++ "D" (seq.++ "D" (seq.++ "$" ""))))))))))))))) (str.to_re ""))))

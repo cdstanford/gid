@@ -1,0 +1,1 @@
+(explore-derivatives (re.union (re.range "A" "A")(re.union (re.range "E" "E")(re.union (re.range "I" "I")(re.union (re.range "O" "O")(re.union (re.range "U" "U")(re.union (re.range "Y" "Y")(re.union (re.range "a" "a")(re.union (re.range "e" "e")(re.union (re.range "i" "i")(re.union (re.range "o" "o")(re.union (re.range "u" "u") (re.range "y" "y")))))))))))))

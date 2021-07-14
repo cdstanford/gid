@@ -1,0 +1,1 @@
+(explore-derivatives (re.++ (str.to_re (seq.++ "I" (seq.++ "C" (seq.++ "O" (seq.++ "N" (seq.++ "=" "")))))) (re.* (re.union (re.range "\x22" "\x22")(re.union (re.range "+" ";")(re.union (re.range "=" "=")(re.union (re.range "A" "Z") (re.range "a" "z"))))))))
