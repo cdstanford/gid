@@ -10,6 +10,9 @@ then outputs the state graph as an incremental list of updates.
 import glob
 import os
 
+# **TODO: this needs to be updated to new git directory structure**
+assert False, "TODO: update to new git directory structure"
+
 Z3_PATH = '/home/caleb/git/research/z3/release/z3'
 INPUT_DIR = '../benchmarks/explore_derivatives/'
 INPUT_EXT = '.smt2'
