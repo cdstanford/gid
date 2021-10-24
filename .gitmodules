@@ -1,0 +1,3 @@
+[submodule "regex-smt-benchmarks"]
+	path = regex-smt-benchmarks
+	url = https://github.com/cdstanford/regex-smt-benchmarks
