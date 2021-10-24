@@ -1,1 +1,0 @@
-(explore-derivatives (re.union (str.to_re (seq.++ "E" (seq.++ "r" (seq.++ "r" (seq.++ "o" (seq.++ "r" ""))))))(re.union (str.to_re (seq.++ "W" (seq.++ "a" (seq.++ "r" (seq.++ "n" (seq.++ "i" (seq.++ "n" (seq.++ "g" "")))))))) (str.to_re (seq.++ "E" (seq.++ "x" (seq.++ "c" (seq.++ "e" (seq.++ "p" (seq.++ "t" (seq.++ "i" (seq.++ "o" (seq.++ "n" "")))))))))))))

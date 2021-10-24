@@ -1,1 +1,0 @@
-(explore-derivatives (re.++ (re.range "[" "[")(re.++ (re.* (re.union (re.range "\x00" "\x5c") (re.range "^" "\xff")))(re.++ (re.range "]" "]") (re.* (re.union (re.range "\x00" "Z") (re.range "\x5c" "\xff")))))))

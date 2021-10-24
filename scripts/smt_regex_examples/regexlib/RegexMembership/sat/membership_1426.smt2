@@ -1,1 +1,0 @@
-(explore-derivatives (re.union (re.range "+" "+")(re.union (re.range "<" ">")(re.union (re.range "|" "|")(re.union (re.range "~" "~")(re.union (re.range "\xac" "\xac")(re.union (re.range "\xb1" "\xb1")(re.union (re.range "\xd7" "\xd7") (re.range "\xf7" "\xf7")))))))))

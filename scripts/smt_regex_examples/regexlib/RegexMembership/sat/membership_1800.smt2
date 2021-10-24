@@ -1,1 +1,0 @@
-(explore-derivatives (re.union (re.union (re.range "\x00" "-")(re.union (re.range "/" "/")(re.union (re.range ":" "?")(re.union (re.range "[" "^")(re.union (re.range "`" "`") (re.range "{" "\xff"))))))(re.union (re.++ ((_ re.loop 2 2) (re.range "@" "@")) (re.* (re.range "@" "@"))) (re.++ ((_ re.loop 5 5) (re.range "." ".")) (re.* (re.range "." "."))))))

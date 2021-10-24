@@ -1,1 +1,0 @@
-(explore-derivatives (re.++ (str.to_re "")(re.++ (re.+ (re.union (str.to_re (seq.++ "/" (seq.++ "w" "")))(re.union (str.to_re (seq.++ "/" (seq.++ "W" ""))) (re.union (re.range "\x00" "#")(re.union (re.range "'" "*")(re.union (re.range "," ";")(re.union (re.range "=" "=")(re.union (re.range "@" "z")(re.union (re.range "|" "|") (re.range "~" "\xff")))))))))) (str.to_re ""))))

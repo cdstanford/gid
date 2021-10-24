@@ -1,1 +1,0 @@
-(explore-derivatives (re.union (re.++ (re.range "\x22" "\x22")(re.++ (re.* (re.union (re.range "\x00" "!") (re.range "#" "\xff"))) (re.range "\x22" "\x22"))) (re.++ (re.++ (re.range "'" "'") (re.* (re.union (re.range "\x00" "\x0c") (re.range "\x0e" "\xff")))) (re.opt (str.to_re (seq.++ "\x0d" (seq.++ "\x0a" "")))))))

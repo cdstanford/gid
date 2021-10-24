@@ -1,2 +1,0 @@
-(explore-derivatives (re.inter (re.inter (re.inter (re.inter (re.++ (re.++ re.all (re.range "a" "z")) re.all) (re.++ (re.++ re.all (re.range "0" "9")) re.all)) (re.++ (re.++ re.all (re.range "A" "Z")) re.all)) ((_ re.loop 8 20) re.allchar)) (re.union (re.inter (re.++ (re.++ (re.++ (re.++ re.all (str.to_re "0")) re.all) (str.to_re "O")) re.all) re.none) (re.inter (re.comp (re.++ (re.++ (re.++ (re.++ re.all (str.to_re "0")) re.all) (str.to_re "O")) re.all)) re.all))))
-
