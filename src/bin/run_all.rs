@@ -26,8 +26,7 @@ impl Args {
         println!("Current Datetime: {:?}", datetime);
         println!("Mode: {}", mode);
         println!("Timeout: {}s", self.timeout);
-        let mut result_lines = Vec::new();
-        result_lines.push(driver::run_compare_csv_header());
+        let mut result_lines = vec![driver::run_compare_csv_header()];
         for dir in ALL_EXAMPLE_DIRS {
             println!("======= directory: {} =======", dir);
             for basename in driver::example_basenames_in_dir(dir) {
