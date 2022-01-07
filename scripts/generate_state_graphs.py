@@ -1,6 +1,8 @@
 #!/usr/bin/env python3.7
 
 """
+**Currently obsolete/broken, see TODO below**
+
 Script to generate state graph test cases from regexes.
 
 Uses a handle into Z3 to simplify the regex and generate the derivatives,
@@ -10,8 +12,12 @@ then outputs the state graph as an incremental list of updates.
 import glob
 import os
 
-# **TODO: this needs to be updated to new git directory structure**
-assert False, "TODO: update to new git directory structure"
+"""
+TODO: this needs to be updated to new git directory structure.
+It also needs to do some basic parsing and add in the explore-derivatives
+command, which is not a part of the SMT input anymore.
+"""
+assert False, "TODO: update to new directory structure"
 
 Z3_PATH = '/home/caleb/git/research/z3/release/z3'
 INPUT_DIR = '../benchmarks/explore_derivatives/'

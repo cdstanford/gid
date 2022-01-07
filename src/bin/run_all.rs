@@ -1,7 +1,7 @@
 /*
     Run all state graph algorithms on every known example input.
 
-    See constants::ALL_EXAMPLES for the list of known examples.
+    See constants::ALL_EXAMPLE_DIRS for the list of known examples.
 */
 
 use state_graph::constants::{ALL_EXAMPLE_DIRS, RESULTS_DIR};
