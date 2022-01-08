@@ -138,11 +138,11 @@ impl ExampleResult {
             Self::Release(_) => "Unknown (not tracked)".to_string(),
         }
     }
-    pub fn unwrap_output(&self) -> &ExampleOutput {
+    pub fn get_output(&self) -> Option<&ExampleOutput> {
         match self {
-            Self::Timeout => panic!("Unwrapped Timeout!"),
-            Self::Debug(res) => &res.output,
-            Self::Release(res) => &res.output,
+            Self::Timeout => None,
+            Self::Debug(res) => Some(&res.output),
+            Self::Release(res) => Some(&res.output),
         }
     }
     pub fn output_str(&self) -> String {

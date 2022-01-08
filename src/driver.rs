@@ -8,7 +8,7 @@ use super::algorithm::{
     JumpStateGraph, NaiveStateGraph, SimpleStateGraph, TarjanStateGraph,
 };
 use super::constants::EXAMPLE_IN_EXT;
-use super::example::{Example, ExampleResult};
+use super::example::{Example, ExampleOutput, ExampleResult};
 use super::interface::StateGraph;
 use std::fmt::{self, Debug};
 use std::fs;
@@ -93,15 +93,15 @@ fn run_core(
         println!("=== Output ===");
         println!("{}", result.output_str());
         println!("=== Result ===");
-        if result.is_correct() {
-            if example.expected.is_some() {
+        println!("Stastics: {}", result.summary());
+        if example.expected.is_some() {
+            if result.is_correct() {
                 println!("Output is correct.");
+            } else {
+                println!("Output is incorrect!");
+                println!("=== Expected Output ===");
+                println!("{:?}", example.expected.as_ref().unwrap());
             }
-            println!("Stastics: {}", result.summary());
-        } else {
-            println!("Output is incorrect!");
-            println!("=== Expected Output ===");
-            println!("{:?}", example.expected.as_ref().unwrap());
         }
     } else {
         println!("{}: {}", alg, result.summary());
@@ -124,6 +124,16 @@ pub fn run_single_example(
     Assertion for unit testing
 */
 
+// Panic on timeouts, otherwise extract output
+pub fn unwrap_timeout(res: &ExampleResult) -> &ExampleOutput {
+    res.get_output().unwrap_or_else(|| {
+        panic!(
+            "Algorithm timed out! Tip: if you are running \
+            --ignored tests, make sure to use --release mode."
+        );
+    })
+}
+
 pub fn assert_example(basename: &str, timeout_secs: u64) {
     let example = Example::load_from(basename);
     let timeout = Duration::from_secs(timeout_secs);
@@ -143,12 +153,13 @@ pub fn assert_example(basename: &str, timeout_secs: u64) {
     } else {
         println!("Asserting each algorithm output matches naive...");
         let naive = run_core(&example, Algorithm::Naive, timeout, true);
+        let expected = unwrap_timeout(&naive);
         let simple = run_core(&example, Algorithm::Simple, timeout, true);
-        assert_eq!(naive.unwrap_output(), simple.unwrap_output());
+        assert_eq!(expected, unwrap_timeout(&simple));
         let tarjan = run_core(&example, Algorithm::Tarjan, timeout, true);
-        assert_eq!(naive.unwrap_output(), tarjan.unwrap_output());
+        assert_eq!(expected, unwrap_timeout(&tarjan));
         let jump = run_core(&example, Algorithm::Jump, timeout, true);
-        assert_eq!(naive.unwrap_output(), jump.unwrap_output());
+        assert_eq!(expected, unwrap_timeout(&jump));
     }
 }
 
