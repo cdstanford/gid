@@ -1,1 +1,1 @@
-find . -name '*.rs' | sort | xargs wc -l > loc.txt
+find . -name '*.rs' | xargs wc -l | sort > loc.txt
