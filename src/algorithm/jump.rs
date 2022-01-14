@@ -4,7 +4,7 @@
     of states ahead at once.
 */
 
-use crate::debug_counter::DebugCounter;
+// use crate::debug_counter::DebugCounter;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
 use std::collections::{HashSet, LinkedList};
@@ -55,7 +55,8 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 #[derive(Debug, Default)]
 pub struct JumpStateGraph {
     graph: DiGraph<usize, Node>,
-    additional_time: DebugCounter,
+    // TODO: did I forget to track time?
+    // additional_time: DebugCounter,
 }
 impl JumpStateGraph {
     /* Node label manipulation */

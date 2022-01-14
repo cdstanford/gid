@@ -145,7 +145,7 @@ where
             let temp2 = &self.prev_nodes;
             temp1.entry(v).or_insert_with(|| (temp2)(v).peekable())
         };
-        while let Some(u) = iter_bck.peek() {
+        while let Some(&u) = iter_bck.peek() {
             // println!("[topsearch] peeking at {:?}", u);
             if !self.visited.contains(&u) {
                 // println!("[topsearch] not ready to visit {:?}", v);

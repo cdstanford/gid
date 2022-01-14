@@ -20,13 +20,8 @@ use std::collections::{HashMap, HashSet};
 use std::iter;
 
 // The key to the algorithm: pseudo-topological numbering
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 struct Level(usize);
-impl Default for Level {
-    fn default() -> Self {
-        Level(0)
-    }
-}
 
 #[derive(Debug, Default)]
 pub struct TarjanStateGraph {
