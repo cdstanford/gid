@@ -14,6 +14,9 @@ struct Node {
     // Reserve list: forward edges not added to graph.
     reserve: LinkedList<usize>,
 
+    // Successor
+    next: Option<usize>,
+
     // Categorized status, same as in other algorithms
     status: Status,
 }
@@ -37,10 +40,10 @@ pub struct SmartStateGraph {
 }
 impl SmartStateGraph {
     /* Node label manipulation */
-    // fn get_node(&self, v: usize) -> &Node {
-    //     debug_assert!(self.is_seen(v));
-    //     self.graph.get_label(v).unwrap()
-    // }
+    fn get_node(&self, v: usize) -> &Node {
+        debug_assert!(self.is_seen(v));
+        self.graph.get_label(v).unwrap()
+    }
     fn get_node_mut(&mut self, v: usize) -> &mut Node {
         debug_assert!(self.is_seen(v));
         self.graph.get_label_mut(v).unwrap()
@@ -68,18 +71,15 @@ impl SmartStateGraph {
     }
     // In this implementation, every vertex has at most one successor.
     fn get_succ(&self, v: usize) -> Option<usize> {
-        // println!("get_first_jump: {} {}", v, self.is_closed(v));
         debug_assert!(self.is_closed(v));
-        let succs: Vec<usize> = self
-            .graph
-            .iter_fwd_edges(v)
-            .filter(|&v| !self.is_dead(v))
-            .collect();
-        match succs.len() {
-            0 => None,
-            1 => Some(succs[0]),
-            _ => panic!("successor invariant violated"),
-        }
+        self.get_node(v).next
+    }
+    fn set_succ(&mut self, v: usize, w: usize) {
+        debug_assert_eq!(self.get_succ(v), None);
+        self.get_node_mut(v).next = Some(w);
+    }
+    fn clear_succ(&mut self, v: usize) {
+        self.get_node_mut(v).next = None;
     }
 
     /*
@@ -147,8 +147,7 @@ impl SmartStateGraph {
                 // No further work, set successor and return
                 // println!("  (setting jump and returning)");
                 self.set_status(v, Status::Unknown);
-                debug_assert_eq!(self.get_succ(v), None);
-                self.graph.ensure_edge_fwd(v, w);
+                self.set_succ(v, w);
                 return;
             }
         }
@@ -167,6 +166,7 @@ impl SmartStateGraph {
         // with them
         for &u in &to_recurse {
             self.set_status(u, Status::Open);
+            self.clear_succ(u);
         }
         // Then go through and check dead for each one
         for &u in &to_recurse {
