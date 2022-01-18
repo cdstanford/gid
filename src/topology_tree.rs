@@ -12,6 +12,7 @@
 
     Currently this is a placeholder. TODOs are
     1. implement naive version that works but isn't efficient
+        ==> Done
     2. write unit tests
     3. implement the efficient version
 
@@ -34,38 +35,80 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::HashMap;
+use std::fmt::Debug;
 use std::hash::Hash;
 
-enum BinTree<V> {
-    Leaf(V),
-    Node(BTreeSet<BinTree<V>>),
+pub struct TopTrees<V: Copy + Debug + Eq + Hash + Ord> {
+    parents: HashMap<V, Option<V>>,
 }
-
-pub struct TopTrees<V: Copy + Eq + Hash + Ord> {
-    trees: BTreeMap<V, BinTree<V>>,
-    nodes: HashSet<V>,
-}
-impl<V: Copy + Eq + Hash + Ord> TopTrees<V> {
-    fn add_tree(&mut self, v: V) {
-        debug_assert!(!self.nodes.contains(&v));
-        debug_assert!(!self.trees.contains_key(&v));
-        self.trees.insert(v, BinTree::Leaf(v));
-        self.nodes.insert(v);
+impl<V: Copy + Debug + Eq + Hash + Ord> TopTrees<V> {
+    pub fn add_vertex(&mut self, v: V) {
+        assert!(!self.is_seen(v));
+        self.parents.insert(v, None);
     }
-    fn query_root(&self, v: V) -> V {
-        unimplemented!()
+    pub fn query_root(&self, mut v: V) -> V {
+        assert!(self.is_seen(v));
+        while !self.is_root(v) {
+            v = self.get_parent(v).unwrap();
+        }
+        v
+    }
+    pub fn set_root(&mut self, v: V) {
+        assert!(self.is_seen(v));
+        // This is implemented recursively
+        // Switches all edges from v to the root.
+        if !self.is_root(v) {
+            let next = self.get_parent(v).unwrap();
+            self.set_root(next);
+            debug_assert!(self.get_parent(next).is_none());
+            self.set_parent(next, v);
+            self.erase_parent(v);
+        }
+        debug_assert!(self.is_root(v));
+    }
+    pub fn add_edge(&mut self, v1: V, v2: V) {
+        assert!(self.is_seen(v1));
+        assert!(self.is_seen(v2));
+        assert!(!self.same_root(v1, v2));
+        self.set_root(v1);
+        debug_assert!(self.get_parent(v1).is_none());
+        self.set_parent(v1, v2);
+    }
+    pub fn remove_edge(&mut self, v1: V, v2: V) {
+        assert!(self.is_seen(v1));
+        assert!(self.is_seen(v2));
+        assert_eq!(self.get_parent(v1), Some(v2));
+        debug_assert!(self.same_root(v1, v2));
+        self.erase_parent(v1);
+    }
+
+    /*
+        Internal
+    */
+    fn is_seen(&self, v: V) -> bool {
+        self.parents.contains_key(&v)
+    }
+    fn get_parent(&self, v: V) -> Option<V> {
+        assert!(self.is_seen(v));
+        *self.parents.get(&v).unwrap()
+    }
+    fn set_parent(&mut self, v1: V, v2: V) {
+        assert!(self.is_seen(v1));
+        assert!(self.is_seen(v2));
+        *self.parents.get_mut(&v1).unwrap() = Some(v2);
+    }
+    fn erase_parent(&mut self, v1: V) {
+        assert!(self.is_seen(v1));
+        *self.parents.get_mut(&v1).unwrap() = None;
+    }
+    fn is_root(&self, v: V) -> bool {
+        assert!(self.is_seen(v));
+        self.query_root(v) == v
     }
     fn same_root(&self, v1: V, v2: V) -> bool {
+        assert!(self.is_seen(v1));
+        assert!(self.is_seen(v2));
         self.query_root(v1) == self.query_root(v2)
-    }
-    fn set_root(&mut self, v: V) {
-        unimplemented!()
-    }
-    fn join_trees(&mut self, v1: V, v2: V) {
-        unimplemented!()
-    }
-    fn split_trees(&mut self, v1: V, v2: V) {
-        unimplemented!()
     }
 }
