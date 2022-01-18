@@ -66,13 +66,20 @@ impl SmartStateGraph {
         debug_assert!(!self.is_closed(v));
         self.get_node_mut(v).reserve.pop_back()
     }
-    // In this implementation, every vertex has a unique successor.
-    fn get_succ(&self, v: usize) -> usize {
+    // In this implementation, every vertex has at most one successor.
+    fn get_succ(&self, v: usize) -> Option<usize> {
         // println!("get_first_jump: {} {}", v, self.is_closed(v));
         debug_assert!(self.is_closed(v));
-        let succs: Vec<usize> = self.graph.iter_fwd_edges(v).collect();
-        debug_assert_eq!(succs.len(), 1);
-        succs[0]
+        let succs: Vec<usize> = self
+            .graph
+            .iter_fwd_edges(v)
+            .filter(|&v| !self.is_dead(v))
+            .collect();
+        match succs.len() {
+            0 => None,
+            1 => Some(succs[0]),
+            _ => panic!("successor invariant violated"),
+        }
     }
 
     /*
@@ -90,7 +97,7 @@ impl SmartStateGraph {
             self.graph.is_same_vertex(v, end)
         } else {
             // Naive implementation, just go one vertex forward at a time
-            self.is_root(self.get_succ(v), end)
+            self.is_root(self.get_succ(v).unwrap(), end)
         }
     }
 
@@ -101,9 +108,9 @@ impl SmartStateGraph {
     fn merge_path_from(&mut self, v: usize) {
         let to_merge: Vec<usize> = {
             iter::successors(Some(v), |&w| {
-                // println!("{} {:?} {}", w, self.get_status(w));
+                // println!("{} {:?}", w, self.get_status(w));
                 if self.is_closed(w) {
-                    Some(self.get_succ(w))
+                    Some(self.get_succ(w).unwrap())
                 } else {
                     None
                 }
@@ -120,7 +127,15 @@ impl SmartStateGraph {
         Initialize function for a newly closed vertex, to find an univisted
         vertex.
     */
+    fn is_succ(&self, u: usize, v: usize) -> bool {
+        if let Some(w) = self.get_succ(u) {
+            self.graph.is_same_vertex(w, v)
+        } else {
+            false
+        }
+    }
     fn check_dead(&mut self, v: usize) {
+        debug_assert!(self.is_open(v));
         while let Some(w) = self.pop_reserve(v) {
             if self.is_dead(w) {
                 continue;
@@ -131,23 +146,24 @@ impl SmartStateGraph {
             } else {
                 // No further work, set successor and return
                 // println!("  (setting jump and returning)");
-                debug_assert_eq!(self.graph.iter_fwd_edges(v).count(), 0);
                 self.set_status(v, Status::Unknown);
+                debug_assert_eq!(self.get_succ(v), None);
                 self.graph.ensure_edge_fwd(v, w);
                 return;
             }
         }
         // No more edges -- v is dead.
-        // Recurse on all edges backwards from v.
-        self.set_status(v, Status::Dead);
         // println!("Found Dead: {}", v);
+        // Recurse on all edges backwards from v.
         let to_recurse: HashSet<usize> = self
             .graph
             .iter_bck_edges(v)
             .filter(|&u| self.is_unknown(u))
-            .filter(|&u| self.graph.is_same_vertex(self.get_succ(u), v))
+            .filter(|&u| self.is_succ(u, v))
             .collect();
-        // First set to_recurse as open so that recursive calls won't mess
+        // First set to dead
+        self.set_status(v, Status::Dead);
+        // Second set to_recurse as open so that recursive calls won't mess
         // with them
         for &u in &to_recurse {
             self.set_status(u, Status::Open);
