@@ -54,6 +54,11 @@ impl<V: Copy + Debug + Eq + Hash + Ord> TopTrees<V> {
         assert!(!self.is_seen(v));
         self.parents.insert(v, None);
     }
+    pub fn ensure_vertex(&mut self, v: V) {
+        if !self.is_seen(v) {
+            self.parents.insert(v, None);
+        }
+    }
     pub fn query_root(&self, mut v: V) -> V {
         assert!(self.is_seen(v));
         while !self.is_root(v) {
