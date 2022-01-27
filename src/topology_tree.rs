@@ -98,6 +98,15 @@ impl<V: Copy + Debug + Eq + Hash + Ord> TopTrees<V> {
     }
 
     /*
+        Derived
+    */
+    pub fn same_root(&self, v1: V, v2: V) -> bool {
+        assert!(self.is_seen(v1));
+        assert!(self.is_seen(v2));
+        self.query_root(v1) == self.query_root(v2)
+    }
+
+    /*
         Internal
     */
     // Basic primitives
@@ -121,12 +130,6 @@ impl<V: Copy + Debug + Eq + Hash + Ord> TopTrees<V> {
     fn erase_parent(&mut self, v1: V) {
         assert!(self.is_seen(v1));
         *self.parents.get_mut(&v1).unwrap() = None;
-    }
-    // Derived from query_root
-    fn same_root(&self, v1: V, v2: V) -> bool {
-        assert!(self.is_seen(v1));
-        assert!(self.is_seen(v2));
-        self.query_root(v1) == self.query_root(v2)
     }
 }
 

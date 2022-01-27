@@ -100,13 +100,13 @@ impl SmartStateGraph {
     fn is_root(&mut self, v: usize, end: usize) -> bool {
         debug_assert!(self.is_unknown(v) || self.is_open(v));
         debug_assert!(self.is_open(end));
-        // self.top_trees TODO
-        if self.is_open(v) {
-            self.graph.is_same_vertex(v, end)
-        } else {
-            // Naive implementation, just go one vertex forward at a time
-            self.is_root(self.get_succ(v).unwrap(), end)
-        }
+        self.top_trees.same_root(v, end)
+        // The following naive implementation works too, not using top_trees
+        // if self.is_open(v) {
+        //     self.graph.is_same_vertex(v, end)
+        // } else {
+        //     self.is_root(self.get_succ(v).unwrap(), end)
+        // }
     }
 
     /*
