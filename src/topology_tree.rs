@@ -1,5 +1,5 @@
 /*
-    Implementation of Frederickson's Topology Trees.
+    Implementation of Frederickson's Topology Trees
     for dynamic undirected graph connectivity problems.
 
     The data structure maintains a forest of rooted trees, and supports
@@ -10,14 +10,19 @@
     - Joining two trees into one by adding an edge
     - Splitting a tree into two by removing an edge
 
-    Currently this is a placeholder. TODOs are
+    This data structure can be used efficiently for undirected
+    connectivity in forests. It doesn't solve the problem of
+    undirected connectivity in *general* graphs, but forests
+    will be enough for our use case.
+
+    TODO List:
     1. implement naive version that works but isn't efficient
         ==> Done
     2. write unit tests
         ==> Done
     3. implement the efficient version
 
-    For simplicity assumes vertices are `usize` values. Use
+    For simplicity, we assume vertices are `usize` values. Use
     a separate data structure to map values of another type
     uniquely to IDs.
 
@@ -49,10 +54,6 @@ impl<V: Copy + Debug + Eq + Hash + Ord> Default for TopTrees<V> {
 impl<V: Copy + Debug + Eq + Hash + Ord> TopTrees<V> {
     pub fn new() -> Self {
         Default::default()
-    }
-    pub fn add_vertex(&mut self, v: V) {
-        assert!(!self.is_seen(v));
-        self.parents.insert(v, None);
     }
     pub fn ensure_vertex(&mut self, v: V) {
         if !self.is_seen(v) {
@@ -140,20 +141,20 @@ mod tests {
     #[test]
     fn test_add_vertex() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
-        g.add_vertex(3);
+        assert!(!g.is_seen(1));
+        assert!(!g.is_seen(2));
+        assert!(!g.is_seen(3));
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
+        g.ensure_vertex(3);
         assert!(g.is_root(1));
         assert!(g.is_root(2));
         assert!(g.is_root(3));
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_add_vertex_twice() {
-        let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(1);
+        assert!(g.is_seen(1));
+        assert!(g.is_seen(2));
+        assert!(g.is_seen(1));
+        assert!(!g.is_seen(0));
+        assert!(!g.is_seen(4));
     }
 
     #[test]
@@ -174,7 +175,7 @@ mod tests {
     #[should_panic]
     fn test_edge_nonexistent_1() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
+        g.ensure_vertex(1);
         g.add_edge(1, 2);
     }
 
@@ -182,15 +183,15 @@ mod tests {
     #[should_panic]
     fn test_edge_nonexistent_2() {
         let mut g = TopTrees::new();
-        g.add_vertex(2);
+        g.ensure_vertex(2);
         g.add_edge(1, 2);
     }
 
     #[test]
     fn test_two_vertices() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
         g.add_edge(1, 2);
         assert_eq!(g.query_root(1), 2);
         assert_eq!(g.query_root(2), 2);
@@ -200,8 +201,8 @@ mod tests {
     #[should_panic]
     fn test_add_edge_twice() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
         g.add_edge(1, 2);
         g.add_edge(1, 2);
     }
@@ -210,16 +211,16 @@ mod tests {
     #[should_panic]
     fn test_add_self_edge() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
+        g.ensure_vertex(1);
         g.add_edge(1, 1);
     }
 
     #[test]
     fn test_add_edges() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
-        g.add_vertex(3);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
+        g.ensure_vertex(3);
         g.add_edge(1, 2);
         assert_eq!(g.query_root(1), 2);
         assert_eq!(g.query_root(2), 2);
@@ -234,7 +235,7 @@ mod tests {
     fn test_add_edges_complicated() {
         let mut g = TopTrees::new();
         for i in 0..10 {
-            g.add_vertex(i);
+            g.ensure_vertex(i);
         }
         g.add_edge(0, 1);
         g.add_edge(2, 3);
@@ -260,8 +261,8 @@ mod tests {
     #[should_panic]
     fn test_add_cycle_2() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
         g.add_edge(1, 2);
         g.add_edge(2, 1);
     }
@@ -270,9 +271,9 @@ mod tests {
     #[should_panic]
     fn test_add_cycle_3() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
-        g.add_vertex(3);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
+        g.ensure_vertex(3);
         g.add_edge(1, 2);
         g.add_edge(2, 3);
         g.add_edge(3, 1);
@@ -282,10 +283,10 @@ mod tests {
     #[should_panic]
     fn test_add_cycle_4() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
-        g.add_vertex(3);
-        g.add_vertex(4);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
+        g.ensure_vertex(3);
+        g.ensure_vertex(4);
         g.add_edge(1, 2);
         g.add_edge(3, 4);
         g.add_edge(2, 3);
@@ -295,8 +296,8 @@ mod tests {
     #[test]
     fn test_set_root_1() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
         g.add_edge(1, 2);
         g.set_root(1);
         assert_eq!(g.query_root(1), 1);
@@ -306,10 +307,10 @@ mod tests {
     #[test]
     fn test_set_root_2() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
-        g.add_vertex(3);
-        g.add_vertex(4);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
+        g.ensure_vertex(3);
+        g.ensure_vertex(4);
         g.add_edge(1, 2);
         g.add_edge(4, 3);
         g.add_edge(2, 3);
@@ -332,9 +333,9 @@ mod tests {
     #[test]
     fn test_add_two_parents() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
-        g.add_vertex(3);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
+        g.ensure_vertex(3);
         g.add_edge(3, 1);
         assert_eq!(g.query_root(3), 1);
         // Note that adding a second edge changes the root!
@@ -346,10 +347,10 @@ mod tests {
     #[test]
     fn test_remove_edge() {
         let mut g = TopTrees::new();
-        g.add_vertex(1);
-        g.add_vertex(2);
-        g.add_vertex(3);
-        g.add_vertex(4);
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
+        g.ensure_vertex(3);
+        g.ensure_vertex(4);
         g.add_edge(1, 2);
         g.add_edge(2, 3);
         g.add_edge(3, 4);
