@@ -22,10 +22,6 @@
         ==> Done
     3. implement the efficient version
 
-    For simplicity, we assume vertices are `usize` values. Use
-    a separate data structure to map values of another type
-    uniquely to IDs.
-
     References:
     - Dynamic graph algorithms.
       David Eppstein, Zvi Galil, and Guiseppe Italiano.
@@ -41,17 +37,21 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
 
+// Trait bound abbreviation
+pub trait IdType: Copy + Debug + Eq + Hash + Ord {}
+impl<I: Copy + Debug + Eq + Hash + Ord> IdType for I {}
+
 #[derive(Debug, Clone)]
-pub struct TopTrees<V: Copy + Debug + Eq + Hash + Ord> {
+pub struct TopTrees<V: IdType> {
     parents: HashMap<V, Option<V>>,
 }
-impl<V: Copy + Debug + Eq + Hash + Ord> Default for TopTrees<V> {
+impl<V: IdType> Default for TopTrees<V> {
     fn default() -> Self {
         let parents = Default::default();
         Self { parents }
     }
 }
-impl<V: Copy + Debug + Eq + Hash + Ord> TopTrees<V> {
+impl<V: IdType> TopTrees<V> {
     pub fn new() -> Self {
         Default::default()
     }
