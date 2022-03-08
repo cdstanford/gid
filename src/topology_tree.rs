@@ -2,12 +2,10 @@
     Implementation of Frederickson's Topology Trees
     for dynamic undirected graph connectivity problems.
 
-    The data structure maintains a forest of rooted trees, and supports
+    The data structure maintains a forest graph, and supports
     the following in O(log n) per operation:
     - Adding a new 1-vertex tree
-    - Querying the root vertex corresponding to a vertex
-    - Setting a vertex as the root
-      TODO: do we actually want to support this?
+    - Checking whether two vertices are in the same tree
     - Joining two trees into one by adding an edge
     - Splitting a tree into two by removing an edge
 
@@ -99,48 +97,6 @@ impl<V: IdType> TopTrees<V> {
             self.nodes.insert(id, node);
         }
     }
-    pub fn query_root(&self, v: V) -> V {
-        let result = self.query_root_1(v);
-        // debug_assert_eq(result, self.query_root_2(v));
-        result
-    }
-    fn query_root_1(&self, mut v: V) -> V {
-        assert!(self.is_seen(v));
-        while !self.is_root(v) {
-            v = self.get_parent(v).unwrap();
-        }
-        v
-    }
-    fn query_root_2(&self, v: V) -> V {
-        assert!(self.is_seen(v));
-        let mut n = NodeId::Vert(v);
-        while let Some(n1) = self.node_parent(n) {
-            n = n1;
-        }
-        while let Some(n1) = self.node_left(n) {
-            n = n1;
-        }
-        match self.node(n).kind {
-            NodeCase::SplitOnEdge(_, _) => unreachable!(),
-            NodeCase::SingleVertex(v) => {
-                debug_assert_eq!(n, NodeId::Vert(v));
-                v
-            }
-        }
-    }
-    pub fn set_root(&mut self, v: V) {
-        assert!(self.is_seen(v));
-        // This is implemented recursively
-        // Switches all edges from v to the root.
-        if !self.is_root(v) {
-            let next = self.get_parent(v).unwrap();
-            self.set_root(next);
-            debug_assert!(self.is_root(next));
-            self.set_parent(next, v);
-            self.erase_parent(v);
-        }
-        debug_assert!(self.is_root(v));
-    }
     pub fn add_edge(&mut self, v1: V, v2: V) {
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
@@ -158,10 +114,6 @@ impl<V: IdType> TopTrees<V> {
         debug_assert!(self.same_root(v1, v2));
         self.erase_parent(v1);
     }
-
-    /*
-        Derived
-    */
     pub fn same_root(&self, v1: V, v2: V) -> bool {
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
@@ -206,6 +158,49 @@ impl<V: IdType> TopTrees<V> {
         assert!(self.is_seen(v1));
         *self.parents.get_mut(&v1).unwrap() = None;
     }
+    // Root querying / modification
+    fn query_root(&self, v: V) -> V {
+        let result = self.query_root_1(v);
+        // debug_assert_eq(result, self.query_root_2(v));
+        result
+    }
+    fn query_root_1(&self, mut v: V) -> V {
+        assert!(self.is_seen(v));
+        while !self.is_root(v) {
+            v = self.get_parent(v).unwrap();
+        }
+        v
+    }
+    fn query_root_2(&self, v: V) -> V {
+        assert!(self.is_seen(v));
+        let mut n = NodeId::Vert(v);
+        while let Some(n1) = self.node_parent(n) {
+            n = n1;
+        }
+        while let Some(n1) = self.node_left(n) {
+            n = n1;
+        }
+        match self.node(n).kind {
+            NodeCase::SplitOnEdge(_, _) => unreachable!(),
+            NodeCase::SingleVertex(v) => {
+                debug_assert_eq!(n, NodeId::Vert(v));
+                v
+            }
+        }
+    }
+    fn set_root(&mut self, v: V) {
+        assert!(self.is_seen(v));
+        // This is implemented recursively
+        // Switches all edges from v to the root.
+        if !self.is_root(v) {
+            let next = self.get_parent(v).unwrap();
+            self.set_root(next);
+            debug_assert!(self.is_root(next));
+            self.set_parent(next, v);
+            self.erase_parent(v);
+        }
+        debug_assert!(self.is_root(v));
+    }
 }
 
 #[cfg(test)]
@@ -221,14 +216,16 @@ mod tests {
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.ensure_vertex(3);
-        assert!(g.is_root(1));
-        assert!(g.is_root(2));
-        assert!(g.is_root(3));
         assert!(g.is_seen(1));
         assert!(g.is_seen(2));
         assert!(g.is_seen(1));
         assert!(!g.is_seen(0));
         assert!(!g.is_seen(4));
+
+        assert!(g.same_root(2, 2));
+        assert!(!g.same_root(1, 2));
+        assert!(!g.same_root(2, 3));
+        assert!(!g.same_root(3, 1));
     }
 
     #[test]
@@ -242,7 +239,7 @@ mod tests {
     #[should_panic]
     fn test_query_nonexistent_2() {
         let g = TopTrees::new();
-        g.query_root(1);
+        g.same_root(1, 2);
     }
 
     #[test]
@@ -267,8 +264,8 @@ mod tests {
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.add_edge(1, 2);
-        assert_eq!(g.query_root(1), 2);
-        assert_eq!(g.query_root(2), 2);
+        assert!(g.same_root(1, 2));
+        assert!(g.same_root(2, 1));
     }
 
     #[test]
@@ -296,13 +293,12 @@ mod tests {
         g.ensure_vertex(2);
         g.ensure_vertex(3);
         g.add_edge(1, 2);
-        assert_eq!(g.query_root(1), 2);
-        assert_eq!(g.query_root(2), 2);
-        assert_eq!(g.query_root(3), 3);
+        assert!(g.same_root(1, 2));
+        assert!(!g.same_root(1, 3));
+        assert!(!g.same_root(2, 3));
         g.add_edge(3, 2);
-        assert_eq!(g.query_root(1), 2);
-        assert_eq!(g.query_root(2), 2);
-        assert_eq!(g.query_root(3), 2);
+        assert!(g.same_root(1, 2));
+        assert!(g.same_root(2, 3));
     }
 
     #[test]
@@ -319,16 +315,30 @@ mod tests {
         g.add_edge(4, 7);
         g.add_edge(3, 8);
         g.add_edge(9, 2);
-        assert_eq!(g.query_root(0), 8);
-        assert_eq!(g.query_root(1), 8);
-        assert_eq!(g.query_root(2), 8);
-        assert_eq!(g.query_root(3), 8);
-        assert_eq!(g.query_root(4), 7);
-        assert_eq!(g.query_root(5), 7);
-        assert_eq!(g.query_root(6), 7);
-        assert_eq!(g.query_root(7), 7);
-        assert_eq!(g.query_root(8), 8);
-        assert_eq!(g.query_root(9), 8);
+
+        assert!(g.same_root(0, 1));
+        assert!(g.same_root(1, 2));
+        assert!(g.same_root(2, 3));
+        assert!(g.same_root(3, 8));
+        assert!(g.same_root(8, 9));
+
+        assert!(g.same_root(4, 5));
+        assert!(g.same_root(5, 6));
+        assert!(g.same_root(6, 7));
+
+        assert!(!g.same_root(3, 4));
+        assert!(!g.same_root(7, 8));
+
+        // assert_eq!(g.query_root(0), 8);
+        // assert_eq!(g.query_root(1), 8);
+        // assert_eq!(g.query_root(2), 8);
+        // assert_eq!(g.query_root(3), 8);
+        // assert_eq!(g.query_root(4), 7);
+        // assert_eq!(g.query_root(5), 7);
+        // assert_eq!(g.query_root(6), 7);
+        // assert_eq!(g.query_root(7), 7);
+        // assert_eq!(g.query_root(8), 8);
+        // assert_eq!(g.query_root(9), 8);
     }
 
     #[test]
@@ -367,42 +377,42 @@ mod tests {
         g.add_edge(4, 1);
     }
 
-    #[test]
-    fn test_set_root_1() {
-        let mut g = TopTrees::new();
-        g.ensure_vertex(1);
-        g.ensure_vertex(2);
-        g.add_edge(1, 2);
-        g.set_root(1);
-        assert_eq!(g.query_root(1), 1);
-        assert_eq!(g.query_root(2), 1);
-    }
+    // #[test]
+    // fn test_set_root_1() {
+    //     let mut g = TopTrees::new();
+    //     g.ensure_vertex(1);
+    //     g.ensure_vertex(2);
+    //     g.add_edge(1, 2);
+    //     g.set_root(1);
+    //     assert_eq!(g.query_root(1), 1);
+    //     assert_eq!(g.query_root(2), 1);
+    // }
 
-    #[test]
-    fn test_set_root_2() {
-        let mut g = TopTrees::new();
-        g.ensure_vertex(1);
-        g.ensure_vertex(2);
-        g.ensure_vertex(3);
-        g.ensure_vertex(4);
-        g.add_edge(1, 2);
-        g.add_edge(4, 3);
-        g.add_edge(2, 3);
-        assert_eq!(g.query_root(1), 3);
-        assert_eq!(g.query_root(2), 3);
-        assert_eq!(g.query_root(3), 3);
-        assert_eq!(g.query_root(4), 3);
-        g.set_root(1);
-        assert_eq!(g.query_root(1), 1);
-        assert_eq!(g.query_root(2), 1);
-        assert_eq!(g.query_root(3), 1);
-        assert_eq!(g.query_root(4), 1);
-        g.set_root(4);
-        assert_eq!(g.query_root(1), 4);
-        assert_eq!(g.query_root(2), 4);
-        assert_eq!(g.query_root(3), 4);
-        assert_eq!(g.query_root(4), 4);
-    }
+    // #[test]
+    // fn test_set_root_2() {
+    //     let mut g = TopTrees::new();
+    //     g.ensure_vertex(1);
+    //     g.ensure_vertex(2);
+    //     g.ensure_vertex(3);
+    //     g.ensure_vertex(4);
+    //     g.add_edge(1, 2);
+    //     g.add_edge(4, 3);
+    //     g.add_edge(2, 3);
+    //     assert_eq!(g.query_root(1), 3);
+    //     assert_eq!(g.query_root(2), 3);
+    //     assert_eq!(g.query_root(3), 3);
+    //     assert_eq!(g.query_root(4), 3);
+    //     g.set_root(1);
+    //     assert_eq!(g.query_root(1), 1);
+    //     assert_eq!(g.query_root(2), 1);
+    //     assert_eq!(g.query_root(3), 1);
+    //     assert_eq!(g.query_root(4), 1);
+    //     g.set_root(4);
+    //     assert_eq!(g.query_root(1), 4);
+    //     assert_eq!(g.query_root(2), 4);
+    //     assert_eq!(g.query_root(3), 4);
+    //     assert_eq!(g.query_root(4), 4);
+    // }
 
     #[test]
     fn test_add_two_parents() {
@@ -411,11 +421,11 @@ mod tests {
         g.ensure_vertex(2);
         g.ensure_vertex(3);
         g.add_edge(3, 1);
-        assert_eq!(g.query_root(3), 1);
-        // Note that adding a second edge changes the root!
+        assert!(g.same_root(1, 3));
+        assert!(!g.same_root(1, 2));
         g.add_edge(3, 2);
-        assert_eq!(g.query_root(3), 2);
-        assert_eq!(g.query_root(1), 2);
+        assert!(g.same_root(1, 2));
+        assert!(g.same_root(2, 3));
     }
 
     #[test]
@@ -428,12 +438,12 @@ mod tests {
         g.add_edge(1, 2);
         g.add_edge(2, 3);
         g.add_edge(3, 4);
-        assert_eq!(g.query_root(1), 4);
-        // Note that removing an edge changes the root!
+        assert!(g.same_root(1, 4));
+        assert!(g.same_root(2, 4));
+        assert!(g.same_root(3, 4));
         g.remove_edge(3, 2);
-        assert_eq!(g.query_root(1), 2);
-        assert_eq!(g.query_root(2), 2);
-        assert_eq!(g.query_root(3), 3);
-        assert_eq!(g.query_root(4), 3);
+        assert!(g.same_root(1, 2));
+        assert!(g.same_root(3, 4));
+        assert!(!g.same_root(2, 3));
     }
 }
