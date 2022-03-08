@@ -92,8 +92,9 @@ impl<V: IdType> TopTrees<V> {
         if !self.is_seen(v) {
             self.parents.insert(v, None);
             let id = NodeId::Vert(v);
-            let node =
-                Node { id, parent: None, kind: NodeCase::SingleVertex(v) };
+            let parent = None;
+            let kind = NodeCase::SingleVertex(v);
+            let node = Node { id, parent, kind };
             self.nodes.insert(id, node);
         }
     }
@@ -101,6 +102,24 @@ impl<V: IdType> TopTrees<V> {
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
         assert!(!self.same_root(v1, v2));
+
+        let n1 = self.node_root(NodeId::Vert(v1));
+        let n2 = self.node_root(NodeId::Vert(v2));
+
+        // New SplitOnEdge node to join two trees
+        let id = NodeId::Edge(v1, v2);
+        let parent = None;
+        let kind = NodeCase::<V, NodeId<V>>::SplitOnEdge(n1, n2);
+        let node = Node { id, parent, kind };
+        self.nodes.insert(id, node);
+
+        // Set parents
+        debug_assert!(self.node_mut(n1).parent.is_none());
+        debug_assert!(self.node_mut(n2).parent.is_none());
+        self.node_mut(n1).parent = Some(id);
+        self.node_mut(n2).parent = Some(id);
+
+        // Old code, to remove when the new impl works
         self.set_root(v1);
         debug_assert!(self.is_root(v1));
         self.set_parent(v1, v2);
@@ -117,7 +136,17 @@ impl<V: IdType> TopTrees<V> {
     pub fn same_root(&self, v1: V, v2: V) -> bool {
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
+        let result = self.same_root_1(v1, v2);
+        debug_assert_eq!(result, self.same_root_2(v1, v2));
+        result
+    }
+    fn same_root_1(&self, v1: V, v2: V) -> bool {
         self.query_root(v1) == self.query_root(v2)
+    }
+    fn same_root_2(&self, v1: V, v2: V) -> bool {
+        let n1 = self.node_root(NodeId::Vert(v1));
+        let n2 = self.node_root(NodeId::Vert(v2));
+        n1 == n2
     }
 
     /*
@@ -139,8 +168,17 @@ impl<V: IdType> TopTrees<V> {
     fn node(&self, n: NodeId<V>) -> &Node<V, NodeId<V>> {
         self.nodes.get(&n).unwrap()
     }
+    fn node_mut(&mut self, n: NodeId<V>) -> &mut Node<V, NodeId<V>> {
+        self.nodes.get_mut(&n).unwrap()
+    }
     fn node_parent(&self, n: NodeId<V>) -> Option<NodeId<V>> {
         self.node(n).parent
+    }
+    fn node_root(&self, mut n: NodeId<V>) -> NodeId<V> {
+        while let Some(parent) = self.node_parent(n) {
+            n = parent
+        }
+        n
     }
     fn node_left(&self, n: NodeId<V>) -> Option<NodeId<V>> {
         match self.node(n).kind {
@@ -438,8 +476,8 @@ mod tests {
         g.add_edge(1, 2);
         g.add_edge(2, 3);
         g.add_edge(3, 4);
-        assert!(g.same_root(1, 4));
-        assert!(g.same_root(2, 4));
+        assert!(g.same_root(1, 2));
+        assert!(g.same_root(2, 3));
         assert!(g.same_root(3, 4));
         g.remove_edge(3, 2);
         assert!(g.same_root(1, 2));
