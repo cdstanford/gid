@@ -7,6 +7,7 @@
     - Adding a new 1-vertex tree
     - Querying the root vertex corresponding to a vertex
     - Setting a vertex as the root
+      TODO: do we actually want to support this?
     - Joining two trees into one by adding an edge
     - Splitting a tree into two by removing an edge
 
@@ -37,18 +38,52 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
 
+/*
+    Internal types used by TopTrees
+*/
 // Trait bound abbreviation
 pub trait IdType: Copy + Debug + Eq + Hash + Ord {}
 impl<I: Copy + Debug + Eq + Hash + Ord> IdType for I {}
 
+// Type used to identify nodes -- can be replaced with anything that
+// identifies an edge or vertex uniquely.
+#[derive(Copy, Debug, Eq, Hash, Ord, Clone, PartialEq, PartialOrd)]
+enum NodeId<V: IdType> {
+    Edge(V, V),
+    Vert(V),
+}
+
+// Represents a node in a balanced hierarchical decomposition of a forest
+// where each vertex has degree at most 3. TopTrees will do the work of
+// converting to degree 3.
+// N will be instantiated with NodeId for now, but can be any unique
+// identifier for each node.
+#[derive(Debug, Clone)]
+enum NodeCase<V: IdType, N: IdType> {
+    SplitOnEdge(N, N),
+    SingleVertex(V),
+}
+#[derive(Debug, Clone)]
+struct Node<V: IdType, N: IdType> {
+    id: N,
+    parent: Option<N>,
+    kind: NodeCase<V, N>,
+}
+
+/*
+    The publicly exposed data structure
+*/
 #[derive(Debug, Clone)]
 pub struct TopTrees<V: IdType> {
+    nodes: HashMap<NodeId<V>, Node<V, NodeId<V>>>,
+
     parents: HashMap<V, Option<V>>,
 }
 impl<V: IdType> Default for TopTrees<V> {
     fn default() -> Self {
+        let nodes = Default::default();
         let parents = Default::default();
-        Self { parents }
+        Self { nodes, parents }
     }
 }
 impl<V: IdType> TopTrees<V> {
@@ -58,14 +93,40 @@ impl<V: IdType> TopTrees<V> {
     pub fn ensure_vertex(&mut self, v: V) {
         if !self.is_seen(v) {
             self.parents.insert(v, None);
+            let id = NodeId::Vert(v);
+            let node =
+                Node { id, parent: None, kind: NodeCase::SingleVertex(v) };
+            self.nodes.insert(id, node);
         }
     }
-    pub fn query_root(&self, mut v: V) -> V {
+    pub fn query_root(&self, v: V) -> V {
+        let result = self.query_root_1(v);
+        // debug_assert_eq(result, self.query_root_2(v));
+        result
+    }
+    fn query_root_1(&self, mut v: V) -> V {
         assert!(self.is_seen(v));
         while !self.is_root(v) {
             v = self.get_parent(v).unwrap();
         }
         v
+    }
+    fn query_root_2(&self, v: V) -> V {
+        assert!(self.is_seen(v));
+        let mut n = NodeId::Vert(v);
+        while let Some(n1) = self.node_parent(n) {
+            n = n1;
+        }
+        while let Some(n1) = self.node_left(n) {
+            n = n1;
+        }
+        match self.node(n).kind {
+            NodeCase::SplitOnEdge(_, _) => unreachable!(),
+            NodeCase::SingleVertex(v) => {
+                debug_assert_eq!(n, NodeId::Vert(v));
+                v
+            }
+        }
     }
     pub fn set_root(&mut self, v: V) {
         assert!(self.is_seen(v));
@@ -112,7 +173,7 @@ impl<V: IdType> TopTrees<V> {
     */
     // Basic primitives
     fn is_seen(&self, v: V) -> bool {
-        self.parents.contains_key(&v)
+        self.nodes.contains_key(&NodeId::Vert(v))
     }
     fn get_parent(&self, v: V) -> Option<V> {
         assert!(self.is_seen(v));
@@ -121,6 +182,19 @@ impl<V: IdType> TopTrees<V> {
     fn is_root(&self, v: V) -> bool {
         assert!(self.is_seen(v));
         self.get_parent(v).is_none()
+    }
+    // Node moidifiers
+    fn node(&self, n: NodeId<V>) -> &Node<V, NodeId<V>> {
+        self.nodes.get(&n).unwrap()
+    }
+    fn node_parent(&self, n: NodeId<V>) -> Option<NodeId<V>> {
+        self.node(n).parent
+    }
+    fn node_left(&self, n: NodeId<V>) -> Option<NodeId<V>> {
+        match self.node(n).kind {
+            NodeCase::SplitOnEdge(n1, _) => Some(n1),
+            NodeCase::SingleVertex(_) => None,
+        }
     }
     // Parent map modifiers
     fn set_parent(&mut self, v1: V, v2: V) {
