@@ -74,14 +74,10 @@ struct Node<V: IdType, N: IdType> {
 #[derive(Debug, Clone)]
 pub struct TopTrees<V: IdType> {
     nodes: HashMap<NodeId<V>, Node<V, NodeId<V>>>,
-
-    parents: HashMap<V, Option<V>>,
 }
 impl<V: IdType> Default for TopTrees<V> {
     fn default() -> Self {
-        let nodes = Default::default();
-        let parents = Default::default();
-        Self { nodes, parents }
+        Self { nodes: Default::default() }
     }
 }
 impl<V: IdType> TopTrees<V> {
@@ -90,7 +86,6 @@ impl<V: IdType> TopTrees<V> {
     }
     pub fn ensure_vertex(&mut self, v: V) {
         if !self.is_seen(v) {
-            self.parents.insert(v, None);
             let id = NodeId::Vert(v);
             let parent = None;
             let kind = NodeCase::SingleVertex(v);
@@ -118,32 +113,14 @@ impl<V: IdType> TopTrees<V> {
         debug_assert!(self.node_mut(n2).parent.is_none());
         self.node_mut(n1).parent = Some(id);
         self.node_mut(n2).parent = Some(id);
-
-        // Old code, to remove when the new impl works
-        self.set_root(v1);
-        debug_assert!(self.is_root(v1));
-        self.set_parent(v1, v2);
     }
     pub fn remove_edge(&mut self, v1: V, v2: V) {
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
-        // Set root -- to ensure edge goes in the expected direction
-        self.set_root(v2);
-        assert_eq!(self.get_parent(v1), Some(v2));
-        debug_assert!(self.same_root(v1, v2));
-        self.erase_parent(v1);
+
+        // TODO
     }
     pub fn same_root(&self, v1: V, v2: V) -> bool {
-        assert!(self.is_seen(v1));
-        assert!(self.is_seen(v2));
-        let result = self.same_root_1(v1, v2);
-        debug_assert_eq!(result, self.same_root_2(v1, v2));
-        result
-    }
-    fn same_root_1(&self, v1: V, v2: V) -> bool {
-        self.query_root(v1) == self.query_root(v2)
-    }
-    fn same_root_2(&self, v1: V, v2: V) -> bool {
         let n1 = self.node_root(NodeId::Vert(v1));
         let n2 = self.node_root(NodeId::Vert(v2));
         n1 == n2
@@ -155,14 +132,6 @@ impl<V: IdType> TopTrees<V> {
     // Basic primitives
     fn is_seen(&self, v: V) -> bool {
         self.nodes.contains_key(&NodeId::Vert(v))
-    }
-    fn get_parent(&self, v: V) -> Option<V> {
-        assert!(self.is_seen(v));
-        *self.parents.get(&v).unwrap()
-    }
-    fn is_root(&self, v: V) -> bool {
-        assert!(self.is_seen(v));
-        self.get_parent(v).is_none()
     }
     // Node moidifiers
     fn node(&self, n: NodeId<V>) -> &Node<V, NodeId<V>> {
@@ -180,65 +149,12 @@ impl<V: IdType> TopTrees<V> {
         }
         n
     }
-    fn node_left(&self, n: NodeId<V>) -> Option<NodeId<V>> {
-        match self.node(n).kind {
-            NodeCase::SplitOnEdge(n1, _) => Some(n1),
-            NodeCase::SingleVertex(_) => None,
-        }
-    }
-    // Parent map modifiers
-    fn set_parent(&mut self, v1: V, v2: V) {
-        assert!(self.is_seen(v1));
-        assert!(self.is_seen(v2));
-        *self.parents.get_mut(&v1).unwrap() = Some(v2);
-    }
-    fn erase_parent(&mut self, v1: V) {
-        assert!(self.is_seen(v1));
-        *self.parents.get_mut(&v1).unwrap() = None;
-    }
-    // Root querying / modification
-    fn query_root(&self, v: V) -> V {
-        let result = self.query_root_1(v);
-        // debug_assert_eq(result, self.query_root_2(v));
-        result
-    }
-    fn query_root_1(&self, mut v: V) -> V {
-        assert!(self.is_seen(v));
-        while !self.is_root(v) {
-            v = self.get_parent(v).unwrap();
-        }
-        v
-    }
-    fn query_root_2(&self, v: V) -> V {
-        assert!(self.is_seen(v));
-        let mut n = NodeId::Vert(v);
-        while let Some(n1) = self.node_parent(n) {
-            n = n1;
-        }
-        while let Some(n1) = self.node_left(n) {
-            n = n1;
-        }
-        match self.node(n).kind {
-            NodeCase::SplitOnEdge(_, _) => unreachable!(),
-            NodeCase::SingleVertex(v) => {
-                debug_assert_eq!(n, NodeId::Vert(v));
-                v
-            }
-        }
-    }
-    fn set_root(&mut self, v: V) {
-        assert!(self.is_seen(v));
-        // This is implemented recursively
-        // Switches all edges from v to the root.
-        if !self.is_root(v) {
-            let next = self.get_parent(v).unwrap();
-            self.set_root(next);
-            debug_assert!(self.is_root(next));
-            self.set_parent(next, v);
-            self.erase_parent(v);
-        }
-        debug_assert!(self.is_root(v));
-    }
+    // fn node_left(&self, n: NodeId<V>) -> Option<NodeId<V>> {
+    //     match self.node(n).kind {
+    //         NodeCase::SplitOnEdge(n1, _) => Some(n1),
+    //         NodeCase::SingleVertex(_) => None,
+    //     }
+    // }
 }
 
 #[cfg(test)]
@@ -270,7 +186,7 @@ mod tests {
     #[should_panic]
     fn test_query_nonexistent_1() {
         let g = TopTrees::new();
-        g.is_root(1);
+        g.same_root(1, 1);
     }
 
     #[test]
