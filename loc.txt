@@ -16,7 +16,7 @@
      260 ./src/driver.rs
      274 ./src/algorithm/tarjan.rs
      315 ./src/algorithm/jump.rs
-     364 ./src/topology_tree.rs
      370 ./src/graph.rs
-     395 ./tests/test_examples.rs
-    3545 total
+     396 ./tests/test_examples.rs
+     533 ./src/topology_tree.rs
+    3715 total
