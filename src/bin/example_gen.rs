@@ -161,7 +161,7 @@ fn gen_reverseunkloop(n: usize) -> Example {
 */
 
 fn main() {
-    for &i in &[3, 10, 20, 100, 1000, 10000] {
+    for &i in &[3, 10, 30, 100, 300, 1000, 3000, 10000] {
         gen_line(i).save();
         gen_reverseline(i).save();
         gen_unkline(i).save();

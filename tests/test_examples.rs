@@ -124,7 +124,7 @@ fn test_tree() {
 fn test_line() {
     assert_one(EX_DIR_GENERATED, "line_3");
     assert_one(EX_DIR_GENERATED, "line_10");
-    assert_one(EX_DIR_GENERATED, "line_20");
+    assert_one(EX_DIR_GENERATED, "line_30");
     assert_one(EX_DIR_GENERATED, "line_100");
 }
 
@@ -132,7 +132,7 @@ fn test_line() {
 fn test_reverseline() {
     assert_one(EX_DIR_GENERATED, "reverseline_3");
     assert_one(EX_DIR_GENERATED, "reverseline_10");
-    assert_one(EX_DIR_GENERATED, "reverseline_20");
+    assert_one(EX_DIR_GENERATED, "reverseline_30");
     assert_one(EX_DIR_GENERATED, "reverseline_100");
 }
 
@@ -140,7 +140,7 @@ fn test_reverseline() {
 fn test_unkline() {
     assert_one(EX_DIR_GENERATED, "unkline_3");
     assert_one(EX_DIR_GENERATED, "unkline_10");
-    assert_one(EX_DIR_GENERATED, "unkline_20");
+    assert_one(EX_DIR_GENERATED, "unkline_30");
     assert_one(EX_DIR_GENERATED, "unkline_100");
 }
 
@@ -148,7 +148,7 @@ fn test_unkline() {
 fn test_reverseunkline() {
     assert_one(EX_DIR_GENERATED, "reverseunkline_3");
     assert_one(EX_DIR_GENERATED, "reverseunkline_10");
-    assert_one(EX_DIR_GENERATED, "reverseunkline_20");
+    assert_one(EX_DIR_GENERATED, "reverseunkline_30");
     assert_one(EX_DIR_GENERATED, "reverseunkline_100");
 }
 
@@ -156,7 +156,7 @@ fn test_reverseunkline() {
 fn test_loop() {
     assert_one(EX_DIR_GENERATED, "loop_3");
     assert_one(EX_DIR_GENERATED, "loop_10");
-    assert_one(EX_DIR_GENERATED, "loop_20");
+    assert_one(EX_DIR_GENERATED, "loop_30");
     assert_one(EX_DIR_GENERATED, "loop_100");
 }
 
@@ -164,7 +164,7 @@ fn test_loop() {
 fn test_unkloop() {
     assert_one(EX_DIR_GENERATED, "unkloop_3");
     assert_one(EX_DIR_GENERATED, "unkloop_10");
-    assert_one(EX_DIR_GENERATED, "unkloop_20");
+    assert_one(EX_DIR_GENERATED, "unkloop_30");
     assert_one(EX_DIR_GENERATED, "unkloop_100");
 }
 
@@ -172,7 +172,7 @@ fn test_unkloop() {
 fn test_reverseloop() {
     assert_one(EX_DIR_GENERATED, "reverseloop_3");
     assert_one(EX_DIR_GENERATED, "reverseloop_10");
-    assert_one(EX_DIR_GENERATED, "reverseloop_20");
+    assert_one(EX_DIR_GENERATED, "reverseloop_30");
     assert_one(EX_DIR_GENERATED, "reverseloop_100");
 }
 
@@ -180,13 +180,14 @@ fn test_reverseloop() {
 fn test_reverseunkloop() {
     assert_one(EX_DIR_GENERATED, "reverseunkloop_3");
     assert_one(EX_DIR_GENERATED, "reverseunkloop_10");
-    assert_one(EX_DIR_GENERATED, "reverseunkloop_20");
+    assert_one(EX_DIR_GENERATED, "reverseunkloop_30");
     assert_one(EX_DIR_GENERATED, "reverseunkloop_100");
 }
 
 #[test]
 #[ignore]
 fn test_generated_expensive() {
+    // Omitted generated examples: _300, _3000, _10000
     assert_expensive(EX_DIR_GENERATED, "line_1000");
     assert_expensive(EX_DIR_GENERATED, "reverseline_1000");
     assert_expensive(EX_DIR_GENERATED, "unkline_1000");
