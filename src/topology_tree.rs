@@ -115,7 +115,9 @@ impl<V: IdType> Default for TopTrees<V> {
 }
 impl<V: IdType> TopTrees<V> {
     pub fn new() -> Self {
-        Default::default()
+        let result: Self = Default::default();
+        result.assert_invariant();
+        result
     }
     pub fn ensure_vertex(&mut self, v: V) {
         if !self.is_seen(v) {
@@ -125,6 +127,8 @@ impl<V: IdType> TopTrees<V> {
             let node = Node { id, parent, kind };
             self.nodes.insert(id, node);
         }
+
+        self.assert_invariant();
     }
     pub fn add_edge(&mut self, v1: V, v2: V) {
         assert!(self.is_seen(v1));
@@ -146,6 +150,8 @@ impl<V: IdType> TopTrees<V> {
         debug_assert!(self.node_mut(n2).parent.is_none());
         self.node_mut(n1).parent = Some(id);
         self.node_mut(n2).parent = Some(id);
+
+        self.assert_invariant();
     }
     pub fn remove_edge(&mut self, v1: V, v2: V) {
         // TODO: this code is horrendous. Clean it up later if it works.
@@ -160,17 +166,17 @@ impl<V: IdType> TopTrees<V> {
         self.node_mut(n1).parent = None;
         self.node_mut(n2).parent = None;
 
-        let orig_n = n;
+        let mut next_join = self.node_parent(n);
+        self.nodes.remove(&n);
 
-        while let Some(par) = self.node_parent(n) {
+        while let Some(to_join) = next_join {
             // Invariant:
             // Two tree nodes, n1 and n2, need parents.
-            // Node par is labeled with an edge and one of its children is n;
-            // node n is being deleted and
-            // needs to be replaced with either n1 or n2.
+            // to_join is labeled with an edge and one of its children is n;
+            // that child needs to be replaced with either n1 or n2.
 
-            let (c1, c2) = self.node(par).children().unwrap();
-            let (v1, v2) = self.node(par).get_edge().unwrap();
+            let (c1, c2) = self.node(to_join).children().unwrap();
+            let (v1, v2) = self.node(to_join).get_edge().unwrap();
 
             if n == c1 {
                 if self.get_root(v1) != n1 {
@@ -178,11 +184,11 @@ impl<V: IdType> TopTrees<V> {
                     std::mem::swap(&mut n1, &mut n2);
                 }
                 // replace c1 with n1
-                self.node_mut(n1).parent = Some(par);
-                self.node_mut(par).kind = NodeCase::SplitOnEdge(n1, c2);
+                self.node_mut(n1).parent = Some(to_join);
+                self.node_mut(to_join).kind = NodeCase::SplitOnEdge(n1, c2);
                 // Now par needs a parent
-                n = par;
-                n1 = par;
+                n = to_join;
+                n1 = to_join;
             } else {
                 debug_assert_eq!(n, c2);
                 // Same as previous case but for c2, v2 instead of c1, v1
@@ -191,15 +197,18 @@ impl<V: IdType> TopTrees<V> {
                     std::mem::swap(&mut n1, &mut n2);
                 }
                 // replace c2 with n2
-                self.node_mut(n2).parent = Some(par);
-                self.node_mut(par).kind = NodeCase::SplitOnEdge(c1, n2);
+                self.node_mut(n2).parent = Some(to_join);
+                self.node_mut(to_join).kind = NodeCase::SplitOnEdge(c1, n2);
                 // Now par needs a parent
-                n = par;
-                n2 = par;
+                n = to_join;
+                n2 = to_join;
             }
+
+            next_join = self.node_parent(n);
+            self.node_mut(n).parent = None;
         }
 
-        self.nodes.remove(&orig_n);
+        self.assert_invariant();
     }
     pub fn same_root(&self, v1: V, v2: V) -> bool {
         let n1 = self.get_root(v1);
@@ -210,6 +219,24 @@ impl<V: IdType> TopTrees<V> {
     /*
         Internal
     */
+    // Invariant
+    #[cfg(debug_assertions)]
+    fn assert_invariant(&self) {
+        for (&id, node) in self.nodes.iter() {
+            node.assert_invariant();
+            assert_eq!(id, node.id);
+            if let Some(par) = node.parent {
+                let (c1, c2) = self.node(par).children().unwrap();
+                assert!(id == c1 || id == c2);
+            }
+            if let Some((n1, n2)) = node.children() {
+                assert_eq!(id, self.node(n1).parent.unwrap());
+                assert_eq!(id, self.node(n2).parent.unwrap());
+            }
+        }
+    }
+    #[cfg(not(debug_assertions))]
+    fn assert_invariant(&self) {}
     // Basic primitives
     fn is_seen(&self, v: V) -> bool {
         self.node_is_seen(NodeId::Vert(v))
@@ -462,7 +489,7 @@ mod tests {
     }
 
     #[test]
-    fn test_remove_edge() {
+    fn test_remove_edge_1() {
         let mut g = TopTrees::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
@@ -478,6 +505,28 @@ mod tests {
         assert!(g.same_root(1, 2));
         assert!(g.same_root(3, 4));
         assert!(!g.same_root(2, 3));
+    }
+
+    #[test]
+    fn test_remove_edge_2() {
+        let mut g = TopTrees::new();
+        g.ensure_vertex(1);
+        g.ensure_vertex(2);
+        g.ensure_vertex(3);
+        g.ensure_vertex(4);
+        g.add_edge(3, 4);
+        g.add_edge(1, 2);
+        g.add_edge(2, 3);
+        assert!(g.same_root(1, 4));
+        g.remove_edge(1, 2);
+        assert!(!g.same_root(1, 2));
+        assert!(g.same_root(2, 3));
+        assert!(g.same_root(3, 4));
+        g.remove_edge(2, 3);
+        assert!(!g.same_root(1, 2));
+        assert!(!g.same_root(1, 3));
+        assert!(!g.same_root(2, 3));
+        assert!(g.same_root(3, 4));
     }
 
     // TODO: write some better test_remove_edge tests.
