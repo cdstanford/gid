@@ -4,19 +4,19 @@
       36 ./src/bin/run_example.rs
       46 ./src/debug_counter.rs
       49 ./src/bin/run_all.rs
-      71 ./src/constants.rs
+      72 ./src/constants.rs
       86 ./src/algorithm/naive.rs
       90 ./src/util.rs
      116 ./src/algorithm/simple.rs
      147 ./src/interface.rs
      202 ./src/search.rs
-     210 ./src/bin/example_gen.rs
+     226 ./src/bin/example_gen.rs
      246 ./src/algorithm/smart.rs
      253 ./src/example.rs
      260 ./src/driver.rs
      274 ./src/algorithm/tarjan.rs
      315 ./src/algorithm/jump.rs
      370 ./src/graph.rs
-     396 ./tests/test_examples.rs
      533 ./src/topology_tree.rs
-    3751 total
+     545 ./tests/test_examples.rs
+    3917 total
