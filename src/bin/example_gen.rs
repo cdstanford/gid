@@ -12,7 +12,8 @@ use std::fmt::Display;
     Utility functions
 */
 
-const GEN_DIRECTORY: &str = "examples/generated";
+const GEN_DIR: &str = "examples/generated";
+const RAND_DIR: &str = "examples/random";
 
 fn paramed_example<P: Display>(
     basename: &str,
@@ -20,12 +21,27 @@ fn paramed_example<P: Display>(
     ex_in: ExampleInput,
     expect: ExampleOutput,
 ) -> Example {
-    let basename = format!("{}/{}_{}", GEN_DIRECTORY, basename, param);
-    Example::new(&basename, ex_in, Some(expect))
+    let pathname = format!("{}/{}_{}", GEN_DIR, basename, param);
+    println!("created {}", pathname);
+    Example::new(&pathname, ex_in, Some(expect))
+}
+
+fn random_example<P: Display>(
+    basename: &str,
+    params: &[P],
+    seed: usize,
+    ex_in: ExampleInput,
+) -> Example {
+    let params: Vec<String> = params.iter().map(|s| s.to_string()).collect();
+    let params = params.join("_");
+    let pathname = format!("{}/{}_{}_{}", RAND_DIR, basename, params, seed);
+    println!("created {}", pathname);
+    Example::new(&pathname, ex_in, None)
 }
 
 /*
-    Example generators
+    Structured example generators
+    (for specific classes of graphs)
 */
 
 fn gen_line(n: usize) -> Example {
@@ -157,10 +173,21 @@ fn gen_reverseunkloop(n: usize) -> Example {
 }
 
 /*
+    Random example generators
+*/
+
+fn random_constoutdegree(n: usize, deg: usize, seed: usize) -> Example {
+    let ex_in = ExampleInput(vec![]);
+    // TODO
+    random_example("constout", &[n, deg], seed, ex_in)
+}
+
+/*
     Entrypoint
 */
 
 fn main() {
+    // Generate and save parameterized examples
     for &i in &[3, 10, 30, 100, 300, 1000, 3000, 10000] {
         gen_line(i).save();
         gen_reverseline(i).save();
@@ -170,5 +197,14 @@ fn main() {
         gen_unkloop(i).save();
         gen_reverseloop(i).save();
         gen_reverseunkloop(i).save();
+    }
+    // Generate and save random examples
+    // Use random seeds 1-10
+    for &n in &[10, 100, 1000] {
+        for &d in &[1, 2, 3, 10] {
+            for i in 1..=10 {
+                random_constoutdegree(n, d, i).save();
+            }
+        }
     }
 }
