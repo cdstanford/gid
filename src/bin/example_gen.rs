@@ -199,6 +199,17 @@ fn random_constoutdegree(n: usize, deg: usize, seed: u64) -> Example {
 }
 
 /*
+    Generate an example with presence/existence of an edge chosen
+    independently at random for each vertex pair.
+    Probably is given as a % between 0 and 100
+*/
+fn random_pairwise(n: usize, p: usize, seed: u64) -> Example {
+    let ex_in = ExampleInput(vec![]);
+    // TODO
+    random_example("complete", &[n, p], seed, ex_in)
+}
+
+/*
     Entrypoint
 */
 
@@ -220,6 +231,13 @@ fn main() {
         for &d in &[1, 2, 3, 10] {
             for i in 1..=10 {
                 random_constoutdegree(n, d, i).save();
+            }
+        }
+    }
+    for &n in &[10, 100, 1000] {
+        for &p in &[1, 5, 9] {
+            for i in 1..=10 {
+                random_pairwise(n, p, i).save();
             }
         }
     }
