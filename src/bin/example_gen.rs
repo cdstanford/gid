@@ -4,6 +4,9 @@
     I am using the examples both for unit testing and performance analysis.
 */
 
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
+use state_graph::constants::{EX_DIR_GENERATED, EX_DIR_RANDOM};
 use state_graph::example::{Example, ExampleInput, ExampleOutput};
 use state_graph::interface::Transaction;
 use std::fmt::Display;
@@ -12,16 +15,13 @@ use std::fmt::Display;
     Utility functions
 */
 
-const GEN_DIR: &str = "examples/generated";
-const RAND_DIR: &str = "examples/random";
-
 fn paramed_example<P: Display>(
     basename: &str,
     param: P,
     ex_in: ExampleInput,
     expect: ExampleOutput,
 ) -> Example {
-    let pathname = format!("{}/{}_{}", GEN_DIR, basename, param);
+    let pathname = format!("{}/{}_{}", EX_DIR_GENERATED, basename, param);
     println!("created {}", pathname);
     Example::new(&pathname, ex_in, Some(expect))
 }
@@ -29,12 +29,12 @@ fn paramed_example<P: Display>(
 fn random_example<P: Display>(
     basename: &str,
     params: &[P],
-    seed: usize,
+    seed: u64,
     ex_in: ExampleInput,
 ) -> Example {
     let params: Vec<String> = params.iter().map(|s| s.to_string()).collect();
     let params = params.join("_");
-    let pathname = format!("{}/{}_{}_{}", RAND_DIR, basename, params, seed);
+    let pathname = format!("{}/{}_{}_{}", EX_DIR_RANDOM, basename, params, seed);
     println!("created {}", pathname);
     Example::new(&pathname, ex_in, None)
 }
@@ -176,9 +176,24 @@ fn gen_reverseunkloop(n: usize) -> Example {
     Random example generators
 */
 
-fn random_constoutdegree(n: usize, deg: usize, seed: usize) -> Example {
-    let ex_in = ExampleInput(vec![]);
-    // TODO
+/*
+    Generate an example with constant outdegree deg:
+    - vertices 0 through n-1 are closed, n is open
+    - 0 through n-1 have 'deg' random out-edges
+*/
+fn random_constoutdegree(n: usize, deg: usize, seed: u64) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    let mut rng = StdRng::seed_from_u64(seed);
+
+    for u in 0..n {
+        for _ in 0..deg {
+            // Note that u == v is possible
+            let v = rng.gen_range(0..=n);
+            ex_in.push(Transaction::Add(u, v));
+        }
+        ex_in.push(Transaction::Close(u));
+    }
+
     random_example("constout", &[n, deg], seed, ex_in)
 }
 

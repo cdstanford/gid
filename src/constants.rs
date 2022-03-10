@@ -19,6 +19,7 @@ pub const UNIT_TEST_TIMEOUT_EXPENSIVE: u64 = 90;
 // Main/special directories where examples are stored,
 // optionally with expected output
 pub const EX_DIR_GENERATED: &str = "examples/generated";
+pub const EX_DIR_RANDOM: &str = "examples/random";
 pub const EX_DIR_HANDWRITTEN: &str = "examples/handwritten";
 
 // All other directories (no expected output)

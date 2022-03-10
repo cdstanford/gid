@@ -394,3 +394,8 @@ fn test_regexlib_expensive() {
     // Long expensive tests
     assert_expensive(EX_DIR_RLIB_M1, "membership_854");
 }
+
+// #[test]
+// fn test_random_constout() {
+//     assert_one()
+// }
