@@ -400,7 +400,7 @@ fn test_regexlib_expensive() {
 */
 
 #[test]
-fn test_random_constout_10_1() {
+fn test_random_constout_10() {
     assert_one(EX_DIR_RANDOM, "constout_10_1_1");
     assert_one(EX_DIR_RANDOM, "constout_10_1_2");
     assert_one(EX_DIR_RANDOM, "constout_10_1_3");
