@@ -155,6 +155,10 @@ impl<V: IdType> TopTrees<V> {
     }
     pub fn remove_edge(&mut self, v1: V, v2: V) {
         // TODO: this code is horrendous. Clean it up later if it works.
+        // TODO: This code is currently O(h^2) in the height of the tree,
+        // due to the O(h) call to .get_root() in the inner loop.
+        // We really want O(h) (will correspond to O(ln n) in
+        // optimized balanced version)
 
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
@@ -255,6 +259,7 @@ impl<V: IdType> TopTrees<V> {
         self.node(n).parent
     }
     fn get_root(&self, v: V) -> NodeId<V> {
+        // Running time O(h) in the height of the tree h
         let mut n = NodeId::Vert(v);
         while let Some(parent) = self.node_parent(n) {
             n = parent
