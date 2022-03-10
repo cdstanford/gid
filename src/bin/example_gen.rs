@@ -34,7 +34,8 @@ fn random_example<P: Display>(
 ) -> Example {
     let params: Vec<String> = params.iter().map(|s| s.to_string()).collect();
     let params = params.join("_");
-    let pathname = format!("{}/{}_{}_{}", EX_DIR_RANDOM, basename, params, seed);
+    let pathname =
+        format!("{}/{}_{}_{}", EX_DIR_RANDOM, basename, params, seed);
     println!("created {}", pathname);
     Example::new(&pathname, ex_in, None)
 }

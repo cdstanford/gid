@@ -400,18 +400,7 @@ fn test_regexlib_expensive() {
 */
 
 #[test]
-fn test_random_constout_10() {
-    assert_one(EX_DIR_RANDOM, "constout_10_10_10");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_1");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_2");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_3");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_4");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_5");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_6");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_7");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_8");
-    assert_one(EX_DIR_RANDOM, "constout_10_10_9");
-    assert_one(EX_DIR_RANDOM, "constout_10_1_10");
+fn test_random_constout_10_1() {
     assert_one(EX_DIR_RANDOM, "constout_10_1_1");
     assert_one(EX_DIR_RANDOM, "constout_10_1_2");
     assert_one(EX_DIR_RANDOM, "constout_10_1_3");
@@ -421,7 +410,7 @@ fn test_random_constout_10() {
     assert_one(EX_DIR_RANDOM, "constout_10_1_7");
     assert_one(EX_DIR_RANDOM, "constout_10_1_8");
     assert_one(EX_DIR_RANDOM, "constout_10_1_9");
-    assert_one(EX_DIR_RANDOM, "constout_10_2_10");
+    assert_one(EX_DIR_RANDOM, "constout_10_1_10");
     assert_one(EX_DIR_RANDOM, "constout_10_2_1");
     assert_one(EX_DIR_RANDOM, "constout_10_2_2");
     assert_one(EX_DIR_RANDOM, "constout_10_2_3");
@@ -431,7 +420,7 @@ fn test_random_constout_10() {
     assert_one(EX_DIR_RANDOM, "constout_10_2_7");
     assert_one(EX_DIR_RANDOM, "constout_10_2_8");
     assert_one(EX_DIR_RANDOM, "constout_10_2_9");
-    assert_one(EX_DIR_RANDOM, "constout_10_3_10");
+    assert_one(EX_DIR_RANDOM, "constout_10_2_10");
     assert_one(EX_DIR_RANDOM, "constout_10_3_1");
     assert_one(EX_DIR_RANDOM, "constout_10_3_2");
     assert_one(EX_DIR_RANDOM, "constout_10_3_3");
@@ -441,21 +430,21 @@ fn test_random_constout_10() {
     assert_one(EX_DIR_RANDOM, "constout_10_3_7");
     assert_one(EX_DIR_RANDOM, "constout_10_3_8");
     assert_one(EX_DIR_RANDOM, "constout_10_3_9");
+    assert_one(EX_DIR_RANDOM, "constout_10_3_10");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_1");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_2");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_3");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_4");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_5");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_6");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_7");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_8");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_9");
+    assert_one(EX_DIR_RANDOM, "constout_10_10_10");
 }
 
 #[test]
-fn test_random_constout_100() {
-    assert_one(EX_DIR_RANDOM, "constout_100_10_10");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_1");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_2");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_3");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_4");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_5");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_6");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_7");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_8");
-    assert_one(EX_DIR_RANDOM, "constout_100_10_9");
-    assert_one(EX_DIR_RANDOM, "constout_100_1_10");
+fn test_random_constout_100_1() {
     assert_one(EX_DIR_RANDOM, "constout_100_1_1");
     assert_one(EX_DIR_RANDOM, "constout_100_1_2");
     assert_one(EX_DIR_RANDOM, "constout_100_1_3");
@@ -465,7 +454,11 @@ fn test_random_constout_100() {
     assert_one(EX_DIR_RANDOM, "constout_100_1_7");
     assert_one(EX_DIR_RANDOM, "constout_100_1_8");
     assert_one(EX_DIR_RANDOM, "constout_100_1_9");
-    assert_one(EX_DIR_RANDOM, "constout_100_2_10");
+    assert_one(EX_DIR_RANDOM, "constout_100_1_10");
+}
+
+#[test]
+fn test_random_constout_100_2() {
     assert_one(EX_DIR_RANDOM, "constout_100_2_1");
     assert_one(EX_DIR_RANDOM, "constout_100_2_2");
     assert_one(EX_DIR_RANDOM, "constout_100_2_3");
@@ -475,6 +468,11 @@ fn test_random_constout_100() {
     assert_one(EX_DIR_RANDOM, "constout_100_2_7");
     assert_one(EX_DIR_RANDOM, "constout_100_2_8");
     assert_one(EX_DIR_RANDOM, "constout_100_2_9");
+    assert_one(EX_DIR_RANDOM, "constout_100_2_10");
+}
+
+#[test]
+fn test_random_constout_100_3() {
     assert_one(EX_DIR_RANDOM, "constout_100_3_10");
     assert_one(EX_DIR_RANDOM, "constout_100_3_1");
     assert_one(EX_DIR_RANDOM, "constout_100_3_2");
@@ -488,19 +486,22 @@ fn test_random_constout_100() {
 }
 
 #[test]
+fn test_random_constout_100_10() {
+    assert_one(EX_DIR_RANDOM, "constout_100_10_1");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_2");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_3");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_4");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_5");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_6");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_7");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_8");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_9");
+    assert_one(EX_DIR_RANDOM, "constout_100_10_10");
+}
+
+#[test]
 #[ignore]
 fn test_random_constout_1000() {
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_10");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_1");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_2");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_3");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_4");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_5");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_6");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_7");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_8");
-    assert_one(EX_DIR_RANDOM, "constout_1000_10_9");
-    assert_one(EX_DIR_RANDOM, "constout_1000_1_10");
     assert_one(EX_DIR_RANDOM, "constout_1000_1_1");
     assert_one(EX_DIR_RANDOM, "constout_1000_1_2");
     assert_one(EX_DIR_RANDOM, "constout_1000_1_3");
@@ -510,7 +511,7 @@ fn test_random_constout_1000() {
     assert_one(EX_DIR_RANDOM, "constout_1000_1_7");
     assert_one(EX_DIR_RANDOM, "constout_1000_1_8");
     assert_one(EX_DIR_RANDOM, "constout_1000_1_9");
-    assert_one(EX_DIR_RANDOM, "constout_1000_2_10");
+    assert_one(EX_DIR_RANDOM, "constout_1000_1_10");
     assert_one(EX_DIR_RANDOM, "constout_1000_2_1");
     assert_one(EX_DIR_RANDOM, "constout_1000_2_2");
     assert_one(EX_DIR_RANDOM, "constout_1000_2_3");
@@ -520,7 +521,7 @@ fn test_random_constout_1000() {
     assert_one(EX_DIR_RANDOM, "constout_1000_2_7");
     assert_one(EX_DIR_RANDOM, "constout_1000_2_8");
     assert_one(EX_DIR_RANDOM, "constout_1000_2_9");
-    assert_one(EX_DIR_RANDOM, "constout_1000_3_10");
+    assert_one(EX_DIR_RANDOM, "constout_1000_2_10");
     assert_one(EX_DIR_RANDOM, "constout_1000_3_1");
     assert_one(EX_DIR_RANDOM, "constout_1000_3_2");
     assert_one(EX_DIR_RANDOM, "constout_1000_3_3");
@@ -530,4 +531,15 @@ fn test_random_constout_1000() {
     assert_one(EX_DIR_RANDOM, "constout_1000_3_7");
     assert_one(EX_DIR_RANDOM, "constout_1000_3_8");
     assert_one(EX_DIR_RANDOM, "constout_1000_3_9");
+    assert_one(EX_DIR_RANDOM, "constout_1000_3_10");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_1");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_2");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_3");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_4");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_5");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_6");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_7");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_8");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_9");
+    assert_one(EX_DIR_RANDOM, "constout_1000_10_10");
 }
