@@ -246,11 +246,12 @@ fn main() {
             }
         }
     }
-    for &n in &[10, 100] {
-        for &p in &[1, 2, 3] {
-            for i in 1..=10 {
-                random_pairwise(n, p, i).save();
-            }
-        }
+    for i in 1..=10 {
+        random_pairwise(10, 2, i).save();
+        random_pairwise(10, 3, i).save();
+        random_pairwise(100, 1, i).save();
+        random_pairwise(100, 2, i).save();
+        random_pairwise(100, 3, i).save();
+        random_pairwise(1000, 1, i).save();
     }
 }
