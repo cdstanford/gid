@@ -546,16 +546,6 @@ fn test_random_constout_1000() {
 
 #[test]
 fn test_random_pairwise_10() {
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_1");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_2");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_3");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_4");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_5");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_6");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_7");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_8");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_9");
-    assert_one(EX_DIR_RANDOM, "pairwise_10_1_10");
     assert_one(EX_DIR_RANDOM, "pairwise_10_2_1");
     assert_one(EX_DIR_RANDOM, "pairwise_10_2_2");
     assert_one(EX_DIR_RANDOM, "pairwise_10_2_3");
@@ -618,4 +608,19 @@ fn test_random_pairwise_100_3() {
     assert_one(EX_DIR_RANDOM, "pairwise_100_3_8");
     assert_one(EX_DIR_RANDOM, "pairwise_100_3_9");
     assert_one(EX_DIR_RANDOM, "pairwise_100_3_10");
+}
+
+#[test]
+#[ignore]
+fn test_random_pairwise_1000_1() {
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_1");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_2");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_3");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_4");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_5");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_6");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_7");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_8");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_9");
+    assert_one(EX_DIR_RANDOM, "pairwise_1000_1_10");
 }
