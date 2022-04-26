@@ -62,6 +62,8 @@ enum NodeId<V: IdType> {
 enum NodeCase<V: IdType, N: IdType> {
     SplitOnEdge(N, N),
     SingleVertex(V),
+    // TODO
+    // SplitOnVert(V, Vec<N>),
 }
 #[derive(Debug, Clone)]
 struct Node<V: IdType, N: IdType> {
@@ -85,11 +87,14 @@ impl<V: IdType, N: IdType> Node<V, N> {
     }
     #[cfg(not(debug_assertions))]
     fn assert_invariant(&self) {}
+    // fn children(&self) -> Vec<N> {
     fn children(&self) -> Option<(N, N)> {
         self.assert_invariant();
         match self.kind {
             NodeCase::SplitOnEdge(n1, n2) => Some((n1, n2)),
             NodeCase::SingleVertex(_) => None,
+            // vec![n1, n2],
+            // NodeCase::SplitOnVert(_, ns) => ns,
         }
     }
     fn get_edge(&self) -> Option<(V, V)> {
@@ -124,6 +129,7 @@ impl<V: IdType> TopTrees<V> {
             let id = NodeId::Vert(v);
             let parent = None;
             let kind = NodeCase::SingleVertex(v);
+            // let kind = NodeCase::SplitOnVert(v);
             let node = Node { id, parent, kind };
             self.nodes.insert(id, node);
         }
