@@ -182,7 +182,7 @@ fn gen_reverseunkloop(n: usize) -> Example {
     - vertices 0 through n-1 are closed, n is open
     - 0 through n-1 have 'deg' random out-edges
 */
-fn random_constoutdegree(n: usize, deg: usize, seed: u64) -> Example {
+fn random_sparse(n: usize, deg: usize, seed: u64) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     let mut rng = StdRng::seed_from_u64(seed);
 
@@ -195,16 +195,18 @@ fn random_constoutdegree(n: usize, deg: usize, seed: u64) -> Example {
         ex_in.push(Transaction::Close(u));
     }
 
-    random_example("constout", &[n, deg], seed, ex_in)
+    random_example("sparse", &[n, deg], seed, ex_in)
 }
 
 /*
     Generate an example with presence/existence of an edge chosen
-    independently at random for each vertex pair.
-    Probably is given as a % between 0 and 100.
-    As before, vertices 0 through n-1 are closed, n is open
+    independently at random for each vertex pair --
+    i.e. the Erdős–Rényi–Gilbert random graph model.
+
+    Probably is given as an integer percent between 0 and 100.
+    As before, vertices 0 through n-1 are closed, n is open.
 */
-fn random_pairwise(n: usize, p: usize, seed: u64) -> Example {
+fn random_dense(n: usize, p: usize, seed: u64) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     let mut rng = StdRng::seed_from_u64(seed);
 
@@ -218,7 +220,7 @@ fn random_pairwise(n: usize, p: usize, seed: u64) -> Example {
         ex_in.push(Transaction::Close(u));
     }
 
-    random_example("pairwise", &[n, p], seed, ex_in)
+    random_example("dense", &[n, p], seed, ex_in)
 }
 
 /*
@@ -241,17 +243,17 @@ fn main() {
     // Use random seeds 1-10
     for &n in &[10, 100, 1000] {
         for &d in &[1, 2, 3, 10] {
-            for i in 1..=10 {
-                random_constoutdegree(n, d, i).save();
+            for seed in 1..=10 {
+                random_sparse(n, d, seed).save();
             }
         }
     }
-    for i in 1..=10 {
-        random_pairwise(10, 2, i).save();
-        random_pairwise(10, 3, i).save();
-        random_pairwise(100, 1, i).save();
-        random_pairwise(100, 2, i).save();
-        random_pairwise(100, 3, i).save();
-        random_pairwise(1000, 1, i).save();
+    for seed in 1..=10 {
+        random_dense(10, 2, seed).save();
+        random_dense(10, 3, seed).save();
+        random_dense(100, 1, seed).save();
+        random_dense(100, 2, seed).save();
+        random_dense(100, 3, seed).save();
+        random_dense(1000, 1, seed).save();
     }
 }
