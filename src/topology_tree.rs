@@ -32,6 +32,9 @@
       Greg Frederickson.
       SIAM Journal on Computing, 1985.
       (Original definition of topology trees)
+
+    Implementation details:
+      TODO
 */
 
 use std::collections::HashMap;
@@ -46,63 +49,83 @@ pub trait IdType: Copy + Debug + Eq + Hash + Ord {}
 impl<I: Copy + Debug + Eq + Hash + Ord> IdType for I {}
 
 // Type used to identify nodes -- can be replaced with anything that
-// identifies an edge or vertex uniquely.
+// identifies an edge or vertex uniquely:
+// - An edge is represented as (u, v)
+// - A vertex v is represented as (v, v)
 #[derive(Copy, Debug, Eq, Hash, Ord, Clone, PartialEq, PartialOrd)]
-enum NodeId<V: IdType> {
-    Edge(V, V),
-    Vert(V),
+struct NodeId<V: IdType>(V, V);
+impl<V: IdType> NodeId<V> {
+    fn edge(u: V, v: V) -> Self {
+        debug_assert!(u != v);
+        NodeId(u, v)
+    }
+    fn vert(v: V) -> Self {
+        NodeId(v, v)
+    }
+    fn is_vert(&self) -> bool {
+        self.0 == self.1
+    }
 }
 
-// Represents a node in a balanced hierarchical decomposition of a forest
-// where each vertex has degree at most 3. TopTrees will do the work of
-// converting to degree 3.
-// N will be instantiated with NodeId for now, but can be any unique
-// identifier for each node.
+// Represents a node in a balanced hierarchical decomposition of a tree
+// where each node is either a single vertex (base case), or splitting
+// a tree along an edge (inductive case).
 #[derive(Debug, Clone)]
-enum NodeCase<V: IdType, N: IdType> {
-    SplitOnEdge(N, N),
-    SingleVertex(V),
-    // TODO
-    // SplitOnVert(V, Vec<N>),
-}
-#[derive(Debug, Clone)]
-struct Node<V: IdType, N: IdType> {
+struct Node<V: IdType> {
     id: NodeId<V>,
-    parent: Option<N>,
-    kind: NodeCase<V, N>,
+    parent: Option<NodeId<V>>,
+    children: Option<(NodeId<V>, NodeId<V>)>,
 }
-impl<V: IdType, N: IdType> Node<V, N> {
+impl<V: IdType> Node<V> {
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
-        match self.kind {
-            NodeCase::SplitOnEdge(_, _) => match self.id {
-                NodeId::Edge(_, _) => (),
-                NodeId::Vert(_) => panic!("invariant failed"),
-            },
-            NodeCase::SingleVertex(_) => match self.id {
-                NodeId::Edge(_, _) => panic!("invariant failed"),
-                NodeId::Vert(_) => (),
-            },
+        if self.children.is_none() {
+            assert!(self.id.is_vert())
+        } else {
+            assert!(!self.id.is_vert());
         }
     }
     #[cfg(not(debug_assertions))]
     fn assert_invariant(&self) {}
-    // fn children(&self) -> Vec<N> {
-    fn children(&self) -> Option<(N, N)> {
+    fn new_split_on_edge(
+        v1: V,
+        v2: V,
+        n1: NodeId<V>,
+        n2: NodeId<V>,
+    ) -> (NodeId<V>, Self) {
+        let id = NodeId::edge(v1, v2);
+        let parent = None;
+        let children = Some((n1, n2));
+        (id, Self { id, parent, children })
+    }
+    fn new_single_vertex(v: V) -> (NodeId<V>, Self) {
+        let id = NodeId::vert(v);
+        let parent = None;
+        let children = None;
+        (id, Self { id, parent, children })
+    }
+    // fn get_children(&self) -> Vec<N> {
+    fn get_children(&self) -> Option<(NodeId<V>, NodeId<V>)> {
         self.assert_invariant();
-        match self.kind {
-            NodeCase::SplitOnEdge(n1, n2) => Some((n1, n2)),
-            NodeCase::SingleVertex(_) => None,
-            // vec![n1, n2],
-            // NodeCase::SplitOnVert(_, ns) => ns,
-        }
+        self.children
+        // vec![n1, n2],
+        // NodeCase::SplitOnVert(_, ns) => ns,
     }
     fn get_edge(&self) -> Option<(V, V)> {
         self.assert_invariant();
-        match self.id {
-            NodeId::Edge(v1, v2) => Some((v1, v2)),
-            NodeId::Vert(_) => None,
+        if self.id.is_vert() {
+            None
+        } else {
+            Some((self.id.0, self.id.1))
         }
+    }
+    fn set_parent(&mut self, p: NodeId<V>) {
+        self.parent = Some(p);
+        self.assert_invariant();
+    }
+    fn set_children(&mut self, c1: NodeId<V>, c2: NodeId<V>) {
+        self.children = Some((c1, c2));
+        self.assert_invariant();
     }
 }
 
@@ -111,7 +134,7 @@ impl<V: IdType, N: IdType> Node<V, N> {
 */
 #[derive(Debug, Clone)]
 pub struct TopTrees<V: IdType> {
-    nodes: HashMap<NodeId<V>, Node<V, NodeId<V>>>,
+    nodes: HashMap<NodeId<V>, Node<V>>,
 }
 impl<V: IdType> Default for TopTrees<V> {
     fn default() -> Self {
@@ -126,11 +149,7 @@ impl<V: IdType> TopTrees<V> {
     }
     pub fn ensure_vertex(&mut self, v: V) {
         if !self.is_seen(v) {
-            let id = NodeId::Vert(v);
-            let parent = None;
-            let kind = NodeCase::SingleVertex(v);
-            // let kind = NodeCase::SplitOnVert(v);
-            let node = Node { id, parent, kind };
+            let (id, node) = Node::new_single_vertex(v);
             self.nodes.insert(id, node);
         }
 
@@ -141,21 +160,17 @@ impl<V: IdType> TopTrees<V> {
         assert!(self.is_seen(v2));
         assert!(!self.same_root(v1, v2));
 
+        // Create new parent node
         let n1 = self.get_root(v1);
         let n2 = self.get_root(v2);
-
-        // New SplitOnEdge node to join two trees
-        let id = NodeId::Edge(v1, v2);
-        let parent = None;
-        let kind = NodeCase::<V, NodeId<V>>::SplitOnEdge(n1, n2);
-        let node = Node { id, parent, kind };
+        let (id, node) = Node::new_split_on_edge(v1, v2, n1, n2);
         self.nodes.insert(id, node);
 
         // Set parents
-        debug_assert!(self.node_mut(n1).parent.is_none());
-        debug_assert!(self.node_mut(n2).parent.is_none());
-        self.node_mut(n1).parent = Some(id);
-        self.node_mut(n2).parent = Some(id);
+        debug_assert!(self.node_parent(n1).is_none());
+        debug_assert!(self.node_parent(n2).is_none());
+        self.node_mut(n1).set_parent(id);
+        self.node_mut(n2).set_parent(id);
 
         self.assert_invariant();
     }
@@ -169,9 +184,9 @@ impl<V: IdType> TopTrees<V> {
         assert!(self.is_seen(v1));
         assert!(self.is_seen(v2));
 
-        let mut n = NodeId::Edge(v1, v2);
+        let mut n = NodeId::edge(v1, v2);
         debug_assert!(self.node_is_seen(n));
-        let (mut n1, mut n2) = self.node(n).children().unwrap();
+        let (mut n1, mut n2) = self.node(n).get_children().unwrap();
 
         self.node_mut(n1).parent = None;
         self.node_mut(n2).parent = None;
@@ -185,7 +200,7 @@ impl<V: IdType> TopTrees<V> {
             // to_join is labeled with an edge and one of its children is n;
             // that child needs to be replaced with either n1 or n2.
 
-            let (c1, c2) = self.node(to_join).children().unwrap();
+            let (c1, c2) = self.node(to_join).get_children().unwrap();
             let (v1, v2) = self.node(to_join).get_edge().unwrap();
 
             if n == c1 {
@@ -194,8 +209,8 @@ impl<V: IdType> TopTrees<V> {
                     std::mem::swap(&mut n1, &mut n2);
                 }
                 // replace c1 with n1
-                self.node_mut(n1).parent = Some(to_join);
-                self.node_mut(to_join).kind = NodeCase::SplitOnEdge(n1, c2);
+                self.node_mut(n1).set_parent(to_join);
+                self.node_mut(to_join).set_children(n1, c2);
                 // Now par needs a parent
                 n = to_join;
                 n1 = to_join;
@@ -207,8 +222,8 @@ impl<V: IdType> TopTrees<V> {
                     std::mem::swap(&mut n1, &mut n2);
                 }
                 // replace c2 with n2
-                self.node_mut(n2).parent = Some(to_join);
-                self.node_mut(to_join).kind = NodeCase::SplitOnEdge(c1, n2);
+                self.node_mut(n2).set_parent(to_join);
+                self.node_mut(to_join).set_children(c1, n2);
                 // Now par needs a parent
                 n = to_join;
                 n2 = to_join;
@@ -221,9 +236,7 @@ impl<V: IdType> TopTrees<V> {
         self.assert_invariant();
     }
     pub fn same_root(&self, v1: V, v2: V) -> bool {
-        let n1 = self.get_root(v1);
-        let n2 = self.get_root(v2);
-        n1 == n2
+        self.get_root(v1) == self.get_root(v2)
     }
 
     /*
@@ -236,12 +249,12 @@ impl<V: IdType> TopTrees<V> {
             node.assert_invariant();
             assert_eq!(id, node.id);
             if let Some(par) = node.parent {
-                let (c1, c2) = self.node(par).children().unwrap();
+                let (c1, c2) = self.node(par).get_children().unwrap();
                 assert!(id == c1 || id == c2);
             }
-            if let Some((n1, n2)) = node.children() {
-                assert_eq!(id, self.node(n1).parent.unwrap());
-                assert_eq!(id, self.node(n2).parent.unwrap());
+            if let Some((n1, n2)) = node.get_children() {
+                assert_eq!(Some(id), self.node_parent(n1));
+                assert_eq!(Some(id), self.node_parent(n2));
             }
         }
     }
@@ -249,16 +262,16 @@ impl<V: IdType> TopTrees<V> {
     fn assert_invariant(&self) {}
     // Basic primitives
     fn is_seen(&self, v: V) -> bool {
-        self.node_is_seen(NodeId::Vert(v))
+        self.node_is_seen(NodeId::vert(v))
     }
     fn node_is_seen(&self, n: NodeId<V>) -> bool {
         self.nodes.contains_key(&n)
     }
     // Node moidifiers
-    fn node(&self, n: NodeId<V>) -> &Node<V, NodeId<V>> {
+    fn node(&self, n: NodeId<V>) -> &Node<V> {
         self.nodes.get(&n).unwrap()
     }
-    fn node_mut(&mut self, n: NodeId<V>) -> &mut Node<V, NodeId<V>> {
+    fn node_mut(&mut self, n: NodeId<V>) -> &mut Node<V> {
         self.nodes.get_mut(&n).unwrap()
     }
     fn node_parent(&self, n: NodeId<V>) -> Option<NodeId<V>> {
@@ -266,7 +279,7 @@ impl<V: IdType> TopTrees<V> {
     }
     fn get_root(&self, v: V) -> NodeId<V> {
         // Running time O(h) in the height of the tree h
-        let mut n = NodeId::Vert(v);
+        let mut n = NodeId::vert(v);
         while let Some(parent) = self.node_parent(n) {
             n = parent
         }
