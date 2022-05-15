@@ -163,9 +163,10 @@ impl<V: IdType> TopTrees<V> {
         self.assert_invariant();
     }
     pub fn add_edge(&mut self, v1: V, v2: V) {
-        assert!(self.is_seen(v1));
-        assert!(self.is_seen(v2));
-        assert!(!self.same_root(v1, v2));
+        // Preconditions
+        debug_assert!(self.is_seen(v1));
+        debug_assert!(self.is_seen(v2));
+        debug_assert!(!self.same_root(v1, v2));
 
         // Create new parent node
         let n1 = self.get_root(v1);
@@ -188,8 +189,10 @@ impl<V: IdType> TopTrees<V> {
         // We really want O(h) (will correspond to O(ln n) in
         // optimized balanced version)
 
-        assert!(self.is_seen(v1));
-        assert!(self.is_seen(v2));
+        // Preconditions
+        debug_assert!(self.is_seen(v1));
+        debug_assert!(self.is_seen(v2));
+        debug_assert!(self.same_root(v1, v2));
 
         let mut n = NodeId::edge(v1, v2);
         debug_assert!(self.node_is_seen(n));
@@ -360,6 +363,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_edge_twice() {
         let mut g = TopTrees::new();
@@ -370,6 +374,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_self_edge() {
         let mut g = TopTrees::new();
@@ -433,6 +438,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_cycle_2() {
         let mut g = TopTrees::new();
@@ -443,6 +449,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_cycle_3() {
         let mut g = TopTrees::new();
@@ -455,6 +462,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_cycle_4() {
         let mut g = TopTrees::new();
@@ -467,43 +475,6 @@ mod tests {
         g.add_edge(2, 3);
         g.add_edge(4, 1);
     }
-
-    // #[test]
-    // fn test_set_root_1() {
-    //     let mut g = TopTrees::new();
-    //     g.ensure_vertex(1);
-    //     g.ensure_vertex(2);
-    //     g.add_edge(1, 2);
-    //     g.set_root(1);
-    //     assert_eq!(g.query_root(1), 1);
-    //     assert_eq!(g.query_root(2), 1);
-    // }
-
-    // #[test]
-    // fn test_set_root_2() {
-    //     let mut g = TopTrees::new();
-    //     g.ensure_vertex(1);
-    //     g.ensure_vertex(2);
-    //     g.ensure_vertex(3);
-    //     g.ensure_vertex(4);
-    //     g.add_edge(1, 2);
-    //     g.add_edge(4, 3);
-    //     g.add_edge(2, 3);
-    //     assert_eq!(g.query_root(1), 3);
-    //     assert_eq!(g.query_root(2), 3);
-    //     assert_eq!(g.query_root(3), 3);
-    //     assert_eq!(g.query_root(4), 3);
-    //     g.set_root(1);
-    //     assert_eq!(g.query_root(1), 1);
-    //     assert_eq!(g.query_root(2), 1);
-    //     assert_eq!(g.query_root(3), 1);
-    //     assert_eq!(g.query_root(4), 1);
-    //     g.set_root(4);
-    //     assert_eq!(g.query_root(1), 4);
-    //     assert_eq!(g.query_root(2), 4);
-    //     assert_eq!(g.query_root(3), 4);
-    //     assert_eq!(g.query_root(4), 4);
-    // }
 
     #[test]
     fn test_add_two_parents() {
@@ -559,6 +530,4 @@ mod tests {
         assert!(!g.same_root(2, 3));
         assert!(g.same_root(3, 4));
     }
-
-    // TODO: write some better test_remove_edge tests.
 }
