@@ -12,11 +12,11 @@
      202 ./src/search.rs
      246 ./src/algorithm/smart.rs
      253 ./src/example.rs
-     256 ./src/bin/example_gen.rs
+     259 ./src/bin/example_gen.rs
      260 ./src/driver.rs
      274 ./src/algorithm/tarjan.rs
      315 ./src/algorithm/jump.rs
      370 ./src/graph.rs
-     538 ./src/topology_tree.rs
-     621 ./tests/test_examples.rs
-    4028 total
+     533 ./src/topology_tree.rs
+     626 ./tests/test_examples.rs
+    4031 total
