@@ -45,8 +45,8 @@ use std::hash::Hash;
     Internal types used by TopTrees
 */
 // Trait bound abbreviation
-pub trait IdType: Copy + Debug + Eq + Hash + Ord {}
-impl<I: Copy + Debug + Eq + Hash + Ord> IdType for I {}
+pub trait IdType: Copy + Debug + Eq + Hash {}
+impl<I: Copy + Debug + Eq + Hash> IdType for I {}
 
 // Type used to identify nodes -- can be replaced with anything that
 // identifies an edge or vertex uniquely:
@@ -70,19 +70,19 @@ impl<V: IdType> NodeId<V> {
 // Represents a node in a balanced hierarchical decomposition of a tree
 // where each node is either a single vertex (base case), or splitting
 // a tree along an edge (inductive case).
+// In the edge case, there are exactly two children.
+// In progress: the single vertex case also has a list of children.
 #[derive(Debug, Clone)]
 struct Node<V: IdType> {
     id: NodeId<V>,
     parent: Option<NodeId<V>>,
-    children: Option<(NodeId<V>, NodeId<V>)>,
+    children: Vec<NodeId<V>>,
 }
 impl<V: IdType> Node<V> {
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
-        if self.children.is_none() {
-            assert!(self.id.is_vert())
-        } else {
-            assert!(!self.id.is_vert());
+        if !self.id.is_vert() {
+            assert_eq!(self.children.len(), 2)
         }
     }
     #[cfg(not(debug_assertions))]
@@ -95,21 +95,28 @@ impl<V: IdType> Node<V> {
     ) -> (NodeId<V>, Self) {
         let id = NodeId::edge(v1, v2);
         let parent = None;
-        let children = Some((n1, n2));
+        let children = vec![n1, n2];
+        (id, Self { id, parent, children })
+    }
+    fn new_split_on_vertex(
+        v: V,
+        children: Vec<NodeId<V>>,
+    ) -> (NodeId<V>, Self) {
+        let id = NodeId::vert(v);
+        let parent = None;
         (id, Self { id, parent, children })
     }
     fn new_single_vertex(v: V) -> (NodeId<V>, Self) {
-        let id = NodeId::vert(v);
-        let parent = None;
-        let children = None;
-        (id, Self { id, parent, children })
+        Self::new_split_on_vertex(v, vec![])
     }
-    // fn get_children(&self) -> Vec<N> {
     fn get_children(&self) -> Option<(NodeId<V>, NodeId<V>)> {
         self.assert_invariant();
-        self.children
-        // vec![n1, n2],
-        // NodeCase::SplitOnVert(_, ns) => ns,
+        if self.id.is_vert() {
+            None
+        } else {
+            debug_assert_eq!(self.children.len(), 2);
+            Some((self.children[0], self.children[1]))
+        }
     }
     fn get_edge(&self) -> Option<(V, V)> {
         self.assert_invariant();
@@ -124,7 +131,7 @@ impl<V: IdType> Node<V> {
         self.assert_invariant();
     }
     fn set_children(&mut self, c1: NodeId<V>, c2: NodeId<V>) {
-        self.children = Some((c1, c2));
+        self.children = vec![c1, c2];
         self.assert_invariant();
     }
 }
