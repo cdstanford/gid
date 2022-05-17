@@ -71,7 +71,7 @@ impl<V: IdType> NodeId<V> {
 // where each node is either a single vertex (base case), or splitting
 // a tree along an edge (inductive case).
 // In the edge case, there are exactly two children.
-// In progress: the single vertex case also has a list of children.
+// In the vertex case, there is a list of any number (0 or more) children.
 #[derive(Debug, Clone)]
 struct Node<V: IdType> {
     id: NodeId<V>,
