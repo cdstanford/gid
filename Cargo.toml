@@ -13,3 +13,22 @@ rand = "0.8.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 structopt = "0.3.21"
+
+[lib]
+doctest = false
+
+[[bin]]
+name = "compare_stats"
+test = false
+
+[[bin]]
+name = "example_gen"
+test = false
+
+[[bin]]
+name = "run_all"
+test = false
+
+[[bin]]
+name = "run_example"
+test = false
