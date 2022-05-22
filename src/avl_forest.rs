@@ -234,6 +234,9 @@ mod tests {
     fn range_vec(i: usize, j: usize) -> Vec<usize> {
         (i..=j).collect()
     }
+    fn range_rev_vec(i: usize, j: usize) -> Vec<usize> {
+        (i..=j).rev().collect()
+    }
 
     #[test]
     fn test_singletons() {
@@ -296,7 +299,43 @@ mod tests {
             forest.ensure_vertex(i);
             assert!(forest.concat(0, i));
             assert_eq!(forest.collect_succs(0), range_vec(0, i));
+            assert_eq!(forest.collect_succs(i), vec![i]);
         }
+    }
+
+    #[test]
+    fn test_concat_repeat_prepend() {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex(0);
+        assert_eq!(forest.collect_succs(0), vec![0]);
+        for i in 1..=10 {
+            forest.ensure_vertex(i);
+            assert!(forest.concat(i, 0));
+            assert_eq!(forest.collect_succs(i), range_rev_vec(0, i));
+            assert_eq!(forest.collect_succs(0), vec![0]);
+        }
+    }
+
+    #[test]
+    fn test_concat_doubling() {
+        let mut forest = AvlForest::new();
+        for i in 0..=7 {
+            forest.ensure_vertex(i);
+        }
+        assert!(forest.concat(0, 1));
+        assert!(forest.concat(2, 3));
+        assert!(forest.concat(4, 5));
+        assert!(forest.concat(6, 7));
+        assert_eq!(forest.collect_succs(0), vec![0, 1]);
+        assert_eq!(forest.collect_succs(2), vec![2, 3]);
+        assert_eq!(forest.collect_succs(4), vec![4, 5]);
+        assert_eq!(forest.collect_succs(6), vec![6, 7]);
+        assert!(forest.concat(1, 5));
+        assert!(forest.concat(2, 7));
+        assert_eq!(forest.collect_succs(0), vec![0, 1, 4, 5]);
+        assert_eq!(forest.collect_succs(2), vec![2, 3, 6, 7]);
+        assert!(forest.concat(3, 4));
+        assert_eq!(forest.collect_succs(2), vec![2, 3, 6, 7, 0, 1, 4, 5]);
     }
 
     #[test]
