@@ -70,19 +70,16 @@ impl<V: IdType> AvlForest<V> {
             if let Some(p) = node.parent {
                 assert!(self.is_seen(p));
             }
-            // Children check (and heights)
-            let mut max_height: usize = 0;
+            // Children point to parent
             if let Some(v1) = node.lchild {
-                let n1 = self.node(v1);
-                assert_eq!(n1.parent, Some(v));
-                max_height = max_height.max(n1.height + 1)
+                assert_eq!(self.node(v1).parent, Some(v));
             }
             if let Some(v2) = node.rchild {
-                let n2 = self.node(v2);
-                assert_eq!(n2.parent, Some(v));
-                max_height = max_height.max(n2.height + 1)
+                assert_eq!(self.node(v2).parent, Some(v));
             }
-            assert_eq!(node.height, max_height);
+            // Height is correct
+            assert_eq!(node.height, self.compute_height(node));
+            // TODO: when balanced, also check heights are balanced
         }
     }
     #[cfg(not(debug_assertions))]
@@ -135,6 +132,7 @@ impl<V: IdType> AvlForest<V> {
         Recursive function called by concat
     */
     fn concat_roots(&mut self, mut r1: V, mut r2: V) -> V {
+        // println!("Concat roots: {r1:?} {r2:?}");
         debug_assert!(r1 != r2);
         debug_assert_eq!(self.node_parent(r1), None);
         debug_assert_eq!(self.node_parent(r2), None);
@@ -148,6 +146,7 @@ impl<V: IdType> AvlForest<V> {
             }
             self.node_mut(r2).parent = Some(r1);
             self.node_mut(r1).rchild = Some(r2);
+            self.set_height(r1);
             r1
         } else {
             if let Some(c2) = n2.lchild {
@@ -156,6 +155,7 @@ impl<V: IdType> AvlForest<V> {
             }
             self.node_mut(r1).parent = Some(r2);
             self.node_mut(r2).lchild = Some(r1);
+            self.set_height(r2);
             r2
         }
     }
@@ -182,7 +182,8 @@ impl<V: IdType> AvlForest<V> {
     fn node_parent(&self, v: V) -> Option<V> {
         self.node(v).parent
     }
-    fn succ(&self, v: V) -> Option<V> {
+    fn succ(&self, mut v: V) -> Option<V> {
+        // println!("succ {v:?}");
         if let Some(mut c) = self.node(v).rchild {
             while let Some(cnew) = self.node(c).lchild {
                 c = cnew;
@@ -193,6 +194,7 @@ impl<V: IdType> AvlForest<V> {
             if self.node(par).lchild == Some(v) {
                 return Some(par);
             }
+            v = par;
         }
         None
     }
@@ -200,6 +202,19 @@ impl<V: IdType> AvlForest<V> {
     /*
         AVL balancing operations (internal)
     */
+    fn compute_height(&self, n: &Node<V>) -> usize {
+        let mut max_height: usize = 0;
+        if let Some(v1) = n.lchild {
+            max_height = max_height.max(self.node(v1).height + 1)
+        }
+        if let Some(v2) = n.rchild {
+            max_height = max_height.max(self.node(v2).height + 1)
+        }
+        max_height
+    }
+    fn set_height(&mut self, v: V) {
+        self.node_mut(v).height = self.compute_height(self.node(v));
+    }
     // TODO
 }
 
@@ -209,6 +224,12 @@ impl<V: IdType> AvlForest<V> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    impl<V: IdType> AvlForest<V> {
+        fn collect_succs(&mut self, v: V) -> Vec<V> {
+            self.iter_succs(v).collect()
+        }
+    }
 
     #[test]
     fn test_singletons() {
@@ -229,5 +250,24 @@ mod tests {
         forest.ensure_vertex(2);
         forest.ensure_vertex(2);
         forest.get_root(1);
+    }
+
+    #[test]
+    fn test_concat() {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex(2);
+        forest.ensure_vertex(4);
+        forest.ensure_vertex(6);
+        assert_eq!(forest.concat(2, 2), false);
+        assert_eq!(forest.concat(4, 2), true);
+        assert_eq!(forest.concat(2, 4), false);
+        assert_eq!(forest.concat(4, 6), true);
+
+        assert!(forest.same_root(2, 4));
+        assert!(forest.same_root(2, 6));
+
+        assert_eq!(forest.collect_succs(6), vec![6]);
+        assert_eq!(forest.collect_succs(2), vec![2, 6]);
+        assert_eq!(forest.collect_succs(4), vec![4, 2, 6]);
     }
 }
