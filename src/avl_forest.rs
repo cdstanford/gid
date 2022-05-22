@@ -202,3 +202,32 @@ impl<V: IdType> AvlForest<V> {
     */
     // TODO
 }
+
+/*
+    Unit tests
+*/
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_singletons() {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex(2);
+        forest.ensure_vertex(2);
+        forest.ensure_vertex(3);
+        forest.ensure_vertex(5);
+        assert_eq!(forest.get_root(2), 2);
+        assert_eq!(forest.get_root(3), 3);
+        assert_eq!(forest.get_root(5), 5);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_get_root_nonexistent() {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex(2);
+        forest.ensure_vertex(2);
+        forest.get_root(1);
+    }
+}
