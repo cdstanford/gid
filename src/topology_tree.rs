@@ -424,17 +424,6 @@ mod tests {
 
         assert!(!g.same_root(3, 4));
         assert!(!g.same_root(7, 8));
-
-        // assert_eq!(g.query_root(0), 8);
-        // assert_eq!(g.query_root(1), 8);
-        // assert_eq!(g.query_root(2), 8);
-        // assert_eq!(g.query_root(3), 8);
-        // assert_eq!(g.query_root(4), 7);
-        // assert_eq!(g.query_root(5), 7);
-        // assert_eq!(g.query_root(6), 7);
-        // assert_eq!(g.query_root(7), 7);
-        // assert_eq!(g.query_root(8), 8);
-        // assert_eq!(g.query_root(9), 8);
     }
 
     #[test]
