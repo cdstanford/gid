@@ -24,6 +24,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::iter;
 
 // Trait bound abbreviation
 pub trait IdType: Copy + Debug + Eq + Hash {}
@@ -160,6 +161,13 @@ impl<V: IdType> AvlForest<V> {
     }
 
     /*
+        Iterator
+    */
+    pub fn iter_succs(&self, v: V) -> impl Iterator<Item = V> + '_ {
+        iter::successors(Some(v), move |&v| self.succ(v))
+    }
+
+    /*
         Basic accessors (internal)
     */
     fn is_seen(&self, v: V) -> bool {
@@ -173,6 +181,20 @@ impl<V: IdType> AvlForest<V> {
     }
     fn node_parent(&self, v: V) -> Option<V> {
         self.node(v).parent
+    }
+    fn succ(&self, v: V) -> Option<V> {
+        if let Some(mut c) = self.node(v).rchild {
+            while let Some(cnew) = self.node(c).lchild {
+                c = cnew;
+            }
+            return Some(c);
+        }
+        while let Some(par) = self.node(v).parent {
+            if self.node(par).lchild == Some(v) {
+                return Some(par);
+            }
+        }
+        None
     }
 
     /*
