@@ -127,6 +127,7 @@ impl<V: IdType> AvlForest<V> {
         let mut lsplit: Option<V> = Some(v);
         let mut rsplit: Option<V> = self.node(v).rchild;
         self.node_mut(v).rchild = None;
+        self.set_height(v);
 
         // Travel upward from v, on each upwards-left move add to lsplit,
         // on each upwards-right move add to rsplit.
@@ -381,5 +382,24 @@ mod tests {
         assert!(!forest.concat(3, 2));
         assert!(!forest.concat(1, 3));
         assert!(!forest.concat(3, 1));
+    }
+
+    #[test]
+    fn test_split_after_simple() {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex('a');
+        forest.ensure_vertex('b');
+
+        assert!(forest.concat('a', 'b'));
+        assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
+        forest.split_after('b');
+        assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
+        forest.split_after('a');
+        assert_eq!(forest.collect_succs('a'), vec!['a']);
+
+        assert!(forest.concat('b', 'a'));
+        assert_eq!(forest.collect_succs('b'), vec!['b', 'a']);
+        forest.split_after('b');
+        assert_eq!(forest.collect_succs('b'), vec!['b']);
     }
 }
