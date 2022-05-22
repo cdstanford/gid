@@ -121,10 +121,29 @@ impl<V: IdType> AvlForest<V> {
             true
         }
     }
-    pub fn split_after(&mut self, v: V) {
+    pub fn split_after(&mut self, mut v: V) {
         debug_assert!(self.is_seen(v));
-        todo!()
-        // self.assert_invariant();
+
+        let mut lsplit: Option<V> = Some(v);
+        let mut rsplit: Option<V> = self.node(v).rchild;
+        self.node_mut(v).rchild = None;
+
+        // Travel upward from v, on each upwards-left move add to lsplit,
+        // on each upwards-right move add to rsplit.
+        while let Some(p) = self.node_parent(v) {
+            if self.node(p).rchild == Some(v) {
+                self.node_mut(p).rchild = lsplit;
+                lsplit = Some(p);
+            } else {
+                debug_assert_eq!(self.node(p).lchild, Some(v));
+                self.node_mut(p).lchild = rsplit;
+                rsplit = Some(p);
+            }
+            self.set_height(p);
+            v = p;
+        }
+
+        self.assert_invariant();
     }
 
     /*
