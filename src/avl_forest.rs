@@ -8,9 +8,22 @@
 
     Semantically, each AVL tree in the collection is an ordered list.
     The data structure supports the following in O(log n):
-    - root(x): get a canonical node for the AVL tree containing x
+    - add(x): add a new tree with a single node x
+    - root(x): get the root node for the AVL tree containing x
     - concat(x, y): concatenate AVL trees containing x and y
     - split(x): Split the AVL tree containing x after x.
+
+    Example:
+        add(1), add(3), add(2)
+            [1] [3] [2]
+        concat(1, 3)
+            [1, 3] [2]
+        concat(1, 2) (or concat(3, 2))
+            [1, 3, 2]
+        split(1)
+            [1], [3, 2]
+        split(3)
+            [1], [3], [2]
 
     This data structure is used for connectivity in undirected forests,
     a la Henzinger-King (Euler tour trees). Introduced in:
