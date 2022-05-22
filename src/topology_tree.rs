@@ -1,6 +1,7 @@
 /*
-    Implementation of Frederickson's Topology Trees
-    for dynamic undirected graph connectivity problems.
+    Implementation of undirected graph connectivity for forests.
+
+    SEE ALSO (heavily relies on): AvlForest in avl_forest.rs
 
     The data structure maintains a forest graph, and supports
     the following in O(log n) per operation:
@@ -9,44 +10,37 @@
     - Joining two trees into one by adding an edge
     - Splitting a tree into two by removing an edge
 
-    This data structure can be used efficiently for undirected
-    connectivity in forests. It doesn't solve the problem of
-    undirected connectivity in *general* graphs, but forests
-    will be enough for our use case.
+    Originally we tried to use Frederickson's Topology Trees,
+    but they seem difficult to get right in the implementation.
+    Now we are using Henzinger and King's Euler tour trees,
+    implemented using a forest of balanced AVL trees.
+    We find this implementation much nicer.
 
-    TODO List:
-    1. implement naive version that works but isn't efficient
-        ==> Done
-    2. write unit tests
-        ==> Done
-    3. implement the efficient version
-        ==> In Progress
-        - Implemented first cut using unbalanced tree
+    This doesn't solve the problem of undirected connectivity in *general*
+    graphs, but forests are enough for our use case.
 
     References:
     - Dynamic graph algorithms.
       David Eppstein, Zvi Galil, and Guiseppe Italiano.
       Algorithms and theory of computation handbook, 1999.
       (Good introduction and overview of topology trees)
-    - Data structures for on-line updating of minimum spanning trees, with applications.
+    - Data structures for on-line updating of minimum spanning trees,
+      with applications.
       Greg Frederickson.
       SIAM Journal on Computing, 1985.
       (Original definition of topology trees)
-
-    Implementation details:
-      TODO
+    -  Randomized Fully Dynamic Graph Algorithms with Polylogarithmic Time
+       per Operation.
+       Monika R. Henzinger and Valerie King.
+       JACM, 1999.
+     - Useful notes:
+       http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
 
-/*
-    Internal types used by TopTrees
-*/
-// Trait bound abbreviation
-pub trait IdType: Copy + Debug + Eq + Hash {}
-impl<I: Copy + Debug + Eq + Hash> IdType for I {}
+use super::avl_forest::{AvlForest, IdType};
 
 // Type used to identify nodes -- can be replaced with anything that
 // identifies an edge or vertex uniquely:
@@ -62,86 +56,14 @@ impl<V: IdType> NodeId<V> {
     fn vert(v: V) -> Self {
         NodeId(v, v)
     }
-    fn is_vert(&self) -> bool {
-        self.0 == self.1
-    }
-}
-
-// Represents a node in a balanced hierarchical decomposition of a tree
-// where each node is either a single vertex (base case), or splitting
-// a tree along an edge (inductive case).
-// In the edge case, there are exactly two children.
-// In the vertex case, there is a list of any number (0 or more) children.
-#[derive(Debug, Clone)]
-struct Node<V: IdType> {
-    id: NodeId<V>,
-    parent: Option<NodeId<V>>,
-    children: Vec<NodeId<V>>,
-}
-impl<V: IdType> Node<V> {
-    #[cfg(debug_assertions)]
-    fn assert_invariant(&self) {
-        if !self.id.is_vert() {
-            assert_eq!(self.children.len(), 2)
-        }
-    }
-    #[cfg(not(debug_assertions))]
-    fn assert_invariant(&self) {}
-    fn new_split_on_edge(
-        v1: V,
-        v2: V,
-        n1: NodeId<V>,
-        n2: NodeId<V>,
-    ) -> (NodeId<V>, Self) {
-        let id = NodeId::edge(v1, v2);
-        let parent = None;
-        let children = vec![n1, n2];
-        (id, Self { id, parent, children })
-    }
-    fn new_split_on_vertex(
-        v: V,
-        children: Vec<NodeId<V>>,
-    ) -> (NodeId<V>, Self) {
-        let id = NodeId::vert(v);
-        let parent = None;
-        (id, Self { id, parent, children })
-    }
-    fn new_single_vertex(v: V) -> (NodeId<V>, Self) {
-        Self::new_split_on_vertex(v, vec![])
-    }
-    fn get_children(&self) -> Option<(NodeId<V>, NodeId<V>)> {
-        self.assert_invariant();
-        if self.id.is_vert() {
-            None
-        } else {
-            debug_assert_eq!(self.children.len(), 2);
-            Some((self.children[0], self.children[1]))
-        }
-    }
-    fn get_edge(&self) -> Option<(V, V)> {
-        self.assert_invariant();
-        if self.id.is_vert() {
-            None
-        } else {
-            Some((self.id.0, self.id.1))
-        }
-    }
-    fn set_parent(&mut self, p: NodeId<V>) {
-        self.parent = Some(p);
-        self.assert_invariant();
-    }
-    fn set_children(&mut self, c1: NodeId<V>, c2: NodeId<V>) {
-        self.children = vec![c1, c2];
-        self.assert_invariant();
-    }
 }
 
 /*
     The publicly exposed data structure
 */
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TopTrees<V: IdType> {
-    nodes: HashMap<NodeId<V>, Node<V>>,
+    nodes: AvlForest<NodeId<V>>,
 }
 impl<V: IdType> Default for TopTrees<V> {
     fn default() -> Self {
@@ -155,146 +77,92 @@ impl<V: IdType> TopTrees<V> {
         result
     }
     pub fn ensure_vertex(&mut self, v: V) {
-        if !self.is_seen(v) {
-            let (id, node) = Node::new_single_vertex(v);
-            self.nodes.insert(id, node);
-        }
-
+        self.nodes.ensure(NodeId::vert(v));
         self.assert_invariant();
     }
     pub fn add_edge(&mut self, v1: V, v2: V) {
-        // Preconditions
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
         debug_assert!(!self.same_root(v1, v2));
 
-        // Create new parent node
-        let n1 = self.get_root(v1);
-        let n2 = self.get_root(v2);
-        let (id, node) = Node::new_split_on_edge(v1, v2, n1, n2);
-        self.nodes.insert(id, node);
+        let e12 = NodeId::edge(v1, v2);
+        let e21 = NodeId::edge(v2, v1);
+        let v1 = NodeId::vert(v1);
+        let v2 = NodeId::vert(v2);
+        self.nodes.ensure(e12);
+        self.nodes.ensure(e21);
 
-        // Set parents
-        debug_assert!(self.node_parent(n1).is_none());
-        debug_assert!(self.node_parent(n2).is_none());
-        self.node_mut(n1).set_parent(id);
-        self.node_mut(n2).set_parent(id);
+        // Split trees at v1 and v2, saving neighbors...
+        let u1 = self.nodes.prev(v1);
+        let w1 = self.nodes.next(v1);
+        let u2 = self.nodes.prev(v2);
+        let w2 = self.nodes.next(v2);
+        self.nodes.split(v1);
+        self.nodes.split(v2);
+
+        // Then piece the trees back together in order of a new Euler tour
+        self.nodes.concat(v1, e12);
+        self.nodes.concat(e12, v2);
+        if let Some(w2) = w2 {
+            self.nodes.concat(v2, w2);
+        }
+        if let Some(u2) = u2 {
+            self.nodes.concat(v2, u2);
+        }
+        self.nodes.concat(v2, e21);
+        if let Some(w1) = w1 {
+            self.nodes.concat(e21, w1);
+        }
+        if let Some(u1) = u1 {
+            self.nodes.concat(e21, u1);
+        }
 
         self.assert_invariant();
     }
     pub fn remove_edge(&mut self, v1: V, v2: V) {
-        // TODO: this code is horrendous. Clean it up later if it works.
-        // TODO: This code is currently O(h^2) in the height of the tree,
-        // due to the O(h) call to .get_root() in the inner loop.
-        // We really want O(h) (will correspond to O(ln n) in
-        // optimized balanced version)
-
-        // Preconditions
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
         debug_assert!(self.same_root(v1, v2));
+        let e12 = NodeId::edge(v1, v2);
+        let e21 = NodeId::edge(v2, v1);
 
-        let mut n = NodeId::edge(v1, v2);
-        debug_assert!(self.node_is_seen(n));
-        let (mut n1, mut n2) = self.node(n).get_children().unwrap();
+        // Neighbors
+        let u1 = self.nodes.prev(e12);
+        let u2 = self.nodes.next(e12);
+        let u3 = self.nodes.prev(e21);
+        let u4 = self.nodes.next(e21);
 
-        self.node_mut(n1).parent = None;
-        self.node_mut(n2).parent = None;
+        // This splits into potentially 3 trees
+        self.nodes.split(e12);
+        self.nodes.split(e21);
 
-        let mut next_join = self.node_parent(n);
-        self.nodes.remove(&n);
-
-        while let Some(to_join) = next_join {
-            // Invariant:
-            // Two tree nodes, n1 and n2, need parents.
-            // to_join is labeled with an edge and one of its children is n;
-            // that child needs to be replaced with either n1 or n2.
-
-            let (c1, c2) = self.node(to_join).get_children().unwrap();
-            let (v1, v2) = self.node(to_join).get_edge().unwrap();
-
-            if n == c1 {
-                if self.get_root(v1) != n1 {
-                    debug_assert_eq!(self.get_root(v1), n2);
-                    std::mem::swap(&mut n1, &mut n2);
-                }
-                // replace c1 with n1
-                self.node_mut(n1).set_parent(to_join);
-                self.node_mut(to_join).set_children(n1, c2);
-                // Now par needs a parent
-                n = to_join;
-                n1 = to_join;
+        // Piece back together the first and last tree, if necessary
+        if let Some((((u1, u2), u3), u4)) = u1.zip(u2).zip(u3).zip(u4) {
+            if self.nodes.same_root(u2, u3) {
+                debug_assert!(!self.nodes.same_root(u1, u4));
+                self.nodes.concat(u4, u1);
             } else {
-                debug_assert_eq!(n, c2);
-                // Same as previous case but for c2, v2 instead of c1, v1
-                if self.get_root(v2) != n2 {
-                    debug_assert_eq!(self.get_root(v2), n1);
-                    std::mem::swap(&mut n1, &mut n2);
-                }
-                // replace c2 with n2
-                self.node_mut(n2).set_parent(to_join);
-                self.node_mut(to_join).set_children(c1, n2);
-                // Now par needs a parent
-                n = to_join;
-                n2 = to_join;
+                debug_assert!(self.nodes.same_root(u1, u4));
+                self.nodes.concat(u2, u3);
             }
-
-            next_join = self.node_parent(n);
-            self.node_mut(n).parent = None;
         }
 
         self.assert_invariant();
     }
     pub fn same_root(&self, v1: V, v2: V) -> bool {
-        self.get_root(v1) == self.get_root(v2)
+        self.nodes.same_root(NodeId::vert(v1), NodeId::vert(v2))
     }
 
     /*
         Internal
     */
-    // Invariant
-    #[cfg(debug_assertions)]
-    fn assert_invariant(&self) {
-        for (&id, node) in self.nodes.iter() {
-            node.assert_invariant();
-            assert_eq!(id, node.id);
-            if let Some(par) = node.parent {
-                let (c1, c2) = self.node(par).get_children().unwrap();
-                assert!(id == c1 || id == c2);
-            }
-            if let Some((n1, n2)) = node.get_children() {
-                assert_eq!(Some(id), self.node_parent(n1));
-                assert_eq!(Some(id), self.node_parent(n2));
-            }
-        }
+    fn is_seen(&self, v: V) -> bool {
+        self.nodes.is_seen(NodeId::vert(v))
     }
+    #[cfg(debug_assertions)]
+    fn assert_invariant(&self) {}
     #[cfg(not(debug_assertions))]
     fn assert_invariant(&self) {}
-    // Basic primitives
-    fn is_seen(&self, v: V) -> bool {
-        self.node_is_seen(NodeId::vert(v))
-    }
-    fn node_is_seen(&self, n: NodeId<V>) -> bool {
-        self.nodes.contains_key(&n)
-    }
-    // Node moidifiers
-    fn node(&self, n: NodeId<V>) -> &Node<V> {
-        self.nodes.get(&n).unwrap()
-    }
-    fn node_mut(&mut self, n: NodeId<V>) -> &mut Node<V> {
-        self.nodes.get_mut(&n).unwrap()
-    }
-    fn node_parent(&self, n: NodeId<V>) -> Option<NodeId<V>> {
-        self.node(n).parent
-    }
-    fn get_root(&self, v: V) -> NodeId<V> {
-        // Running time O(h) in the height of the tree h
-        let mut n = NodeId::vert(v);
-        while let Some(parent) = self.node_parent(n) {
-            n = parent
-        }
-        n
-    }
 }
 
 #[cfg(test)]
