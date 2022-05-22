@@ -64,9 +64,11 @@ impl<V: IdType> AvlForest<V> {
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
         for (&v, node) in self.nodes.iter() {
-            // Parent exists
+            // Parent points to children
             if let Some(p) = node.parent {
                 assert!(self.is_seen(p));
+                let n = self.node(p);
+                assert!(n.lchild == Some(v) || n.rchild == Some(v));
             }
             // Children point to parent
             if let Some(v1) = node.lchild {
@@ -124,27 +126,42 @@ impl<V: IdType> AvlForest<V> {
     pub fn split_after(&mut self, mut v: V) {
         debug_assert!(self.is_seen(v));
 
+        // println!("{:?}, splitting after {:?}", self, v);
+
         let mut lsplit: Option<V> = Some(v);
         let mut rsplit: Option<V> = self.node(v).rchild;
         self.node_mut(v).rchild = None;
+        if let Some(u) = rsplit {
+            self.node_mut(u).parent = None;
+        }
         self.set_height(v);
 
         // Travel upward from v, on each upwards-left move add to lsplit,
         // on each upwards-right move add to rsplit.
         while let Some(p) = self.node_parent(v) {
+            self.node_mut(v).parent = None;
+
             if self.node(p).rchild == Some(v) {
                 self.node_mut(p).rchild = lsplit;
+                self.node_mut(lsplit.unwrap()).parent = Some(p);
                 lsplit = Some(p);
             } else {
                 debug_assert_eq!(self.node(p).lchild, Some(v));
                 self.node_mut(p).lchild = rsplit;
+                if let Some(u) = rsplit {
+                    self.node_mut(u).parent = Some(p);
+                }
                 rsplit = Some(p);
             }
+
             self.set_height(p);
             v = p;
         }
 
         self.assert_invariant();
+    }
+    pub fn iter_succs(&self, v: V) -> impl Iterator<Item = V> + '_ {
+        iter::successors(Some(v), move |&v| self.succ(v))
     }
 
     /*
@@ -181,14 +198,7 @@ impl<V: IdType> AvlForest<V> {
     }
 
     /*
-        Iterator
-    */
-    pub fn iter_succs(&self, v: V) -> impl Iterator<Item = V> + '_ {
-        iter::successors(Some(v), move |&v| self.succ(v))
-    }
-
-    /*
-        Basic accessors (internal)
+        Basic accessors
     */
     fn is_seen(&self, v: V) -> bool {
         self.nodes.contains_key(&v)
@@ -394,8 +404,11 @@ mod tests {
         assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
         forest.split_after('b');
         assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
+        assert_eq!(forest.get_root('a'), forest.get_root('b'));
         forest.split_after('a');
         assert_eq!(forest.collect_succs('a'), vec!['a']);
+        assert_eq!(forest.get_root('a'), 'a');
+        assert_eq!(forest.get_root('b'), 'b');
 
         assert!(forest.concat('b', 'a'));
         assert_eq!(forest.collect_succs('b'), vec!['b', 'a']);
