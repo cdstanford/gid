@@ -166,10 +166,22 @@ impl<V: IdType> AvlForest<V> {
         }
         None
     }
-    // TODO
-    // pub fn prev(&self, mut v: V) -> Option<V> {
-    //     todo!()
-    // }
+    pub fn prev(&self, mut v: V) -> Option<V> {
+        // println!("succ {v:?}");
+        if let Some(mut c) = self.node(v).lchild {
+            while let Some(cnew) = self.node(c).rchild {
+                c = cnew;
+            }
+            return Some(c);
+        }
+        while let Some(par) = self.node(v).parent {
+            if self.node(par).rchild == Some(v) {
+                return Some(par);
+            }
+            v = par;
+        }
+        None
+    }
     pub fn iter_next(&self, v: V) -> impl Iterator<Item = V> + '_ {
         iter::successors(Some(v), move |&v| self.next(v))
     }
@@ -525,5 +537,16 @@ mod tests {
                 assert_eq!(forest.collect_succs(BIG), vec![BIG]);
             }
         }
+    }
+
+    #[test]
+    fn test_next_prev() {
+        let forest = n_chain(10);
+        for i in 1..=9 {
+            assert_eq!(forest.next(i), Some(i + 1));
+            assert_eq!(forest.prev(i + 1), Some(i));
+        }
+        assert_eq!(forest.prev(1), None);
+        assert_eq!(forest.next(10), None);
     }
 }
