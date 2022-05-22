@@ -270,7 +270,7 @@ mod tests {
         assert_eq!(forest.collect_succs(2), vec![2]);
         assert_eq!(forest.collect_succs(4), vec![4]);
 
-        assert_eq!(forest.concat(4, 2), true);
+        assert!(forest.concat(4, 2));
         // forest: [4, 2], [6]
         assert!(forest.same_root(2, 4));
         assert!(!forest.same_root(2, 6));
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(forest.collect_succs(2), vec![2]);
         assert_eq!(forest.collect_succs(4), vec![4, 2]);
 
-        assert_eq!(forest.concat(4, 6), true);
+        assert!(forest.concat(4, 6));
         // forest:
         assert!(forest.same_root(2, 4));
         assert!(forest.same_root(2, 6));
@@ -294,7 +294,7 @@ mod tests {
         assert_eq!(forest.collect_succs(0), vec![0]);
         for i in 1..=10 {
             forest.ensure_vertex(i);
-            assert_eq!(forest.concat(0, i), true);
+            assert!(forest.concat(0, i));
             assert_eq!(forest.collect_succs(0), range_vec(0, i));
         }
     }
@@ -305,16 +305,16 @@ mod tests {
         forest.ensure_vertex(3);
         forest.ensure_vertex(2);
         forest.ensure_vertex(1);
-        assert_eq!(forest.concat(2, 2), false);
+        assert!(!forest.concat(2, 2));
 
-        assert_eq!(forest.concat(1, 2), true);
-        assert_eq!(forest.concat(2, 1), false);
-        assert_eq!(forest.concat(1, 2), false);
-        assert_eq!(forest.concat(3, 3), false);
+        assert!(forest.concat(1, 2));
+        assert!(!forest.concat(2, 1));
+        assert!(!forest.concat(1, 2));
+        assert!(!forest.concat(3, 3));
 
-        assert_eq!(forest.concat(2, 3), true);
-        assert_eq!(forest.concat(3, 2), false);
-        assert_eq!(forest.concat(1, 3), false);
-        assert_eq!(forest.concat(3, 1), false);
+        assert!(forest.concat(2, 3));
+        assert!(!forest.concat(3, 2));
+        assert!(!forest.concat(1, 3));
+        assert!(!forest.concat(3, 1));
     }
 }
