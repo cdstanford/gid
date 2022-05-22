@@ -94,6 +94,7 @@ impl<V: IdType> AvlForest<V> {
         if !self.is_seen(v) {
             self.nodes.insert(v, Node::new(v));
         }
+        self.assert_invariant();
     }
     pub fn get_root(&self, mut v: V) -> V {
         // Running time O(h) in the height of the tree h
@@ -118,12 +119,14 @@ impl<V: IdType> AvlForest<V> {
             false
         } else {
             self.concat_roots(r1, r2);
+            self.assert_invariant();
             true
         }
     }
     pub fn split_after(&mut self, v: V) {
         debug_assert!(self.is_seen(v));
         todo!()
+        // self.assert_invariant();
     }
 
     /*
