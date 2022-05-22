@@ -1,5 +1,8 @@
 /*
-    Implementation of undirected graph connectivity for forests.
+    Euler Forest
+
+    Implementation of log(n) graph connectivity for forests, i.e.
+    undirected graphs that are distjoint unions of trees.
 
     SEE ALSO (heavily relies on): AvlForest in avl_forest.rs
 
@@ -62,15 +65,15 @@ impl<V: IdType> NodeId<V> {
     The publicly exposed data structure
 */
 #[derive(Debug)]
-pub struct TopTrees<V: IdType> {
+pub struct EulerForest<V: IdType> {
     nodes: AvlForest<NodeId<V>>,
 }
-impl<V: IdType> Default for TopTrees<V> {
+impl<V: IdType> Default for EulerForest<V> {
     fn default() -> Self {
         Self { nodes: Default::default() }
     }
 }
-impl<V: IdType> TopTrees<V> {
+impl<V: IdType> EulerForest<V> {
     pub fn new() -> Self {
         let result: Self = Default::default();
         result.assert_invariant();
@@ -171,7 +174,7 @@ mod tests {
 
     #[test]
     fn test_add_vertex() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         assert!(!g.is_seen(1));
         assert!(!g.is_seen(2));
         assert!(!g.is_seen(3));
@@ -193,21 +196,21 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_query_nonexistent_1() {
-        let g = TopTrees::new();
+        let g = EulerForest::new();
         g.same_root(1, 1);
     }
 
     #[test]
     #[should_panic]
     fn test_query_nonexistent_2() {
-        let g = TopTrees::new();
+        let g = EulerForest::new();
         g.same_root(1, 2);
     }
 
     #[test]
     #[should_panic]
     fn test_edge_nonexistent_1() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.add_edge(1, 2);
     }
@@ -215,14 +218,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_edge_nonexistent_2() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(2);
         g.add_edge(1, 2);
     }
 
     #[test]
     fn test_two_vertices() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.add_edge(1, 2);
@@ -234,7 +237,7 @@ mod tests {
     #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_edge_twice() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.add_edge(1, 2);
@@ -245,14 +248,14 @@ mod tests {
     #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_self_edge() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.add_edge(1, 1);
     }
 
     #[test]
     fn test_add_edges() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.ensure_vertex(3);
@@ -267,7 +270,7 @@ mod tests {
 
     #[test]
     fn test_add_edges_complicated() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         for i in 0..10 {
             g.ensure_vertex(i);
         }
@@ -298,7 +301,7 @@ mod tests {
     #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_cycle_2() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.add_edge(1, 2);
@@ -309,7 +312,7 @@ mod tests {
     #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_cycle_3() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.ensure_vertex(3);
@@ -322,7 +325,7 @@ mod tests {
     #[cfg(debug_assertions)]
     #[should_panic]
     fn test_add_cycle_4() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.ensure_vertex(3);
@@ -335,7 +338,7 @@ mod tests {
 
     #[test]
     fn test_add_two_parents() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.ensure_vertex(3);
@@ -349,7 +352,7 @@ mod tests {
 
     #[test]
     fn test_remove_edge_1() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.ensure_vertex(3);
@@ -368,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_remove_edge_2() {
-        let mut g = TopTrees::new();
+        let mut g = EulerForest::new();
         g.ensure_vertex(1);
         g.ensure_vertex(2);
         g.ensure_vertex(3);

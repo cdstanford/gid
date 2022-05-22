@@ -1,11 +1,11 @@
 /*
-    Implementation that uses topology trees (topology_tree.rs)
+    Implementation that uses Euler tour trees (euler_forest.rs)
     to track which states are in the same component of the forest.
 */
 
+use crate::euler_forest::EulerForest;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
-use crate::topology_tree::TopTrees;
 use std::collections::{HashSet, LinkedList};
 use std::iter;
 
@@ -36,7 +36,7 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 #[derive(Debug, Default)]
 pub struct SmartStateGraph {
     graph: DiGraph<usize, Node>,
-    top_trees: TopTrees<usize>,
+    top_trees: EulerForest<usize>,
     // TODO: track time, if wanted for debug step counting
     // additional_time: DebugCounter,
 }
@@ -93,7 +93,7 @@ impl SmartStateGraph {
         is-root
         Compare with the implementation in jump.rs
         In this implementation, we critically rely
-        on topology trees for the efficient check. (TODO)
+        on Euler tour trees for the efficient check. (TODO)
 
         Currently: do something naive and inefficient
     */
