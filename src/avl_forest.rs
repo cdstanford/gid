@@ -468,4 +468,29 @@ mod tests {
         assert_eq!(forest.collect_succs('b'), vec!['b']);
         assert_eq!(forest.collect_succs('c'), vec!['c']);
     }
+
+    fn n_chain(n: usize) -> AvlForest<usize> {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex(1);
+        for i in 2..=n {
+            forest.ensure_vertex(i);
+            forest.concat(i - 1, i);
+        }
+        forest
+    }
+
+    #[test]
+    fn test_split_bigchain() {
+        const BIG: usize = 10;
+        for i in 1..=BIG {
+            let mut forest = n_chain(BIG);
+            forest.split_after(i);
+            assert_eq!(forest.collect_succs(1), range_vec(1, i));
+            if i < BIG {
+                assert_eq!(forest.collect_succs(i + 1), range_vec(i + 1, BIG));
+            }
+            assert_eq!(forest.collect_succs(i), vec![i]);
+            assert_eq!(forest.collect_succs(BIG), vec![BIG]);
+        }
+    }
 }
