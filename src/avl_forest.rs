@@ -408,7 +408,7 @@ mod tests {
     }
 
     #[test]
-    fn test_split_after_simple() {
+    fn test_split_after_simple_1() {
         let mut forest = AvlForest::new();
         forest.ensure_vertex('a');
         forest.ensure_vertex('b');
@@ -427,5 +427,45 @@ mod tests {
         assert_eq!(forest.collect_succs('b'), vec!['b', 'a']);
         forest.split_after('b');
         assert_eq!(forest.collect_succs('b'), vec!['b']);
+    }
+
+    #[test]
+    fn test_split_after_simple_2() {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex('a');
+        forest.ensure_vertex('b');
+        forest.ensure_vertex('c');
+
+        assert!(forest.concat('a', 'b'));
+        assert!(forest.concat('a', 'c'));
+        assert_eq!(forest.collect_succs('a'), vec!['a', 'b', 'c']);
+
+        forest.split_after('a');
+        assert_eq!(forest.collect_succs('a'), vec!['a']);
+        assert_eq!(forest.collect_succs('b'), vec!['b', 'c']);
+
+        forest.split_after('b');
+        assert_eq!(forest.collect_succs('a'), vec!['a']);
+        assert_eq!(forest.collect_succs('b'), vec!['b']);
+        assert_eq!(forest.collect_succs('c'), vec!['c']);
+    }
+
+    #[test]
+    fn test_split_after_simple_3() {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex('a');
+        forest.ensure_vertex('b');
+        forest.ensure_vertex('c');
+        assert!(forest.concat('a', 'b'));
+        assert!(forest.concat('a', 'c'));
+
+        forest.split_after('b');
+        assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
+        assert_eq!(forest.collect_succs('c'), vec!['c']);
+
+        forest.split_after('a');
+        assert_eq!(forest.collect_succs('a'), vec!['a']);
+        assert_eq!(forest.collect_succs('b'), vec!['b']);
+        assert_eq!(forest.collect_succs('c'), vec!['c']);
     }
 }
