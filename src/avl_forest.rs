@@ -8,10 +8,11 @@
 
     Semantically, each AVL tree in the collection is an ordered list.
     The data structure supports the following in O(log n):
-    - add(x): add a new tree with a single node x
-    - root(x): get the root node for the AVL tree containing x
+    - add(x) (ensure_vertex): add a new tree with a single node x
+    - get_root(x): get the root node for the AVL tree containing x
     - concat(x, y): concatenate AVL trees containing x and y
-    - split(x): Split the AVL tree containing x after x.
+    - split(x) (split_at): Split the AVL tree containing x, removing
+      x from its tree.
 
     Example:
         add(1), add(3), add(2)
@@ -24,6 +25,8 @@
             [1], [3, 2]
         split(3)
             [1], [3], [2]
+
+    Also, split(3) from [1, 3, 2] yields [1], [3], [2] directly.
 
     This data structure is used for connectivity in undirected forests,
     a la Henzinger-King (Euler tour trees). Introduced in:
@@ -107,11 +110,11 @@ impl<V: IdType> AvlForest<V> {
             true
         }
     }
-    pub fn split_after(&mut self, mut v: V) {
+    pub fn split_at(&mut self, mut v: V) {
         debug_assert!(self.is_seen(v));
         // println!("{:?}, splitting after {:?}", self, v);
 
-        let mut lsplit: Option<V> = Some(v);
+        let mut lsplit: Option<V> = self.detach_lchild(v);
         let mut rsplit: Option<V> = self.detach_rchild(v);
         self.set_height(v);
 
@@ -137,6 +140,9 @@ impl<V: IdType> AvlForest<V> {
     }
     pub fn iter_succs(&self, v: V) -> impl Iterator<Item = V> + '_ {
         iter::successors(Some(v), move |&v| self.succ(v))
+    }
+    pub fn is_seen(&self, v: V) -> bool {
+        self.nodes.contains_key(&v)
     }
 
     /*
@@ -173,9 +179,6 @@ impl<V: IdType> AvlForest<V> {
     /*
         Basic accessors
     */
-    fn is_seen(&self, v: V) -> bool {
-        self.nodes.contains_key(&v)
-    }
     fn node(&self, v: V) -> &Node<V> {
         self.nodes.get(&v).unwrap()
     }
@@ -216,6 +219,14 @@ impl<V: IdType> AvlForest<V> {
         if let Some(c0) = c {
             self.node_mut(c0).parent = Some(p);
         }
+    }
+    fn detach_lchild(&mut self, p: V) -> Option<V> {
+        let c = self.node(p).lchild;
+        if let Some(c0) = c {
+            self.node_mut(p).lchild = None;
+            self.node_mut(c0).parent = None;
+        }
+        c
     }
     fn detach_rchild(&mut self, p: V) -> Option<V> {
         let c = self.node(p).rchild;
@@ -421,29 +432,26 @@ mod tests {
     }
 
     #[test]
-    fn test_split_after_simple_1() {
+    fn test_split_at_simple_1() {
         let mut forest = AvlForest::new();
         forest.ensure_vertex('a');
         forest.ensure_vertex('b');
 
         assert!(forest.concat('a', 'b'));
         assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
-        forest.split_after('b');
-        assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
-        assert_eq!(forest.get_root('a'), forest.get_root('b'));
-        forest.split_after('a');
+        forest.split_at('a');
         assert_eq!(forest.collect_succs('a'), vec!['a']);
         assert_eq!(forest.get_root('a'), 'a');
         assert_eq!(forest.get_root('b'), 'b');
 
         assert!(forest.concat('b', 'a'));
         assert_eq!(forest.collect_succs('b'), vec!['b', 'a']);
-        forest.split_after('b');
+        forest.split_at('a');
         assert_eq!(forest.collect_succs('b'), vec!['b']);
     }
 
     #[test]
-    fn test_split_after_simple_2() {
+    fn test_split_at_simple_2() {
         let mut forest = AvlForest::new();
         forest.ensure_vertex('a');
         forest.ensure_vertex('b');
@@ -453,18 +461,18 @@ mod tests {
         assert!(forest.concat('a', 'c'));
         assert_eq!(forest.collect_succs('a'), vec!['a', 'b', 'c']);
 
-        forest.split_after('a');
+        forest.split_at('a');
         assert_eq!(forest.collect_succs('a'), vec!['a']);
         assert_eq!(forest.collect_succs('b'), vec!['b', 'c']);
 
-        forest.split_after('b');
+        forest.split_at('b');
         assert_eq!(forest.collect_succs('a'), vec!['a']);
         assert_eq!(forest.collect_succs('b'), vec!['b']);
         assert_eq!(forest.collect_succs('c'), vec!['c']);
     }
 
     #[test]
-    fn test_split_after_simple_3() {
+    fn test_split_at_simple_3() {
         let mut forest = AvlForest::new();
         forest.ensure_vertex('a');
         forest.ensure_vertex('b');
@@ -472,11 +480,7 @@ mod tests {
         assert!(forest.concat('a', 'b'));
         assert!(forest.concat('a', 'c'));
 
-        forest.split_after('b');
-        assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
-        assert_eq!(forest.collect_succs('c'), vec!['c']);
-
-        forest.split_after('a');
+        forest.split_at('b');
         assert_eq!(forest.collect_succs('a'), vec!['a']);
         assert_eq!(forest.collect_succs('b'), vec!['b']);
         assert_eq!(forest.collect_succs('c'), vec!['c']);
@@ -497,13 +501,16 @@ mod tests {
         const BIG: usize = 10;
         for i in 1..=BIG {
             let mut forest = n_chain(BIG);
-            forest.split_after(i);
-            assert_eq!(forest.collect_succs(1), range_vec(1, i));
-            if i < BIG {
-                assert_eq!(forest.collect_succs(i + 1), range_vec(i + 1, BIG));
+            forest.split_at(i);
+            if i > 1 {
+                assert_eq!(forest.collect_succs(1), range_vec(1, i - 1));
+                assert_eq!(forest.collect_succs(i - 1), vec![i - 1]);
             }
             assert_eq!(forest.collect_succs(i), vec![i]);
-            assert_eq!(forest.collect_succs(BIG), vec![BIG]);
+            if i < BIG {
+                assert_eq!(forest.collect_succs(i + 1), range_vec(i + 1, BIG));
+                assert_eq!(forest.collect_succs(BIG), vec![BIG]);
+            }
         }
     }
 }
