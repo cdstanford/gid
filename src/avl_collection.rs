@@ -63,7 +63,26 @@ impl<V: IdType> AvlForest<V> {
     }
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
-        // TODO
+        for (&v, node) in self.nodes.iter() {
+            assert_eq!(v, node.label);
+            // Parent exists
+            if let Some(p) = node.parent {
+                assert!(self.is_seen(p));
+            }
+            // Children check (and heights)
+            let mut max_height: usize = 0;
+            if let Some(v1) = node.lchild {
+                let n1 = self.node(v1);
+                assert_eq!(n1.parent, Some(v));
+                max_height = max_height.max(n1.height + 1)
+            }
+            if let Some(v2) = node.rchild {
+                let n2 = self.node(v2);
+                assert_eq!(n2.parent, Some(v));
+                max_height = max_height.max(n2.height + 1)
+            }
+            assert_eq!(node.height, max_height);
+        }
     }
     #[cfg(not(debug_assertions))]
     fn assert_invariant(&self) {}
@@ -109,13 +128,13 @@ impl<V: IdType> AvlForest<V> {
     fn node(&self, v: V) -> &Node<V> {
         self.nodes.get(&v).unwrap()
     }
-    fn node_mut(&mut self, v: V) -> &mut Node<V> {
-        self.nodes.get_mut(&v).unwrap()
-    }
+    // fn node_mut(&mut self, v: V) -> &mut Node<V> {
+    //     self.nodes.get_mut(&v).unwrap()
+    // }
     fn node_parent(&self, v: V) -> Option<V> {
         self.node(v).parent
     }
-    fn node_children(&self, v: V) -> (Option<V>, Option<V>) {
-        (self.node(v).lchild, self.node(v).rchild)
-    }
+    // fn node_children(&self, v: V) -> (Option<V>, Option<V>) {
+    //     (self.node(v).lchild, self.node(v).rchild)
+    // }
 }
