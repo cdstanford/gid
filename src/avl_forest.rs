@@ -112,11 +112,7 @@ impl<V: IdType> AvlForest<V> {
         // println!("{:?}, splitting after {:?}", self, v);
 
         let mut lsplit: Option<V> = Some(v);
-        let mut rsplit: Option<V> = self.node(v).rchild;
-        self.node_mut(v).rchild = None;
-        if let Some(u) = rsplit {
-            self.node_mut(u).parent = None;
-        }
+        let mut rsplit: Option<V> = self.detach_rchild(v);
         self.set_height(v);
 
         // Travel upward from v, on each upwards-left move add to lsplit,
@@ -125,15 +121,11 @@ impl<V: IdType> AvlForest<V> {
             self.node_mut(v).parent = None;
 
             if self.node(p).rchild == Some(v) {
-                self.node_mut(p).rchild = lsplit;
-                self.node_mut(lsplit.unwrap()).parent = Some(p);
+                self.set_rchild(p, lsplit);
                 lsplit = Some(p);
             } else {
                 debug_assert_eq!(self.node(p).lchild, Some(v));
-                self.node_mut(p).lchild = rsplit;
-                if let Some(u) = rsplit {
-                    self.node_mut(u).parent = Some(p);
-                }
+                self.set_lchild(p, rsplit);
                 rsplit = Some(p);
             }
 
@@ -164,8 +156,7 @@ impl<V: IdType> AvlForest<V> {
                 self.node_mut(c1).parent = None;
                 r2 = self.concat_roots(c1, r2);
             }
-            self.node_mut(r2).parent = Some(r1);
-            self.node_mut(r1).rchild = Some(r2);
+            self.set_rchild(r1, Some(r2));
             self.set_height(r1);
             r1
         } else {
@@ -173,8 +164,7 @@ impl<V: IdType> AvlForest<V> {
                 self.node_mut(c2).parent = None;
                 r1 = self.concat_roots(r1, c2);
             }
-            self.node_mut(r1).parent = Some(r2);
-            self.node_mut(r2).lchild = Some(r1);
+            self.set_lchild(r2, Some(r1));
             self.set_height(r2);
             r2
         }
@@ -188,9 +178,6 @@ impl<V: IdType> AvlForest<V> {
     }
     fn node(&self, v: V) -> &Node<V> {
         self.nodes.get(&v).unwrap()
-    }
-    fn node_mut(&mut self, v: V) -> &mut Node<V> {
-        self.nodes.get_mut(&v).unwrap()
     }
     fn node_parent(&self, v: V) -> Option<V> {
         self.node(v).parent
@@ -213,7 +200,34 @@ impl<V: IdType> AvlForest<V> {
     }
 
     /*
-        AVL balancing operations (internal)
+        Internal setters
+    */
+    fn node_mut(&mut self, v: V) -> &mut Node<V> {
+        self.nodes.get_mut(&v).unwrap()
+    }
+    fn set_rchild(&mut self, p: V, c: Option<V>) {
+        self.node_mut(p).rchild = c;
+        if let Some(c0) = c {
+            self.node_mut(c0).parent = Some(p);
+        }
+    }
+    fn set_lchild(&mut self, p: V, c: Option<V>) {
+        self.node_mut(p).lchild = c;
+        if let Some(c0) = c {
+            self.node_mut(c0).parent = Some(p);
+        }
+    }
+    fn detach_rchild(&mut self, p: V) -> Option<V> {
+        let c = self.node(p).rchild;
+        if let Some(c0) = c {
+            self.node_mut(p).rchild = None;
+            self.node_mut(c0).parent = None;
+        }
+        c
+    }
+
+    /*
+        Internal AVL balancing operations
     */
     fn height_above(&self, child: Option<V>) -> usize {
         child.map_or(0, |v| self.node(v).height + 1)
