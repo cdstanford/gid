@@ -32,15 +32,14 @@ impl<I: Copy + Debug + Eq + Hash> IdType for I {}
 
 #[derive(Debug, Clone)]
 struct Node<V: IdType> {
-    label: V,
     height: usize,
     parent: Option<V>,
     lchild: Option<V>,
     rchild: Option<V>,
 }
-impl<V: IdType> Node<V> {
-    fn new(v: V) -> Self {
-        Self { label: v, height: 0, parent: None, lchild: None, rchild: None }
+impl<V: IdType> Default for Node<V> {
+    fn default() -> Self {
+        Self { height: 0, parent: None, lchild: None, rchild: None }
     }
 }
 
@@ -65,7 +64,6 @@ impl<V: IdType> AvlForest<V> {
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
         for (&v, node) in self.nodes.iter() {
-            assert_eq!(v, node.label);
             // Parent exists
             if let Some(p) = node.parent {
                 assert!(self.is_seen(p));
@@ -92,7 +90,7 @@ impl<V: IdType> AvlForest<V> {
     */
     pub fn ensure_vertex(&mut self, v: V) {
         if !self.is_seen(v) {
-            self.nodes.insert(v, Node::new(v));
+            self.nodes.insert(v, Default::default());
         }
         self.assert_invariant();
     }
