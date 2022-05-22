@@ -67,42 +67,13 @@ impl<V: IdType> Default for AvlForest<V> {
 }
 impl<V: IdType> AvlForest<V> {
     /*
-        Constructor and invariant
+        Public API
     */
     pub fn new() -> Self {
         let result: Self = Default::default();
         result.assert_invariant();
         result
     }
-    #[cfg(debug_assertions)]
-    fn assert_invariant(&self) {
-        for (&v, node) in self.nodes.iter() {
-            // Parent points to children
-            if let Some(p) = node.parent {
-                assert!(self.is_seen(p));
-                let n = self.node(p);
-                assert!(n.lchild == Some(v) || n.rchild == Some(v));
-            }
-            // Children point to parent
-            if let Some(v1) = node.lchild {
-                assert_eq!(self.node(v1).parent, Some(v));
-            }
-            if let Some(v2) = node.rchild {
-                assert_eq!(self.node(v2).parent, Some(v));
-            }
-            // Height is correct
-            assert_eq!(node.height, self.compute_height(node));
-            // Balanced
-            // TODO uncomment once implemented
-            // assert!(self.is_balanced(node));
-        }
-    }
-    #[cfg(not(debug_assertions))]
-    fn assert_invariant(&self) {}
-
-    /*
-        Public API
-    */
     pub fn ensure_vertex(&mut self, v: V) {
         if !self.is_seen(v) {
             self.nodes.insert(v, Default::default());
@@ -138,7 +109,6 @@ impl<V: IdType> AvlForest<V> {
     }
     pub fn split_after(&mut self, mut v: V) {
         debug_assert!(self.is_seen(v));
-
         // println!("{:?}, splitting after {:?}", self, v);
 
         let mut lsplit: Option<V> = Some(v);
@@ -266,6 +236,35 @@ impl<V: IdType> AvlForest<V> {
         self.node_mut(v).height = self.compute_height(self.node(v));
     }
     // TODO
+
+    /*
+        Data structure invariant
+    */
+    #[cfg(debug_assertions)]
+    fn assert_invariant(&self) {
+        for (&v, node) in self.nodes.iter() {
+            // Parent points to children
+            if let Some(p) = node.parent {
+                assert!(self.is_seen(p));
+                let n = self.node(p);
+                assert!(n.lchild == Some(v) || n.rchild == Some(v));
+            }
+            // Children point to parent
+            if let Some(v1) = node.lchild {
+                assert_eq!(self.node(v1).parent, Some(v));
+            }
+            if let Some(v2) = node.rchild {
+                assert_eq!(self.node(v2).parent, Some(v));
+            }
+            // Height is correct
+            assert_eq!(node.height, self.compute_height(node));
+            // Balanced
+            // TODO uncomment once implemented
+            // assert!(self.is_balanced(node));
+        }
+    }
+    #[cfg(not(debug_assertions))]
+    fn assert_invariant(&self) {}
 }
 
 /*
