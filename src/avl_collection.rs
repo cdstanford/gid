@@ -1,0 +1,121 @@
+/*
+    AVL Forest
+
+    Data structure mainaining a collection of balanced AVL trees;
+    unlike the usual AVL trees, nodes are not ordered by key
+    and we maintain many trees (a forest) at once,
+    but the basic algorithms and rebalancing operations are the same.
+
+    Semantically, each AVL tree in the collection is an ordered list.
+    The data structure supports the following in O(log n):
+    - root(x): get a canonical node for the AVL tree containing x
+    - concat(x, y): concatenate AVL trees containing x and y
+    - split(x): Split the AVL tree containing x after x.
+
+    This data structure is used for connectivity in undirected forests,
+    a la Henzinger-King (Euler tour trees). Introduced in:
+        Randomized Fully Dynamic Graph Algorithms with Polylogarithmic Time
+        per Operation. Monika R. Henzinger and Valerie King, JACM 1999.
+
+    Helpful notes on this:
+        http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
+*/
+
+use std::collections::HashMap;
+use std::fmt::Debug;
+use std::hash::Hash;
+
+// Trait bound abbreviation
+pub trait IdType: Copy + Debug + Eq + Hash {}
+impl<I: Copy + Debug + Eq + Hash> IdType for I {}
+
+#[derive(Debug, Clone)]
+struct Node<V: IdType> {
+    label: V,
+    height: usize,
+    parent: Option<V>,
+    lchild: Option<V>,
+    rchild: Option<V>,
+}
+impl<V: IdType> Node<V> {
+    fn new(v: V) -> Self {
+        Self { label: v, height: 0, parent: None, lchild: None, rchild: None }
+    }
+}
+
+#[derive(Debug)]
+pub struct AvlForest<V: IdType> {
+    nodes: HashMap<V, Node<V>>,
+}
+impl<V: IdType> Default for AvlForest<V> {
+    fn default() -> Self {
+        Self { nodes: Default::default() }
+    }
+}
+impl<V: IdType> AvlForest<V> {
+    /*
+        Constructor and invariant
+    */
+    pub fn new() -> Self {
+        let result: Self = Default::default();
+        result.assert_invariant();
+        result
+    }
+    #[cfg(debug_assertions)]
+    fn assert_invariant(&self) {
+        // TODO
+    }
+    #[cfg(not(debug_assertions))]
+    fn assert_invariant(&self) {}
+
+    /*
+        Public API
+    */
+    pub fn ensure_vertex(&mut self, v: V) {
+        if !self.is_seen(v) {
+            self.nodes.insert(v, Node::new(v));
+        }
+    }
+    pub fn get_root(&self, mut v: V) -> V {
+        // Running time O(h) in the height of the tree h
+        debug_assert!(self.is_seen(v));
+        while let Some(parent) = self.node_parent(v) {
+            v = parent
+        }
+        v
+    }
+    pub fn same_root(&self, v1: V, v2: V) -> bool {
+        debug_assert!(self.is_seen(v1));
+        debug_assert!(self.is_seen(v2));
+        self.get_root(v1) == self.get_root(v2)
+    }
+    pub fn concat(&mut self, v1: V, v2: V) -> bool {
+        // Return true if successful
+        debug_assert!(self.is_seen(v1));
+        debug_assert!(self.is_seen(v2));
+        todo!()
+    }
+    pub fn split_after(&mut self, v: V) {
+        debug_assert!(self.is_seen(v));
+        todo!()
+    }
+
+    /*
+        Internal
+    */
+    fn is_seen(&self, v: V) -> bool {
+        self.nodes.contains_key(&v)
+    }
+    fn node(&self, v: V) -> &Node<V> {
+        self.nodes.get(&v).unwrap()
+    }
+    fn node_mut(&mut self, v: V) -> &mut Node<V> {
+        self.nodes.get_mut(&v).unwrap()
+    }
+    fn node_parent(&self, v: V) -> Option<V> {
+        self.node(v).parent
+    }
+    fn node_children(&self, v: V) -> (Option<V>, Option<V>) {
+        (self.node(v).lchild, self.node(v).rchild)
+    }
+}
