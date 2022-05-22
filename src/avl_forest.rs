@@ -127,12 +127,33 @@ impl<V: IdType> AvlForest<V> {
     }
 
     /*
-        Core operations (internal)
+        Concatenate two trees at the roots, returning the new root.
+        Recursive function called by concat
     */
-    fn concat_roots(&mut self, r1: V, r2: V) {
-        debug_assert!(self.node_parent(r1).is_none());
-        debug_assert!(self.node_parent(r2).is_none());
-        todo!()
+    fn concat_roots(&mut self, mut r1: V, mut r2: V) -> V {
+        debug_assert!(r1 != r2);
+        debug_assert_eq!(self.node_parent(r1), None);
+        debug_assert_eq!(self.node_parent(r2), None);
+
+        let n1 = self.node(r1);
+        let n2 = self.node(r2);
+        if n1.height >= n2.height {
+            if let Some(c1) = n1.rchild {
+                self.node_mut(c1).parent = None;
+                r2 = self.concat_roots(c1, r2);
+            }
+            self.node_mut(r2).parent = Some(r1);
+            self.node_mut(r1).rchild = Some(r2);
+            r1
+        } else {
+            if let Some(c2) = n2.lchild {
+                self.node_mut(c2).parent = None;
+                r1 = self.concat_roots(r1, c2);
+            }
+            self.node_mut(r1).parent = Some(r2);
+            self.node_mut(r2).lchild = Some(r1);
+            r2
+        }
     }
 
     /*
@@ -144,15 +165,12 @@ impl<V: IdType> AvlForest<V> {
     fn node(&self, v: V) -> &Node<V> {
         self.nodes.get(&v).unwrap()
     }
-    // fn node_mut(&mut self, v: V) -> &mut Node<V> {
-    //     self.nodes.get_mut(&v).unwrap()
-    // }
+    fn node_mut(&mut self, v: V) -> &mut Node<V> {
+        self.nodes.get_mut(&v).unwrap()
+    }
     fn node_parent(&self, v: V) -> Option<V> {
         self.node(v).parent
     }
-    // fn node_children(&self, v: V) -> (Option<V>, Option<V>) {
-    //     (self.node(v).lchild, self.node(v).rchild)
-    // }
 
     /*
         AVL balancing operations (internal)
