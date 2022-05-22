@@ -1,5 +1,5 @@
-      10 ./src/lib.rs
       11 ./src/algorithm/mod.rs
+      11 ./src/lib.rs
       30 ./src/bin/compare_stats.rs
       36 ./src/bin/run_example.rs
       46 ./src/debug_counter.rs
@@ -9,6 +9,7 @@
       90 ./src/util.rs
      116 ./src/algorithm/simple.rs
      147 ./src/interface.rs
+     182 ./src/avl_forest.rs
      202 ./src/search.rs
      246 ./src/algorithm/smart.rs
      253 ./src/example.rs
@@ -17,6 +18,6 @@
      274 ./src/algorithm/tarjan.rs
      315 ./src/algorithm/jump.rs
      370 ./src/graph.rs
-     533 ./src/topology_tree.rs
+     522 ./src/topology_tree.rs
      626 ./tests/test_examples.rs
-    4031 total
+    4203 total
