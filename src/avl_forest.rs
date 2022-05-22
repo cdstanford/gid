@@ -258,16 +258,47 @@ mod tests {
         forest.ensure_vertex(2);
         forest.ensure_vertex(4);
         forest.ensure_vertex(6);
-        assert_eq!(forest.concat(2, 2), false);
-        assert_eq!(forest.concat(4, 2), true);
-        assert_eq!(forest.concat(2, 4), false);
-        assert_eq!(forest.concat(4, 6), true);
 
+        // forest: [4], [2], [6]
+        assert!(!forest.same_root(2, 4));
+        assert!(!forest.same_root(2, 6));
+        assert_eq!(forest.collect_succs(6), vec![6]);
+        assert_eq!(forest.collect_succs(2), vec![2]);
+        assert_eq!(forest.collect_succs(4), vec![4]);
+
+        assert_eq!(forest.concat(4, 2), true);
+        // forest: [4, 2], [6]
+        assert!(forest.same_root(2, 4));
+        assert!(!forest.same_root(2, 6));
+        assert_eq!(forest.collect_succs(6), vec![6]);
+        assert_eq!(forest.collect_succs(2), vec![2]);
+        assert_eq!(forest.collect_succs(4), vec![4, 2]);
+
+        assert_eq!(forest.concat(4, 6), true);
+        // forest:
         assert!(forest.same_root(2, 4));
         assert!(forest.same_root(2, 6));
-
         assert_eq!(forest.collect_succs(6), vec![6]);
         assert_eq!(forest.collect_succs(2), vec![2, 6]);
         assert_eq!(forest.collect_succs(4), vec![4, 2, 6]);
+    }
+
+    #[test]
+    fn test_concat_unsuccessful() {
+        let mut forest = AvlForest::new();
+        forest.ensure_vertex(3);
+        forest.ensure_vertex(2);
+        forest.ensure_vertex(1);
+        assert_eq!(forest.concat(2, 2), false);
+
+        assert_eq!(forest.concat(1, 2), true);
+        assert_eq!(forest.concat(2, 1), false);
+        assert_eq!(forest.concat(1, 2), false);
+        assert_eq!(forest.concat(3, 3), false);
+
+        assert_eq!(forest.concat(2, 3), true);
+        assert_eq!(forest.concat(3, 2), false);
+        assert_eq!(forest.concat(1, 3), false);
+        assert_eq!(forest.concat(3, 1), false);
     }
 }
