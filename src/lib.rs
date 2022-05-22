@@ -1,5 +1,5 @@
 pub mod algorithm;
-pub mod avl_collection;
+pub mod avl_forest;
 pub mod constants;
 pub mod debug_counter;
 pub mod driver;

@@ -112,7 +112,14 @@ impl<V: IdType> AvlForest<V> {
         // Return true if successful
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
-        todo!()
+        let r1 = self.get_root(v1);
+        let r2 = self.get_root(v2);
+        if r1 == r2 {
+            false
+        } else {
+            self.concat_roots(r1, r2);
+            true
+        }
     }
     pub fn split_after(&mut self, v: V) {
         debug_assert!(self.is_seen(v));
@@ -120,7 +127,16 @@ impl<V: IdType> AvlForest<V> {
     }
 
     /*
-        Internal
+        Core operations (internal)
+    */
+    fn concat_roots(&mut self, r1: V, r2: V) {
+        debug_assert!(self.node_parent(r1).is_none());
+        debug_assert!(self.node_parent(r2).is_none());
+        todo!()
+    }
+
+    /*
+        Basic accessors (internal)
     */
     fn is_seen(&self, v: V) -> bool {
         self.nodes.contains_key(&v)
@@ -137,4 +153,9 @@ impl<V: IdType> AvlForest<V> {
     // fn node_children(&self, v: V) -> (Option<V>, Option<V>) {
     //     (self.node(v).lchild, self.node(v).rchild)
     // }
+
+    /*
+        AVL balancing operations (internal)
+    */
+    // TODO
 }
