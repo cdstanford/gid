@@ -18,15 +18,15 @@ structopt = "0.3.21"
 doctest = false
 
 [[bin]]
-name = "compare_stats"
-test = false
-
-[[bin]]
 name = "example_gen"
 test = false
 
 [[bin]]
 name = "run_all"
+test = false
+
+[[bin]]
+name = "run_compare"
 test = false
 
 [[bin]]
