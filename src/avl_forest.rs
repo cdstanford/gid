@@ -132,7 +132,6 @@ impl<V: IdType> AvlForest<V> {
                 rsplit = Some(p);
             }
 
-            self.set_height(p);
             v = p;
         }
 
@@ -204,7 +203,6 @@ impl<V: IdType> AvlForest<V> {
                 r2 = self.concat_roots(c1, r2);
             }
             self.set_rchild(r1, Some(r2));
-            self.set_height(r1);
             r1
         } else {
             if let Some(c2) = n2.lchild {
@@ -212,13 +210,12 @@ impl<V: IdType> AvlForest<V> {
                 r1 = self.concat_roots(r1, c2);
             }
             self.set_lchild(r2, Some(r1));
-            self.set_height(r2);
             r2
         }
     }
 
     /*
-        Basic accessors
+        Internal accessors
     */
     fn node(&self, v: V) -> &Node<V> {
         self.nodes.get(&v).unwrap()
@@ -228,7 +225,8 @@ impl<V: IdType> AvlForest<V> {
     }
 
     /*
-        Internal setters
+        Internal modifiers
+        (not necessarily preserving data structure invariants)
     */
     fn node_mut(&mut self, v: V) -> &mut Node<V> {
         self.nodes.get_mut(&v).unwrap()
@@ -238,12 +236,18 @@ impl<V: IdType> AvlForest<V> {
         if let Some(c0) = c {
             self.node_mut(c0).parent = Some(p);
         }
+        // TODO: maybe separate out set_height again
+        // after balanced versions are implemented
+        self.set_height(p);
     }
     fn set_lchild(&mut self, p: V, c: Option<V>) {
         self.node_mut(p).lchild = c;
         if let Some(c0) = c {
             self.node_mut(c0).parent = Some(p);
         }
+        // TODO: maybe separate out set_height again
+        // after balanced versions are implemented
+        self.set_height(p);
     }
     fn detach_lchild(&mut self, p: V) -> Option<V> {
         let c = self.node(p).lchild;
@@ -263,29 +267,52 @@ impl<V: IdType> AvlForest<V> {
     }
 
     /*
-        Internal AVL balancing operations
+        Height computations
     */
     fn height_above(&self, child: Option<V>) -> usize {
         child.map_or(0, |v| self.node(v).height + 1)
     }
-    // TODO uncomment
-    // fn is_balanced(&self, n: &Node<V>) -> bool {
-    //     let h1 = self.height_above(n.lchild);
-    //     let h2 = self.height_above(n.rchild);
-    //     (h1 <= h2 + 1) && (h2 <= h1 + 1)
-    // }
     fn compute_height(&self, n: &Node<V>) -> usize {
         let h1 = self.height_above(n.lchild);
         let h2 = self.height_above(n.rchild);
-        // Balance check
-        // TODO uncomment once implemented
-        // debug_assert!(self.is_balanced(n));
         h1.max(h2)
     }
     fn set_height(&mut self, v: V) {
         self.node_mut(v).height = self.compute_height(self.node(v));
     }
-    // TODO
+
+    /*
+        AVL balancing operations
+
+        TODO: all of these currently unused
+    */
+    fn is_balanced(&self, n: &Node<V>) -> bool {
+        let h1 = self.height_above(n.lchild);
+        let h2 = self.height_above(n.rchild);
+        (h1 <= h2 + 1) && (h2 <= h1 + 1)
+    }
+    fn rotate_right(&mut self, v: V) -> V {
+        let left = self.detach_lchild(v).unwrap();
+        let mid = self.detach_rchild(left);
+        self.set_lchild(v, mid);
+        self.set_rchild(left, Some(v));
+        left
+    }
+    fn rotate_left(&mut self, v: V) -> V {
+        let right = self.detach_rchild(v).unwrap();
+        let mid = self.detach_lchild(right);
+        self.set_rchild(v, mid);
+        self.set_lchild(right, Some(v));
+        right
+    }
+    fn set_rchild_balanced(&mut self, p: V, c: V) {
+        self.set_rchild(p, Some(c));
+        todo!()
+    }
+    fn set_lchild_balanced(&mut self, p: V, c: V) {
+        self.set_lchild(p, Some(c));
+        todo!()
+    }
 
     /*
         Data structure invariant
