@@ -105,10 +105,10 @@ impl<V: IdType> EulerForest<V> {
 
         // Then piece the trees back together in order of a new Euler tour
         let r = self.nodes.get_root(v1);
-        for node in [Some(e12), Some(v2), w2, u2, Some(e21), w1, u1] {
-            if let Some(node) = node {
-                self.nodes.concat(r, node);
-            }
+        for &node in
+            [Some(e12), Some(v2), w2, u2, Some(e21), w1, u1].iter().flatten()
+        {
+            self.nodes.concat(r, node);
         }
 
         self.assert_invariant();
