@@ -60,7 +60,7 @@ struct Node<V: IdType> {
 }
 impl<V: IdType> Default for Node<V> {
     fn default() -> Self {
-        Self { height: 0, parent: None, lchild: None, rchild: None }
+        Self { height: 1, parent: None, lchild: None, rchild: None }
     }
 }
 
@@ -181,7 +181,7 @@ impl<V: IdType> AvlForest<V> {
         }
         None
     }
-    pub fn iter_next(&self, v: V) -> impl Iterator<Item = V> + '_ {
+    pub fn iter_fwd_from(&self, v: V) -> impl Iterator<Item = V> + '_ {
         iter::successors(Some(v), move |&v| self.next(v))
     }
 
@@ -268,9 +268,12 @@ impl<V: IdType> AvlForest<V> {
 
     /*
         Height computations
+
+        None is defined to be height 0, a node with no children
+        is height 1, and so on.
     */
     fn height_above(&self, child: Option<V>) -> usize {
-        child.map_or(0, |v| self.node(v).height + 1)
+        child.map_or(1, |v| self.node(v).height)
     }
     fn compute_height(&self, n: &Node<V>) -> usize {
         let h1 = self.height_above(n.lchild);
@@ -353,7 +356,7 @@ mod tests {
 
     impl<V: IdType> AvlForest<V> {
         fn collect_succs(&mut self, v: V) -> Vec<V> {
-            self.iter_next(v).collect()
+            self.iter_fwd_from(v).collect()
         }
     }
 
