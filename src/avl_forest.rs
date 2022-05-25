@@ -42,6 +42,7 @@
         http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -197,20 +198,42 @@ impl<V: IdType> AvlForest<V> {
 
         let n1 = self.node(r1);
         let n2 = self.node(r2);
-        if n1.height >= n2.height {
-            if let Some(c1) = n1.rchild {
-                self.node_mut(c1).parent = None;
-                r2 = self.concat_roots(c1, r2);
+        match n1.height.cmp(&n2.height) {
+            Ordering::Greater => {
+                if let Some(c1) = n1.rchild {
+                    self.node_mut(c1).parent = None;
+                    r2 = self.concat_roots(c1, r2);
+                }
+                self.set_rchild(r1, Some(r2));
+                r1
             }
-            self.set_rchild(r1, Some(r2));
-            r1
-        } else {
-            if let Some(c2) = n2.lchild {
-                self.node_mut(c2).parent = None;
-                r1 = self.concat_roots(r1, c2);
+            Ordering::Less => {
+                if let Some(c2) = n2.lchild {
+                    self.node_mut(c2).parent = None;
+                    r1 = self.concat_roots(r1, c2);
+                }
+                self.set_lchild(r2, Some(r1));
+                r2
             }
-            self.set_lchild(r2, Some(r1));
-            r2
+            Ordering::Equal => {
+                let r = self.get_leftmost(r2);
+                if r == r2 {
+                    // TODO implement balancing
+                    debug_assert!(n1.height <= 2);
+                    self.set_lchild(r2, Some(r1));
+                    // TODO implement balancing
+                    debug_assert!(self.is_balanced(self.node(r2)));
+                } else {
+                    // The following call to .split() could be replaced
+                    // by a more specialized 'pop_front' function
+                    // that just removes the leftmost element.
+                    self.split(r);
+
+                    self.set_lchild(r, Some(r1));
+                    self.set_rchild(r, Some(r2));
+                }
+                r
+            }
         }
     }
 
@@ -265,6 +288,12 @@ impl<V: IdType> AvlForest<V> {
         }
         c
     }
+    fn get_leftmost(&self, mut v: V) -> V {
+        while let Some(c) = self.node(v).lchild {
+            v = c;
+        }
+        v
+    }
 
     /*
         Height computations
@@ -294,6 +323,7 @@ impl<V: IdType> AvlForest<V> {
         let h2 = self.height_above(n.rchild);
         (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
+    #[allow(dead_code)]
     fn rotate_right(&mut self, v: V) -> V {
         let left = self.detach_lchild(v).unwrap();
         let mid = self.detach_rchild(left);
@@ -301,6 +331,7 @@ impl<V: IdType> AvlForest<V> {
         self.set_rchild(left, Some(v));
         left
     }
+    #[allow(dead_code)]
     fn rotate_left(&mut self, v: V) -> V {
         let right = self.detach_rchild(v).unwrap();
         let mid = self.detach_lchild(right);
@@ -308,10 +339,12 @@ impl<V: IdType> AvlForest<V> {
         self.set_lchild(right, Some(v));
         right
     }
+    #[allow(dead_code)]
     fn set_rchild_balanced(&mut self, p: V, c: V) {
         self.set_rchild(p, Some(c));
         todo!()
     }
+    #[allow(dead_code)]
     fn set_lchild_balanced(&mut self, p: V, c: V) {
         self.set_lchild(p, Some(c));
         todo!()
