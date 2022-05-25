@@ -104,20 +104,11 @@ impl<V: IdType> EulerForest<V> {
         self.nodes.split(v2);
 
         // Then piece the trees back together in order of a new Euler tour
-        self.nodes.concat(v1, e12);
-        self.nodes.concat(e12, v2);
-        if let Some(w2) = w2 {
-            self.nodes.concat(v2, w2);
-        }
-        if let Some(u2) = u2 {
-            self.nodes.concat(v2, u2);
-        }
-        self.nodes.concat(v2, e21);
-        if let Some(w1) = w1 {
-            self.nodes.concat(e21, w1);
-        }
-        if let Some(u1) = u1 {
-            self.nodes.concat(e21, u1);
+        let r = self.nodes.get_root(v1);
+        for node in [Some(e12), Some(v2), w2, u2, Some(e21), w1, u1] {
+            if let Some(node) = node {
+                self.nodes.concat(r, node);
+            }
         }
 
         self.assert_invariant();
@@ -140,14 +131,12 @@ impl<V: IdType> EulerForest<V> {
         self.nodes.split(e21);
 
         // Piece back together the first and last tree, if necessary
-        if let Some((((u1, u2), u3), u4)) = u1.zip(u2).zip(u3).zip(u4) {
-            if self.nodes.same_root(u2, u3) {
-                debug_assert!(!self.nodes.same_root(u1, u4));
-                self.nodes.concat(u4, u1);
-            } else {
-                debug_assert!(self.nodes.same_root(u1, u4));
-                self.nodes.concat(u2, u3);
-            }
+        // One of these should return true and the other false
+        if let Some((u2, u3)) = u2.zip(u3) {
+            self.nodes.concat(u2, u3);
+        }
+        if let Some((u4, u1)) = u4.zip(u1) {
+            self.nodes.concat(u4, u1);
         }
 
         self.assert_invariant();
@@ -162,6 +151,11 @@ impl<V: IdType> EulerForest<V> {
     fn is_seen(&self, v: V) -> bool {
         self.nodes.is_seen(NodeId::vert(v))
     }
+
+    /*
+        Invariant check
+        TODO
+    */
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {}
     #[cfg(not(debug_assertions))]
