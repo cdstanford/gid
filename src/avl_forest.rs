@@ -321,18 +321,18 @@ impl<V: IdType> AvlForest<V> {
 
     /*
         AVL balancing operations
-
-        TODO: all of these currently unused
     */
     fn is_balanced(&self, v: V) -> bool {
         // Mostly for debugging purposes.
         // For now: just checks whether height is correct
-        // TODO
         self.height(v) == self.compute_height(v)
 
+        // TODO
+        // let n = self.node(v);
+        // let h = n.height;
         // let h1 = self.height_above(n.lchild);
         // let h2 = self.height_above(n.rchild);
-        // (h1 <= h2 + 1) && (h2 <= h1 + 1)
+        // (h == max(h1, h2)) && (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
     fn rebalance_lheavy(&mut self, v: V) {
         // O(1) rebalance at v
@@ -392,16 +392,6 @@ impl<V: IdType> AvlForest<V> {
         self.set_lchild(right, Some(v));
         right
     }
-    // #[allow(dead_code)]
-    // fn set_rchild_balanced(&mut self, p: V, c: V) {
-    //     self.set_rchild(p, Some(c));
-    //     todo!()
-    // }
-    // #[allow(dead_code)]
-    // fn set_lchild_balanced(&mut self, p: V, c: V) {
-    //     self.set_lchild(p, Some(c));
-    //     todo!()
-    // }
 
     /*
         Data structure invariant
