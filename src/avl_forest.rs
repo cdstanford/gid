@@ -126,10 +126,12 @@ impl<V: IdType> AvlForest<V> {
 
             if self.node(p).rchild == Some(v) {
                 self.set_rchild(p, lsplit);
+                self.set_height(p);
                 lsplit = Some(p);
             } else {
                 debug_assert_eq!(self.node(p).lchild, Some(v));
                 self.set_lchild(p, rsplit);
+                self.set_height(p);
                 rsplit = Some(p);
             }
 
@@ -205,6 +207,7 @@ impl<V: IdType> AvlForest<V> {
                     r2 = self.concat_roots(c1, r2);
                 }
                 self.set_rchild(r1, Some(r2));
+                self.rebalance_rheavy(r1);
                 r1
             }
             Ordering::Less => {
@@ -213,14 +216,16 @@ impl<V: IdType> AvlForest<V> {
                     r1 = self.concat_roots(r1, c2);
                 }
                 self.set_lchild(r2, Some(r1));
+                self.rebalance_lheavy(r2);
                 r2
             }
             Ordering::Equal => {
                 let (head, tail) = self.pop_front(r2);
                 self.set_lchild(head, Some(r1));
                 self.set_rchild(head, tail);
-                // TODO assert balanced
-                // debug_assert!()
+                // Should not need rebalancing
+                self.set_height(head);
+                debug_assert!(self.is_balanced(self.node(head)));
                 head
             }
         }
@@ -248,18 +253,12 @@ impl<V: IdType> AvlForest<V> {
         if let Some(c0) = c {
             self.node_mut(c0).parent = Some(p);
         }
-        // TODO: maybe separate out set_height again
-        // after balanced versions are implemented
-        self.set_height(p);
     }
     fn set_lchild(&mut self, p: V, c: Option<V>) {
         self.node_mut(p).lchild = c;
         if let Some(c0) = c {
             self.node_mut(c0).parent = Some(p);
         }
-        // TODO: maybe separate out set_height again
-        // after balanced versions are implemented
-        self.set_height(p);
     }
     fn detach_lchild(&mut self, p: V) -> Option<V> {
         let c = self.node(p).lchild;
@@ -286,9 +285,11 @@ impl<V: IdType> AvlForest<V> {
         if let Some(c) = self.detach_lchild(rt) {
             let (head, tail) = self.pop_front(c);
             self.set_lchild(rt, tail);
+            self.rebalance_rheavy(rt);
             (head, Some(rt))
         } else {
             let c = self.detach_rchild(rt);
+            self.set_height(rt);
             (rt, c)
         }
     }
@@ -316,31 +317,35 @@ impl<V: IdType> AvlForest<V> {
 
         TODO: all of these currently unused
     */
-    #[allow(dead_code)]
-    fn is_balanced(&self, n: &Node<V>) -> bool {
-        let h1 = self.height_above(n.lchild);
-        let h2 = self.height_above(n.rchild);
-        (h1 <= h2 + 1) && (h2 <= h1 + 1)
+    fn is_balanced(&self, _n: &Node<V>) -> bool {
+        // TODO
+        true
+        // let h1 = self.height_above(n.lchild);
+        // let h2 = self.height_above(n.rchild);
+        // (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
-    // TODO
-    // fn rebalance(&mut self, v: V) -> Option<V> {
-    //     // Precondition: children at most 2 apart;
-    //     // rebalance so that they are at most 1 apart.
-    //     // Return the new root if the height changed
-    //     // TODO
-    //     false
-    // }
-    // fn rebalance_upwards(&mut self, v: V) {
-    //     // Rebalance all the way upwards from v
-    //     while self.rebalance(v) {
-    //         if let Some(p) = self.node_parent(v) {
-    //
-    //             Some(p) => {
-    //
-    //             }
-    //         }
-    //     }
-    // }
+    fn rebalance_lheavy(&mut self, v: V) {
+        // Preconditions:
+        // - v is a root, but height may not be set correctly
+        // - right <= left + 1, left <= right + 2
+        debug_assert_eq!(self.node_parent(v), None);
+
+        // TODO
+
+        self.set_height(v);
+        debug_assert!(self.is_balanced(self.node(v)));
+    }
+    fn rebalance_rheavy(&mut self, v: V) {
+        // Preconditions:
+        // - v is a root, but height may not be set correctly
+        // - left <= right + 1, right <= left + 2
+        debug_assert_eq!(self.node_parent(v), None);
+
+        // TODO
+
+        self.set_height(v);
+        debug_assert!(self.is_balanced(self.node(v)));
+    }
     #[allow(dead_code)]
     fn rotate_right(&mut self, v: V) -> V {
         let left = self.detach_lchild(v).unwrap();
@@ -357,16 +362,16 @@ impl<V: IdType> AvlForest<V> {
         self.set_lchild(right, Some(v));
         right
     }
-    #[allow(dead_code)]
-    fn set_rchild_balanced(&mut self, p: V, c: V) {
-        self.set_rchild(p, Some(c));
-        todo!()
-    }
-    #[allow(dead_code)]
-    fn set_lchild_balanced(&mut self, p: V, c: V) {
-        self.set_lchild(p, Some(c));
-        todo!()
-    }
+    // #[allow(dead_code)]
+    // fn set_rchild_balanced(&mut self, p: V, c: V) {
+    //     self.set_rchild(p, Some(c));
+    //     todo!()
+    // }
+    // #[allow(dead_code)]
+    // fn set_lchild_balanced(&mut self, p: V, c: V) {
+    //     self.set_lchild(p, Some(c));
+    //     todo!()
+    // }
 
     /*
         Data structure invariant
@@ -390,8 +395,7 @@ impl<V: IdType> AvlForest<V> {
             // Height is correct
             assert_eq!(node.height, self.compute_height(node));
             // Balanced
-            // TODO uncomment once implemented
-            // assert!(self.is_balanced(node));
+            assert!(self.is_balanced(node));
         }
     }
     #[cfg(not(debug_assertions))]
