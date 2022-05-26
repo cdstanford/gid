@@ -216,21 +216,12 @@ impl<V: IdType> AvlForest<V> {
                 r2
             }
             Ordering::Equal => {
-                let c2 = self.node(r2).rchild;
-                let r = self.pop_front(r2);
-                if r == r2 {
-                    // TODO implement balancing
-                    // Somehow the debug_asserts here are not failing, but
-                    // I think there are cases where they should w/o balancing
-                    debug_assert!(self.node(r1).height <= 2);
-                    self.set_lchild(r, Some(r1));
-                    self.set_rchild(r, c2);
-                    debug_assert!(self.is_balanced(self.node(r)));
-                } else {
-                    self.set_lchild(r, Some(r1));
-                    self.set_rchild(r, Some(r2));
-                }
-                r
+                let (head, tail) = self.pop_front(r2);
+                self.set_lchild(head, Some(r1));
+                self.set_rchild(head, tail);
+                // TODO assert balanced
+                // debug_assert!()
+                head
             }
         }
     }
@@ -286,28 +277,20 @@ impl<V: IdType> AvlForest<V> {
         }
         c
     }
-    fn get_leftmost(&self, mut v: V) -> V {
-        while let Some(c) = self.node(v).lchild {
-            v = c;
-        }
-        v
-    }
-    fn pop_front(&mut self, rt: V) -> V {
-        // Pop the leftmost element of the tree containing v, returning it.
+    fn pop_front(&mut self, rt: V) -> (V, Option<V>) {
+        // Pop the leftmost element of the tree containing v, returning it
+        // (the head) and the remaining tree (tail)
         // Precondition: rt is a root
         debug_assert_eq!(self.node_parent(rt), None);
 
-        let l = self.get_leftmost(rt);
-        let p = self.node_parent(l);
-        debug_assert_eq!(self.node(l).lchild, None);
-        let c = self.detach_rchild(l);
-        self.node_mut(l).parent = None;
-        if let Some(par) = p {
-            self.set_lchild(par, c);
-            // TODO
-            // self.rebalance_upwards(par);
+        if let Some(c) = self.detach_lchild(rt) {
+            let (head, tail) = self.pop_front(c);
+            self.set_lchild(rt, tail);
+            (head, Some(rt))
+        } else {
+            let c = self.detach_rchild(rt);
+            (rt, c)
         }
-        l
     }
 
     /*
@@ -317,7 +300,7 @@ impl<V: IdType> AvlForest<V> {
         is height 1, and so on.
     */
     fn height_above(&self, child: Option<V>) -> usize {
-        child.map_or(1, |v| self.node(v).height)
+        child.map_or(1, |v| self.node(v).height + 1)
     }
     fn compute_height(&self, n: &Node<V>) -> usize {
         let h1 = self.height_above(n.lchild);
@@ -333,6 +316,7 @@ impl<V: IdType> AvlForest<V> {
 
         TODO: all of these currently unused
     */
+    #[allow(dead_code)]
     fn is_balanced(&self, n: &Node<V>) -> bool {
         let h1 = self.height_above(n.lchild);
         let h2 = self.height_above(n.rchild);
