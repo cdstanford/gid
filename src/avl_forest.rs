@@ -111,31 +111,34 @@ impl<V: IdType> AvlForest<V> {
             true
         }
     }
-    pub fn split(&mut self, mut v: V) {
+    pub fn split(&mut self, v: V) {
         debug_assert!(self.is_seen(v));
-        // println!("{:?}, splitting after {:?}", self, v);
+        // println!("Splitting on: {:?}", v);
 
         let mut lsplit: Option<V> = self.detach_lchild(v);
         let mut rsplit: Option<V> = self.detach_rchild(v);
         self.set_height(v);
+        debug_assert_eq!(self.height_above(Some(v)), 2);
 
         // Travel upward from v, on each upwards-left move add to lsplit,
         // on each upwards-right move add to rsplit.
-        while let Some(p) = self.node_parent(v) {
-            self.node_mut(v).parent = None;
+        let mut pivot = v;
+        let mut next_parent = self.node_parent(v);
+        self.node_mut(v).parent = None;
+        while let Some(p) = next_parent {
+            next_parent = self.node_parent(p);
+            self.node_mut(p).parent = None;
 
-            if self.node(p).rchild == Some(v) {
+            if self.node(p).rchild == Some(pivot) {
                 self.set_rchild(p, lsplit);
-                self.set_height(p);
-                lsplit = Some(p);
+                lsplit = Some(self.rebalance_full(p));
             } else {
-                debug_assert_eq!(self.node(p).lchild, Some(v));
+                debug_assert_eq!(self.node(p).lchild, Some(pivot));
                 self.set_lchild(p, rsplit);
-                self.set_height(p);
-                rsplit = Some(p);
+                rsplit = Some(self.rebalance_full(p));
             }
 
-            v = p;
+            pivot = p;
         }
 
         self.assert_invariant();
@@ -317,14 +320,20 @@ impl<V: IdType> AvlForest<V> {
 
         TODO: all of these currently unused
     */
-    fn is_balanced(&self, _n: &Node<V>) -> bool {
+    fn is_balanced(&self, n: &Node<V>) -> bool {
+        // For now: just checks whether height is correct
         // TODO
-        true
+        n.height == self.compute_height(n)
+
+        // assert_eq!(node.height, self.compute_height(node));
+        // Balanced
+        // true
         // let h1 = self.height_above(n.lchild);
         // let h2 = self.height_above(n.rchild);
         // (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
     fn rebalance_lheavy(&mut self, v: V) {
+        // O(1) rebalance at v
         // Preconditions:
         // - v is a root, but height may not be set correctly
         // - right <= left + 1, left <= right + 2
@@ -336,6 +345,7 @@ impl<V: IdType> AvlForest<V> {
         debug_assert!(self.is_balanced(self.node(v)));
     }
     fn rebalance_rheavy(&mut self, v: V) {
+        // O(1) rebalance at v
         // Preconditions:
         // - v is a root, but height may not be set correctly
         // - left <= right + 1, right <= left + 2
@@ -345,6 +355,24 @@ impl<V: IdType> AvlForest<V> {
 
         self.set_height(v);
         debug_assert!(self.is_balanced(self.node(v)));
+    }
+    fn rebalance_full(&mut self, mut v: V) -> V {
+        // println!("rebalance full: {:?} ({:?})", v, self.node(v));
+        // O(log n) rebalance at v, assuming nothing about the two
+        // children except that they are balanced subtrees.
+        // For now, I'm just implementing this by calling concat.
+        // There might be a slightly better way.
+        let c1 = self.detach_lchild(v);
+        let c2 = self.detach_rchild(v);
+        self.set_height(v);
+        if let Some(c) = c1 {
+            v = self.concat_roots(c, v);
+        }
+        if let Some(c) = c2 {
+            v = self.concat_roots(v, c);
+        }
+        debug_assert!(self.is_balanced(self.node(v)));
+        v
     }
     #[allow(dead_code)]
     fn rotate_right(&mut self, v: V) -> V {
@@ -392,9 +420,7 @@ impl<V: IdType> AvlForest<V> {
             if let Some(v2) = node.rchild {
                 assert_eq!(self.node(v2).parent, Some(v));
             }
-            // Height is correct
-            assert_eq!(node.height, self.compute_height(node));
-            // Balanced
+            // Height is correct and balanced
             assert!(self.is_balanced(node));
         }
     }
@@ -547,15 +573,21 @@ mod tests {
         forest.ensure('a');
         forest.ensure('b');
 
+        println!("=== concat(a, b) ===");
         assert!(forest.concat('a', 'b'));
         assert_eq!(forest.collect_succs('a'), vec!['a', 'b']);
+
+        println!("=== split(a) ===");
         forest.split('a');
         assert_eq!(forest.collect_succs('a'), vec!['a']);
         assert_eq!(forest.get_root('a'), 'a');
         assert_eq!(forest.get_root('b'), 'b');
 
+        println!("=== concat(b, a) ===");
         assert!(forest.concat('b', 'a'));
         assert_eq!(forest.collect_succs('b'), vec!['b', 'a']);
+
+        println!("=== split(a) ===");
         forest.split('a');
         assert_eq!(forest.collect_succs('b'), vec!['b']);
     }
