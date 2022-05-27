@@ -270,8 +270,19 @@ fn test_regex_password() {
     assert_one(EX_DIR_REGEX_PASSW, "passw_sat4");
     assert_one(EX_DIR_REGEX_PASSW, "passw_unsat1");
     assert_one(EX_DIR_REGEX_PASSW, "passw_unsat3");
+}
+
+#[test]
+#[ignore]
+fn test_regex_password_medium() {
     assert_one(EX_DIR_REGEX_PASSW, "passw_very_complex_2_4_unsat");
     assert_one(EX_DIR_REGEX_PASSW, "passw_very_complex_3_4_unsat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_4_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_5_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_6_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_7_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_8_10_sat");
+    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_9_10_sat");
 }
 
 #[test]
@@ -293,12 +304,6 @@ fn test_regex_medium() {
     assert_expensive(EX_DIR_REGEX_SGHARD, "inter_star_100_100");
     assert_expensive(EX_DIR_REGEX_SGEASY, "long_10");
     assert_expensive(EX_DIR_REGEX_SGHARD, "long_30");
-    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_4_10_sat");
-    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_5_10_sat");
-    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_6_10_sat");
-    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_7_10_sat");
-    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_8_10_sat");
-    assert_expensive(EX_DIR_REGEX_PASSW, "passw_complex_9_10_sat");
 }
 
 #[test]
