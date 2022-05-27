@@ -36,7 +36,7 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 #[derive(Debug, Default)]
 pub struct SmartStateGraph {
     graph: DiGraph<usize, Node>,
-    top_trees: EulerForest<usize>,
+    euler_forest: EulerForest<usize>,
     // TODO: track time, if wanted for debug step counting
     // additional_time: DebugCounter,
 }
@@ -100,8 +100,8 @@ impl SmartStateGraph {
     fn is_root(&mut self, v: usize, end: usize) -> bool {
         debug_assert!(self.is_unknown(v) || self.is_open(v));
         debug_assert!(self.is_open(end));
-        self.top_trees.same_root(v, end)
-        // The following naive implementation works too, not using top_trees
+        self.euler_forest.same_root(v, end)
+        // The following naive implementation works too, not using euler_forest
         // if self.is_open(v) {
         //     self.graph.is_same_vertex(v, end)
         // } else {
@@ -155,7 +155,7 @@ impl SmartStateGraph {
                 // println!("  (setting jump and returning)");
                 self.set_status(v, Status::Unknown);
                 self.set_succ(v, w);
-                self.top_trees.add_edge(v, w);
+                self.euler_forest.add_edge(v, w);
                 return;
             }
         }
@@ -176,7 +176,7 @@ impl SmartStateGraph {
             self.set_status(u, Status::Open);
             let (orig_u, orig_v) = self.clear_succ(u);
             // TODO: we might need to know u, v are canonical here. Do we?
-            self.top_trees.remove_edge(orig_u, orig_v);
+            self.euler_forest.remove_edge(orig_u, orig_v);
         }
         // Then go through and check dead for each one
         for &u in &to_recurse {
@@ -211,8 +211,8 @@ impl StateGraph for SmartStateGraph {
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
         // println!("# Adding transition: {}, {}", v1, v2);
         self.graph.ensure_edge_bck(v1, v2);
-        self.top_trees.ensure_vertex(v1);
-        self.top_trees.ensure_vertex(v2);
+        self.euler_forest.ensure_vertex(v1);
+        self.euler_forest.ensure_vertex(v2);
         self.calculate_new_live_states(v2);
         if !self.is_live(v1) {
             self.push_reserve(v1, v2);
@@ -221,13 +221,13 @@ impl StateGraph for SmartStateGraph {
     fn mark_closed_unchecked(&mut self, v: usize) {
         // println!("# Marking closed: {}", v);
         self.graph.ensure_vertex(v);
-        self.top_trees.ensure_vertex(v);
+        self.euler_forest.ensure_vertex(v);
         self.check_dead(v);
     }
     fn mark_live_unchecked(&mut self, v: usize) {
         // println!("# Marking live: {}", v);
         self.graph.ensure_vertex(v);
-        self.top_trees.ensure_vertex(v);
+        self.euler_forest.ensure_vertex(v);
         self.set_status(v, Status::Live);
         self.calculate_new_live_states(v);
     }

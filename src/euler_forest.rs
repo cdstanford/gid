@@ -53,7 +53,7 @@ impl<I: Copy + Debug + Eq + Hash> IdType for I {}
 // - An edge is represented as (u, v)
 // - A vertex v is represented as (v, v)
 #[derive(Copy, Debug, Eq, Hash, Ord, Clone, PartialEq, PartialOrd)]
-struct NodeId<V: Copy + Debug + Eq>(V, V);
+struct NodeId<V: IdType>(V, V);
 impl<V: IdType> NodeId<V> {
     fn edge(u: V, v: V) -> Self {
         debug_assert!(u != v);
