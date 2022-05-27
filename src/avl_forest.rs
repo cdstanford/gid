@@ -42,39 +42,53 @@
         http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
+use super::hashy::Hashy;
 use std::cmp::{self, Ordering};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::hash::Hash;
 use std::iter;
-
-// Trait bound abbreviation
-pub trait IdType: Copy + Debug + Eq + Hash {}
-impl<I: Copy + Debug + Eq + Hash> IdType for I {}
+use std::marker::PhantomData;
 
 #[derive(Debug, Clone)]
-struct Node<V: IdType> {
+pub struct Node<V> {
     height: usize,
     parent: Option<V>,
     lchild: Option<V>,
     rchild: Option<V>,
 }
-impl<V: IdType> Default for Node<V> {
+impl<V> Default for Node<V> {
     fn default() -> Self {
         Self { height: 1, parent: None, lchild: None, rchild: None }
     }
 }
 
+/*
+    Generic implementation for any "hashy" data structure H --
+    this allows different backends other than just HashMap
+*/
 #[derive(Debug)]
-pub struct AvlForest<V: IdType> {
-    nodes: HashMap<V, Node<V>>,
+pub struct AvlForest<V, H>
+where
+    V: Copy + Debug + Eq,
+    H: Hashy<V, Node<V>>,
+{
+    nodes: H,
+    _phantom_v: PhantomData<V>,
 }
-impl<V: IdType> Default for AvlForest<V> {
+impl<V, H> Default for AvlForest<V, H>
+where
+    V: Copy + Debug + Eq,
+    H: Hashy<V, Node<V>>,
+{
     fn default() -> Self {
-        Self { nodes: Default::default() }
+        Self { nodes: Default::default(), _phantom_v: Default::default() }
     }
 }
-impl<V: IdType> AvlForest<V> {
+impl<V, H> AvlForest<V, H>
+where
+    V: Copy + Debug + Eq,
+    H: Hashy<V, Node<V>>,
+{
     /*
         Primary public API
     */
@@ -456,13 +470,23 @@ impl<V: IdType> AvlForest<V> {
 }
 
 /*
+    Specializations with particular HashMap implementation backings
+*/
+pub type AvlForestHM<V> = AvlForest<V, HashMap<V, Node<V>>>;
+// TODO: others
+
+/*
     Unit tests
 */
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    impl<V: IdType> AvlForest<V> {
+    impl<V, H> AvlForest<V, H>
+    where
+        V: Copy + Debug + Eq,
+        H: Hashy<V, Node<V>>,
+    {
         fn collect_succs(&mut self, v: V) -> Vec<V> {
             self.iter_fwd_from(v).collect()
         }
@@ -477,7 +501,7 @@ mod tests {
 
     #[test]
     fn test_singletons() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure(2);
         forest.ensure(2);
         forest.ensure(3);
@@ -490,7 +514,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_get_root_nonexistent() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure(2);
         forest.ensure(2);
         forest.get_root(1);
@@ -498,7 +522,7 @@ mod tests {
 
     #[test]
     fn test_concat_simple() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure('a');
         forest.ensure('b');
         assert!(forest.concat('a', 'b'));
@@ -506,7 +530,7 @@ mod tests {
 
     #[test]
     fn test_concat() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure(2);
         forest.ensure(4);
         forest.ensure(6);
@@ -537,7 +561,7 @@ mod tests {
 
     #[test]
     fn test_concat_repeat_append() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure(0);
         assert_eq!(forest.collect_succs(0), vec![0]);
         for i in 1..=10 {
@@ -550,7 +574,7 @@ mod tests {
 
     #[test]
     fn test_concat_repeat_prepend() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure(0);
         assert_eq!(forest.collect_succs(0), vec![0]);
         for i in 1..=10 {
@@ -563,7 +587,7 @@ mod tests {
 
     #[test]
     fn test_concat_doubling() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         for i in 0..=7 {
             forest.ensure(i);
         }
@@ -585,7 +609,7 @@ mod tests {
 
     #[test]
     fn test_concat_unsuccessful() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure(3);
         forest.ensure(2);
         forest.ensure(1);
@@ -604,7 +628,7 @@ mod tests {
 
     #[test]
     fn test_split_at_simple_1() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure('a');
         forest.ensure('b');
 
@@ -629,7 +653,7 @@ mod tests {
 
     #[test]
     fn test_split_at_simple_2() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure('a');
         forest.ensure('b');
         forest.ensure('c');
@@ -650,7 +674,7 @@ mod tests {
 
     #[test]
     fn test_split_at_simple_3() {
-        let mut forest = AvlForest::new();
+        let mut forest = AvlForestHM::new();
         forest.ensure('a');
         forest.ensure('b');
         forest.ensure('c');
@@ -663,8 +687,8 @@ mod tests {
         assert_eq!(forest.collect_succs('c'), vec!['c']);
     }
 
-    fn n_chain(n: usize) -> AvlForest<usize> {
-        let mut forest = AvlForest::new();
+    fn n_chain(n: usize) -> AvlForestHM<usize> {
+        let mut forest = AvlForestHM::new();
         forest.ensure(1);
         for i in 2..=n {
             forest.ensure(i);

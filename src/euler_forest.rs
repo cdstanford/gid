@@ -40,17 +40,20 @@
        http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
+use super::avl_forest::AvlForestHM;
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use super::avl_forest::{AvlForest, IdType};
+// Trait bound abbreviation
+pub trait IdType: Copy + Debug + Eq + Hash {}
+impl<I: Copy + Debug + Eq + Hash> IdType for I {}
 
 // Type used to identify nodes -- can be replaced with anything that
 // identifies an edge or vertex uniquely:
 // - An edge is represented as (u, v)
 // - A vertex v is represented as (v, v)
 #[derive(Copy, Debug, Eq, Hash, Ord, Clone, PartialEq, PartialOrd)]
-struct NodeId<V: IdType>(V, V);
+struct NodeId<V: Copy + Debug + Eq>(V, V);
 impl<V: IdType> NodeId<V> {
     fn edge(u: V, v: V) -> Self {
         debug_assert!(u != v);
@@ -66,7 +69,7 @@ impl<V: IdType> NodeId<V> {
 */
 #[derive(Debug)]
 pub struct EulerForest<V: IdType> {
-    nodes: AvlForest<NodeId<V>>,
+    nodes: AvlForestHM<NodeId<V>>,
 }
 impl<V: IdType> Default for EulerForest<V> {
     fn default() -> Self {
