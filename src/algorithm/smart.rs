@@ -36,7 +36,7 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 #[derive(Debug, Default)]
 pub struct SmartStateGraph {
     graph: DiGraph<usize, Node>,
-    euler_forest: EulerForest<usize>,
+    euler_forest: EulerForest,
     // TODO: track time, if wanted for debug step counting
     // additional_time: DebugCounter,
 }

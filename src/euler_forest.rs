@@ -44,22 +44,23 @@ use super::avl_forest::AvlForestHM;
 use std::fmt::Debug;
 use std::hash::Hash;
 
-// Trait bound abbreviation
-pub trait IdType: Copy + Debug + Eq + Hash {}
-impl<I: Copy + Debug + Eq + Hash> IdType for I {}
+// For this file, we use usize to identify vertices.
+// This is more efficient and we don't currently need the more
+// generic implementation.
+type IdType = usize;
 
 // Type used to identify nodes -- can be replaced with anything that
 // identifies an edge or vertex uniquely:
 // - An edge is represented as (u, v)
 // - A vertex v is represented as (v, v)
 #[derive(Copy, Debug, Eq, Hash, Ord, Clone, PartialEq, PartialOrd)]
-struct NodeId<V: IdType>(V, V);
-impl<V: IdType> NodeId<V> {
-    fn edge(u: V, v: V) -> Self {
+struct NodeId(IdType, IdType);
+impl NodeId {
+    fn edge(u: IdType, v: IdType) -> Self {
         debug_assert!(u != v);
         NodeId(u, v)
     }
-    fn vert(v: V) -> Self {
+    fn vert(v: IdType) -> Self {
         NodeId(v, v)
     }
 }
@@ -67,26 +68,21 @@ impl<V: IdType> NodeId<V> {
 /*
     The publicly exposed data structure
 */
-#[derive(Debug)]
-pub struct EulerForest<V: IdType> {
-    nodes: AvlForestHM<NodeId<V>>,
+#[derive(Debug, Default)]
+pub struct EulerForest {
+    nodes: AvlForestHM<NodeId>,
 }
-impl<V: IdType> Default for EulerForest<V> {
-    fn default() -> Self {
-        Self { nodes: Default::default() }
-    }
-}
-impl<V: IdType> EulerForest<V> {
+impl EulerForest {
     pub fn new() -> Self {
         let result: Self = Default::default();
         result.assert_invariant();
         result
     }
-    pub fn ensure_vertex(&mut self, v: V) {
+    pub fn ensure_vertex(&mut self, v: IdType) {
         self.nodes.ensure(NodeId::vert(v));
         self.assert_invariant();
     }
-    pub fn add_edge(&mut self, v1: V, v2: V) {
+    pub fn add_edge(&mut self, v1: IdType, v2: IdType) {
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
         debug_assert!(!self.same_root(v1, v2));
@@ -116,7 +112,7 @@ impl<V: IdType> EulerForest<V> {
 
         self.assert_invariant();
     }
-    pub fn remove_edge(&mut self, v1: V, v2: V) {
+    pub fn remove_edge(&mut self, v1: IdType, v2: IdType) {
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
         debug_assert!(self.same_root(v1, v2));
@@ -144,14 +140,14 @@ impl<V: IdType> EulerForest<V> {
 
         self.assert_invariant();
     }
-    pub fn same_root(&self, v1: V, v2: V) -> bool {
+    pub fn same_root(&self, v1: IdType, v2: IdType) -> bool {
         self.nodes.same_root(NodeId::vert(v1), NodeId::vert(v2))
     }
 
     /*
         Internal
     */
-    fn is_seen(&self, v: V) -> bool {
+    fn is_seen(&self, v: IdType) -> bool {
         self.nodes.is_seen(NodeId::vert(v))
     }
 
@@ -165,6 +161,9 @@ impl<V: IdType> EulerForest<V> {
     fn assert_invariant(&self) {}
 }
 
+/*
+    Unit tests
+*/
 #[cfg(test)]
 mod tests {
     use super::*;
