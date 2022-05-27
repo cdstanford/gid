@@ -121,7 +121,7 @@ impl<V: Clone> Hashy<(usize, usize), V> for Vec<Vec<Option<V>>> {
         self[i][j].as_mut().unwrap()
     }
     fn insert(&mut self, (i, j): (usize, usize), v: V) {
-        self.resize(i + 1, Vec::with_capacity(self.len()));
+        self.resize(i + 1, vec![None; self.len()]);
         self[i].resize(j + 1, None);
         self[i][j] = Some(v);
     }

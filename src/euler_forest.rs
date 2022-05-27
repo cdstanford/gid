@@ -40,9 +40,8 @@
        http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
-use super::avl_forest::AvlForestHM;
+use super::avl_forest::AvlForest2DVec;
 use std::fmt::Debug;
-use std::hash::Hash;
 
 // For this file, we use usize to identify vertices.
 // This is more efficient and we don't currently need the more
@@ -53,16 +52,13 @@ type IdType = usize;
 // identifies an edge or vertex uniquely:
 // - An edge is represented as (u, v)
 // - A vertex v is represented as (v, v)
-#[derive(Copy, Debug, Eq, Hash, Ord, Clone, PartialEq, PartialOrd)]
-struct NodeId(IdType, IdType);
-impl NodeId {
-    fn edge(u: IdType, v: IdType) -> Self {
-        debug_assert!(u != v);
-        NodeId(u, v)
-    }
-    fn vert(v: IdType) -> Self {
-        NodeId(v, v)
-    }
+type NodeId = (usize, usize);
+fn edge_id(u: IdType, v: IdType) -> NodeId {
+    debug_assert!(u != v);
+    (u, v)
+}
+fn vert_id(v: IdType) -> NodeId {
+    (v, v)
 }
 
 /*
@@ -70,7 +66,7 @@ impl NodeId {
 */
 #[derive(Debug, Default)]
 pub struct EulerForest {
-    nodes: AvlForestHM<NodeId>,
+    nodes: AvlForest2DVec,
 }
 impl EulerForest {
     pub fn new() -> Self {
@@ -79,7 +75,7 @@ impl EulerForest {
         result
     }
     pub fn ensure_vertex(&mut self, v: IdType) {
-        self.nodes.ensure(NodeId::vert(v));
+        self.nodes.ensure(vert_id(v));
         self.assert_invariant();
     }
     pub fn add_edge(&mut self, v1: IdType, v2: IdType) {
@@ -87,10 +83,10 @@ impl EulerForest {
         debug_assert!(self.is_seen(v2));
         debug_assert!(!self.same_root(v1, v2));
 
-        let e12 = NodeId::edge(v1, v2);
-        let e21 = NodeId::edge(v2, v1);
-        let v1 = NodeId::vert(v1);
-        let v2 = NodeId::vert(v2);
+        let e12 = edge_id(v1, v2);
+        let e21 = edge_id(v2, v1);
+        let v1 = vert_id(v1);
+        let v2 = vert_id(v2);
         self.nodes.ensure(e12);
         self.nodes.ensure(e21);
 
@@ -116,8 +112,8 @@ impl EulerForest {
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
         debug_assert!(self.same_root(v1, v2));
-        let e12 = NodeId::edge(v1, v2);
-        let e21 = NodeId::edge(v2, v1);
+        let e12 = edge_id(v1, v2);
+        let e21 = edge_id(v2, v1);
 
         // Neighbors
         let u1 = self.nodes.prev(e12);
@@ -141,14 +137,14 @@ impl EulerForest {
         self.assert_invariant();
     }
     pub fn same_root(&self, v1: IdType, v2: IdType) -> bool {
-        self.nodes.same_root(NodeId::vert(v1), NodeId::vert(v2))
+        self.nodes.same_root(vert_id(v1), vert_id(v2))
     }
 
     /*
         Internal
     */
     fn is_seen(&self, v: IdType) -> bool {
-        self.nodes.is_seen(NodeId::vert(v))
+        self.nodes.is_seen(vert_id(v))
     }
 
     /*
