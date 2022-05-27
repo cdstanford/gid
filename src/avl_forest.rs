@@ -315,7 +315,7 @@ impl<V: IdType> AvlForest<V> {
     }
     fn compute_height(&self, v: V) -> usize {
         let (h1, h2) = self.child_heights(v);
-        cmp::max(h1 + 1, h2 + 1)
+        1 + cmp::max(h1, h2)
     }
     fn set_height(&mut self, v: V) {
         self.node_mut(v).height = self.compute_height(v);
@@ -326,39 +326,63 @@ impl<V: IdType> AvlForest<V> {
     */
     fn is_balanced(&self, v: V) -> bool {
         // Mostly for debugging purposes.
-        // For now: just checks whether height is correct
-        self.height(v) == self.compute_height(v)
-
-        // TODO
-        // let n = self.node(v);
-        // let h = n.height;
-        // let h1 = self.height_opt(n.lchild);
-        // let h2 = self.height_opt(n.rchild);
-        // (h == max(h1, h2)) && (h1 <= h2 + 1) && (h2 <= h1 + 1)
+        let n = self.node(v);
+        let h = n.height;
+        let h1 = self.height_opt(n.lchild);
+        let h2 = self.height_opt(n.rchild);
+        (h == cmp::max(h1, h2)) && (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
-    fn rebalance_lheavy(&mut self, v: V) -> V {
+    fn rebalance_lheavy(&mut self, mut v: V) -> V {
         // O(1) rebalance at v
         // Preconditions:
         // - v is a root, but height may not be set correctly
         // - right <= left + 1, left <= right + 2
         debug_assert_eq!(self.node_parent(v), None);
-
-        // TODO
-
+        let (h1, h2) = self.child_heights(v);
+        debug_assert!(h2 <= h1 + 1);
+        debug_assert!(h1 <= h2 + 2);
         self.set_height(v);
+
+        if h1 == h2 + 2 {
+            let c1 = self.node(v).lchild.unwrap();
+            let (h11, h12) = self.child_heights(c1);
+            if h11 < h12 {
+                debug_assert_eq!(h11 + 1, h12);
+                debug_assert_eq!(h11, h2);
+                let c1 = self.rotate_left(c1);
+                v = self.rotate_right(v);
+                debug_assert!(self.is_balanced(c1));
+            } else {
+                v = self.rotate_right(v);
+            }
+        }
         debug_assert!(self.is_balanced(v));
         v
     }
-    fn rebalance_rheavy(&mut self, v: V) -> V {
+    fn rebalance_rheavy(&mut self, mut v: V) -> V {
         // O(1) rebalance at v
         // Preconditions:
         // - v is a root, but height may not be set correctly
         // - left <= right + 1, right <= left + 2
         debug_assert_eq!(self.node_parent(v), None);
-
-        // TODO
-
+        let (h1, h2) = self.child_heights(v);
+        debug_assert!(h1 <= h2 + 1);
+        debug_assert!(h2 <= h1 + 2);
         self.set_height(v);
+
+        if h2 == h1 + 2 {
+            let c2 = self.node(v).rchild.unwrap();
+            let (h21, h22) = self.child_heights(c2);
+            if h21 > h22 {
+                debug_assert_eq!(h22 + 1, h21);
+                debug_assert_eq!(h22, h1);
+                let c2 = self.rotate_right(c2);
+                v = self.rotate_left(v);
+                debug_assert!(self.is_balanced(c2));
+            } else {
+                v = self.rotate_left(v);
+            }
+        }
         debug_assert!(self.is_balanced(v));
         v
     }
@@ -380,20 +404,22 @@ impl<V: IdType> AvlForest<V> {
         debug_assert!(self.is_balanced(v));
         v
     }
-    #[allow(dead_code)]
     fn rotate_right(&mut self, v: V) -> V {
         let left = self.detach_lchild(v).unwrap();
         let mid = self.detach_rchild(left);
         self.set_lchild(v, mid);
         self.set_rchild(left, Some(v));
+        self.set_height(v);
+        self.set_height(left);
         left
     }
-    #[allow(dead_code)]
     fn rotate_left(&mut self, v: V) -> V {
         let right = self.detach_rchild(v).unwrap();
         let mid = self.detach_lchild(right);
         self.set_rchild(v, mid);
         self.set_lchild(right, Some(v));
+        self.set_height(v);
+        self.set_height(right);
         right
     }
 
@@ -463,6 +489,14 @@ mod tests {
         forest.ensure(2);
         forest.ensure(2);
         forest.get_root(1);
+    }
+
+    #[test]
+    fn test_concat_simple() {
+        let mut forest = AvlForest::new();
+        forest.ensure('a');
+        forest.ensure('b');
+        assert!(forest.concat('a', 'b'));
     }
 
     #[test]
