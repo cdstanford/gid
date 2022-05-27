@@ -349,7 +349,8 @@ impl<V: IdType> AvlForest<V> {
             if h11 < h12 {
                 debug_assert_eq!(h11 + 1, h12);
                 debug_assert_eq!(h11, h2);
-                self.rotate_left(c1);
+                let c1 = self.rotate_left(c1);
+                self.set_lchild(v, Some(c1));
                 v = self.rotate_right(v);
                 debug_assert!(self.is_balanced(self.node(v).lchild.unwrap()));
                 debug_assert!(self.is_balanced(self.node(v).rchild.unwrap()));
@@ -377,7 +378,8 @@ impl<V: IdType> AvlForest<V> {
             if h21 > h22 {
                 debug_assert_eq!(h22 + 1, h21);
                 debug_assert_eq!(h22, h1);
-                self.rotate_right(c2);
+                let c2 = self.rotate_right(c2);
+                self.set_rchild(v, Some(c2));
                 v = self.rotate_left(v);
                 debug_assert!(self.is_balanced(self.node(v).lchild.unwrap()));
                 debug_assert!(self.is_balanced(self.node(v).rchild.unwrap()));
