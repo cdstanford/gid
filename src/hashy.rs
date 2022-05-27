@@ -73,7 +73,9 @@ impl<V: Clone> Hashy<usize, V> for Vec<Option<V>> {
         self[k].as_mut().unwrap()
     }
     fn insert(&mut self, k: usize, v: V) {
-        self.resize(k + 1, None);
+        if k >= self.len() {
+            self.resize(k + 1, None);
+        }
         self[k] = Some(v);
     }
     fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (usize, &'a V)> + 'a> {
@@ -121,8 +123,12 @@ impl<V: Clone> Hashy<(usize, usize), V> for Vec<Vec<Option<V>>> {
         self[i][j].as_mut().unwrap()
     }
     fn insert(&mut self, (i, j): (usize, usize), v: V) {
-        self.resize(i + 1, vec![None; self.len()]);
-        self[i].resize(j + 1, None);
+        if i >= self.len() {
+            self.resize(i + 1, vec![None; self.len()]);
+        }
+        if j >= self[i].len() {
+            self[i].resize(j + 1, None);
+        }
         self[i][j] = Some(v);
     }
     fn iter<'a>(
