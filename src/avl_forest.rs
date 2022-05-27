@@ -330,7 +330,7 @@ impl<V: IdType> AvlForest<V> {
         let h = n.height;
         let h1 = self.height_opt(n.lchild);
         let h2 = self.height_opt(n.rchild);
-        (h == cmp::max(h1, h2)) && (h1 <= h2 + 1) && (h2 <= h1 + 1)
+        (h == 1 + cmp::max(h1, h2)) && (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
     fn rebalance_lheavy(&mut self, mut v: V) -> V {
         // O(1) rebalance at v
@@ -349,9 +349,10 @@ impl<V: IdType> AvlForest<V> {
             if h11 < h12 {
                 debug_assert_eq!(h11 + 1, h12);
                 debug_assert_eq!(h11, h2);
-                let c1 = self.rotate_left(c1);
+                self.rotate_left(c1);
                 v = self.rotate_right(v);
-                debug_assert!(self.is_balanced(c1));
+                debug_assert!(self.is_balanced(self.node(v).lchild.unwrap()));
+                debug_assert!(self.is_balanced(self.node(v).rchild.unwrap()));
             } else {
                 v = self.rotate_right(v);
             }
@@ -376,9 +377,10 @@ impl<V: IdType> AvlForest<V> {
             if h21 > h22 {
                 debug_assert_eq!(h22 + 1, h21);
                 debug_assert_eq!(h22, h1);
-                let c2 = self.rotate_right(c2);
+                self.rotate_right(c2);
                 v = self.rotate_left(v);
-                debug_assert!(self.is_balanced(c2));
+                debug_assert!(self.is_balanced(self.node(v).lchild.unwrap()));
+                debug_assert!(self.is_balanced(self.node(v).rchild.unwrap()));
             } else {
                 v = self.rotate_left(v);
             }
@@ -443,6 +445,7 @@ impl<V: IdType> AvlForest<V> {
                 assert_eq!(self.node(v2).parent, Some(v));
             }
             // Height is correct and balanced
+            // println!("{:?}", self);
             assert!(self.is_balanced(v));
         }
     }
@@ -671,7 +674,9 @@ mod tests {
     #[test]
     fn test_split_bigchain() {
         const BIG: usize = 10;
+        println!("===== Big chain {BIG} =====");
         for i in 1..=BIG {
+            println!("=== splitting at {i}");
             let mut forest = n_chain(BIG);
             forest.split(i);
             if i > 1 {
