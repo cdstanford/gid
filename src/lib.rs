@@ -6,6 +6,7 @@ pub mod driver;
 pub mod euler_forest;
 pub mod example;
 pub mod graph;
+pub mod hashy;
 pub mod interface;
 pub mod search;
 pub mod util;
