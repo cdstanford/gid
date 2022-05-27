@@ -210,8 +210,7 @@ impl<V: IdType> AvlForest<V> {
                     r2 = self.concat_roots(c1, r2);
                 }
                 self.set_rchild(r1, Some(r2));
-                self.rebalance_rheavy(r1);
-                r1
+                self.rebalance_rheavy(r1)
             }
             Ordering::Less => {
                 if let Some(c2) = n2.lchild {
@@ -219,8 +218,7 @@ impl<V: IdType> AvlForest<V> {
                     r1 = self.concat_roots(r1, c2);
                 }
                 self.set_lchild(r2, Some(r1));
-                self.rebalance_lheavy(r2);
-                r2
+                self.rebalance_lheavy(r2)
             }
             Ordering::Equal => {
                 let (head, tail) = self.pop_front(r2);
@@ -288,8 +286,8 @@ impl<V: IdType> AvlForest<V> {
         if let Some(c) = self.detach_lchild(rt) {
             let (head, tail) = self.pop_front(c);
             self.set_lchild(rt, tail);
-            self.rebalance_rheavy(rt);
-            (head, Some(rt))
+            let tail = self.rebalance_rheavy(rt);
+            (head, Some(tail))
         } else {
             let c = self.detach_rchild(rt);
             self.set_height(rt);
@@ -334,7 +332,7 @@ impl<V: IdType> AvlForest<V> {
         // let h2 = self.height_above(n.rchild);
         // (h == max(h1, h2)) && (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
-    fn rebalance_lheavy(&mut self, v: V) {
+    fn rebalance_lheavy(&mut self, v: V) -> V {
         // O(1) rebalance at v
         // Preconditions:
         // - v is a root, but height may not be set correctly
@@ -345,8 +343,9 @@ impl<V: IdType> AvlForest<V> {
 
         self.set_height(v);
         debug_assert!(self.is_balanced(v));
+        v
     }
-    fn rebalance_rheavy(&mut self, v: V) {
+    fn rebalance_rheavy(&mut self, v: V) -> V {
         // O(1) rebalance at v
         // Preconditions:
         // - v is a root, but height may not be set correctly
@@ -357,6 +356,7 @@ impl<V: IdType> AvlForest<V> {
 
         self.set_height(v);
         debug_assert!(self.is_balanced(v));
+        v
     }
     fn rebalance_full(&mut self, mut v: V) -> V {
         // println!("rebalance full: {:?} ({:?})", v, self.node(v));
