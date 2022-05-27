@@ -250,7 +250,7 @@ where
         Internal accessors
     */
     fn node(&self, v: V) -> &Node<V> {
-        self.nodes.get(&v).unwrap()
+        self.nodes.get_unwrapped(&v)
     }
     fn node_parent(&self, v: V) -> Option<V> {
         self.node(v).parent
@@ -261,7 +261,7 @@ where
         (not necessarily preserving data structure invariants)
     */
     fn node_mut(&mut self, v: V) -> &mut Node<V> {
-        self.nodes.get_mut(&v).unwrap()
+        self.nodes.get_mut_unwrapped(&v)
     }
     fn set_rchild(&mut self, p: V, c: Option<V>) {
         self.node_mut(p).rchild = c;

@@ -9,6 +9,8 @@ pub trait Hashy<K, V>: Default {
     fn contains_key(&self, k: &K) -> bool;
     fn get(&self, k: &K) -> Option<&V>;
     fn get_mut(&mut self, k: &K) -> Option<&mut V>;
+    fn get_unwrapped(&self, k: &K) -> &V;
+    fn get_mut_unwrapped(&mut self, k: &K) -> &mut V;
     fn insert(&mut self, k: K, v: V);
     // Iterator -- currently used for debugging purposes only,
     // so avoid having to do too much lifetime hacking we use
@@ -25,6 +27,12 @@ impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     }
     fn get_mut(&mut self, k: &K) -> Option<&mut V> {
         HashMap::get_mut(self, k)
+    }
+    fn get_unwrapped(&self, k: &K) -> &V {
+        self.get(k).unwrap()
+    }
+    fn get_mut_unwrapped(&mut self, k: &K) -> &mut V {
+        self.get_mut(k).unwrap()
     }
     fn insert(&mut self, k: K, v: V) {
         HashMap::insert(self, k, v);
@@ -52,6 +60,12 @@ impl<V: Clone> Hashy<usize, V> for Vec<Option<V>> {
         } else {
             None
         }
+    }
+    fn get_unwrapped(&self, &k: &usize) -> &V {
+        self[k].as_ref().unwrap()
+    }
+    fn get_mut_unwrapped(&mut self, &k: &usize) -> &mut V {
+        self[k].as_mut().unwrap()
     }
     fn insert(&mut self, k: usize, v: V) {
         self.resize(k + 1, None);
