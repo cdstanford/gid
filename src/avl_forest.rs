@@ -446,7 +446,7 @@ where
     */
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
-        for (&v, node) in self.nodes.iter() {
+        for (v, node) in self.nodes.iter() {
             // Parent points to children
             if let Some(p) = node.parent {
                 assert!(self.is_seen(p));
