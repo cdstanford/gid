@@ -42,7 +42,7 @@
         http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
-use std::cmp::Ordering;
+use std::cmp::{self, Ordering};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -304,14 +304,18 @@ impl<V: IdType> AvlForest<V> {
     fn height(&self, v: V) -> usize {
         self.node(v).height
     }
-    fn height_above(&self, child: Option<V>) -> usize {
-        child.map_or(1, |v| self.node(v).height + 1)
+    fn height_opt(&self, child: Option<V>) -> usize {
+        child.map_or(0, |v| self.node(v).height)
+    }
+    fn child_heights(&self, v: V) -> (usize, usize) {
+        let n = self.node(v);
+        let h1 = self.height_opt(n.lchild);
+        let h2 = self.height_opt(n.rchild);
+        (h1, h2)
     }
     fn compute_height(&self, v: V) -> usize {
-        let n = self.node(v);
-        let h1 = self.height_above(n.lchild);
-        let h2 = self.height_above(n.rchild);
-        h1.max(h2)
+        let (h1, h2) = self.child_heights(v);
+        cmp::max(h1 + 1, h2 + 1)
     }
     fn set_height(&mut self, v: V) {
         self.node_mut(v).height = self.compute_height(v);
@@ -328,8 +332,8 @@ impl<V: IdType> AvlForest<V> {
         // TODO
         // let n = self.node(v);
         // let h = n.height;
-        // let h1 = self.height_above(n.lchild);
-        // let h2 = self.height_above(n.rchild);
+        // let h1 = self.height_opt(n.lchild);
+        // let h2 = self.height_opt(n.rchild);
         // (h == max(h1, h2)) && (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
     fn rebalance_lheavy(&mut self, v: V) -> V {
