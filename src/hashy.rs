@@ -1,5 +1,10 @@
 /*
-    Trait for hashmap-like collections.
+    Wrapper trait for hashmap-like collections.
+
+    Used to swap out different backend implementations easily.
+    Primarily because repeated HashMap calls get extremely expensive for
+    data structures based on a bunch of nodes pointing to other nodes,
+    so it's nice to have a plain Vec representation.
 */
 
 use std::collections::HashMap;
@@ -42,7 +47,7 @@ impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     }
 }
 
-// Vector based hashmap
+// 1D Vector based hashmap
 impl<V: Clone> Hashy<usize, V> for Vec<Option<V>> {
     fn contains_key(&self, &k: &usize) -> bool {
         k < self.len() && self[k].is_some()
@@ -77,6 +82,62 @@ impl<V: Clone> Hashy<usize, V> for Vec<Option<V>> {
             .iter()
             .enumerate()
             .map(|(i, v)| Some(i).zip(v.as_ref()))
+            .flatten();
+        Box::new(result)
+    }
+}
+
+// 2D Vector based hashmap
+impl<V: Clone> Hashy<(usize, usize), V> for Vec<Vec<Option<V>>> {
+    fn contains_key(&self, &(i, j): &(usize, usize)) -> bool {
+        i < self.len() && j < self[i].len() && self[i][j].is_some()
+    }
+    fn get(&self, &(i, j): &(usize, usize)) -> Option<&V> {
+        if i < self.len() {
+            if j < self.len() {
+                self[i][j].as_ref()
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+    fn get_mut(&mut self, &(i, j): &(usize, usize)) -> Option<&mut V> {
+        if i < self.len() {
+            if j < self.len() {
+                self[i][j].as_mut()
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+    fn get_unwrapped(&self, &(i, j): &(usize, usize)) -> &V {
+        self[i][j].as_ref().unwrap()
+    }
+    fn get_mut_unwrapped(&mut self, &(i, j): &(usize, usize)) -> &mut V {
+        self[i][j].as_mut().unwrap()
+    }
+    fn insert(&mut self, (i, j): (usize, usize), v: V) {
+        self.resize(i + 1, Vec::with_capacity(self.len()));
+        self[i].resize(j + 1, None);
+        self[i][j] = Some(v);
+    }
+    fn iter<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = ((usize, usize), &'a V)> + 'a> {
+        let result = self
+            .as_slice()
+            .iter()
+            .enumerate()
+            .flat_map(|(i, xs)| {
+                xs.as_slice()
+                    .iter()
+                    .enumerate()
+                    .map(move |(j, x)| Some((i, j)).zip(x.as_ref()))
+            })
             .flatten();
         Box::new(result)
     }
