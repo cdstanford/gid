@@ -185,10 +185,12 @@ pub fn run_compare_csv_header() -> String {
     let header = if cfg!(debug_assertions) {
         "name, size, \
         time (naive), time (simple), time (tarjan), time (jump), \
-        space (naive), space (simple), space (tarjan), space (jump)"
+        time (smart), \
+        space (naive), space (simple), space (tarjan), space (jump), \
+        space (smart)"
     } else {
         "name, size, \
-        time (naive), time (simple), time (tarjan), time (jump)"
+        time (naive), time (simple), time (tarjan), time (jump), time (smart)"
     };
     header.to_string()
 }
