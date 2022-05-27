@@ -473,7 +473,9 @@ where
     Specializations with particular HashMap implementation backings
 */
 pub type AvlForestHM<V> = AvlForest<V, HashMap<V, Node<V>>>;
-// TODO: others
+pub type AvlForest1DVec = AvlForest<usize, Vec<Option<Node<usize>>>>;
+pub type AvlForest2DVec =
+    AvlForest<(usize, usize), Vec<Vec<Option<Node<(usize, usize)>>>>>;
 
 /*
     Unit tests
@@ -481,6 +483,10 @@ pub type AvlForestHM<V> = AvlForest<V, HashMap<V, Node<V>>>;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Most examples use the AvlForestHM backend.
+    // A few examples at the end use AvlForest1DVec.
+    // Would be good to have some AvlForest2DVec examples.
 
     impl<V, H> AvlForest<V, H>
     where
@@ -687,8 +693,8 @@ mod tests {
         assert_eq!(forest.collect_succs('c'), vec!['c']);
     }
 
-    fn n_chain(n: usize) -> AvlForestHM<usize> {
-        let mut forest = AvlForestHM::new();
+    fn n_chain(n: usize) -> AvlForest1DVec {
+        let mut forest = AvlForest1DVec::new();
         forest.ensure(1);
         for i in 2..=n {
             forest.ensure(i);
