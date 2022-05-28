@@ -222,6 +222,50 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMapP<V> {
 }
 
 /*
+    Vector-of-HashMaps "Hybrid" hashmap
+
+    This is a more conventionally reasonable representation for
+    sparse graph, much less space-hungry.
+*/
+#[derive(Debug)]
+pub struct VecMapHy<V>(Vec<HashMap<usize, V>>);
+impl<V: Clone + Default> Default for VecMapHy<V> {
+    fn default() -> Self {
+        Self(vec![Default::default()])
+    }
+}
+impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMapHy<V> {
+    fn valid_key(&self, &(i, j): &(usize, usize)) -> bool {
+        i < self.0.len() && self.0[i].contains_key(&j)
+    }
+    fn index(&self, &(i, j): &(usize, usize)) -> &V {
+        self.0[i].get(&j).unwrap()
+    }
+    fn index_mut(&mut self, &(i, j): &(usize, usize)) -> &mut V {
+        self.0[i].get_mut(&j).unwrap()
+    }
+    fn ensure(&mut self, (i, j): (usize, usize)) {
+        debug_assert!(!self.0.is_empty());
+        while i >= self.0.len() {
+            // double size
+            self.0.resize_with(2 * self.0.len(), HashMap::new);
+        }
+        self.0[i].entry(j).or_insert_with(Default::default);
+    }
+    fn iter<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = ((usize, usize), &'a V)> + 'a> {
+        Box::new(
+            self.0
+                .as_slice()
+                .iter()
+                .enumerate()
+                .flat_map(|(i, xs)| xs.iter().map(move |(&j, x)| ((i, j), x))),
+        )
+    }
+}
+
+/*
     Unit tests
 */
 #[cfg(test)]
