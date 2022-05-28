@@ -42,7 +42,7 @@
         http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
-use super::hashy::Hashy;
+use super::hashy::{Hashy, VecMap1D, VecMap2D};
 use std::cmp::{self, Ordering};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -473,9 +473,9 @@ where
     Specializations with particular HashMap implementation backings
 */
 pub type AvlForestHM<V> = AvlForest<V, HashMap<V, Node<V>>>;
-pub type AvlForest1DVec = AvlForest<usize, Vec<Option<Node<usize>>>>;
+pub type AvlForest1DVec = AvlForest<usize, VecMap1D<Node<usize>>>;
 pub type AvlForest2DVec =
-    AvlForest<(usize, usize), Vec<Vec<Option<Node<(usize, usize)>>>>>;
+    AvlForest<(usize, usize), VecMap2D<Node<(usize, usize)>>>;
 
 /*
     Unit tests

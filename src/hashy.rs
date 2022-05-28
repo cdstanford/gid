@@ -23,6 +23,11 @@ pub trait Hashy<K, V>: Default {
     fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (K, &'a V)> + 'a>;
 }
 
+/*
+    Implementers
+*/
+
+// standard hashmap
 impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     fn contains_key(&self, k: &K) -> bool {
         Self::contains_key(self, k)
@@ -47,39 +52,47 @@ impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     }
 }
 
-// 1D Vector based hashmap
-impl<V: Clone> Hashy<usize, V> for Vec<Option<V>> {
+// 1D Vector-based hashmap
+#[derive(Debug)]
+pub struct VecMap1D<V>(Vec<Option<V>>);
+impl<V> Default for VecMap1D<V> {
+    fn default() -> Self {
+        Self(Vec::new())
+    }
+}
+impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
     fn contains_key(&self, &k: &usize) -> bool {
-        k < self.len() && self[k].is_some()
+        k < self.0.len() && self.0[k].is_some()
     }
     fn get(&self, &k: &usize) -> Option<&V> {
-        if k < self.len() {
-            self[k].as_ref()
+        if k < self.0.len() {
+            self.0[k].as_ref()
         } else {
             None
         }
     }
     fn get_mut(&mut self, &k: &usize) -> Option<&mut V> {
-        if k < self.len() {
-            self[k].as_mut()
+        if k < self.0.len() {
+            self.0[k].as_mut()
         } else {
             None
         }
     }
     fn get_unwrapped(&self, &k: &usize) -> &V {
-        self[k].as_ref().unwrap()
+        self.0[k].as_ref().unwrap()
     }
     fn get_mut_unwrapped(&mut self, &k: &usize) -> &mut V {
-        self[k].as_mut().unwrap()
+        self.0[k].as_mut().unwrap()
     }
     fn insert(&mut self, k: usize, v: V) {
-        if k >= self.len() {
-            self.resize(k + 1, None);
+        if k >= self.0.len() {
+            self.0.resize(k + 1, None);
         }
-        self[k] = Some(v);
+        self.0[k] = Some(v);
     }
     fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (usize, &'a V)> + 'a> {
         let result = self
+            .0
             .as_slice()
             .iter()
             .enumerate()
@@ -89,15 +102,22 @@ impl<V: Clone> Hashy<usize, V> for Vec<Option<V>> {
     }
 }
 
-// 2D Vector based hashmap
-impl<V: Clone> Hashy<(usize, usize), V> for Vec<Vec<Option<V>>> {
+// 2D Vector-based hashmap
+#[derive(Debug)]
+pub struct VecMap2D<V>(Vec<Vec<Option<V>>>);
+impl<V> Default for VecMap2D<V> {
+    fn default() -> Self {
+        Self(Vec::new())
+    }
+}
+impl<V: Clone> Hashy<(usize, usize), V> for VecMap2D<V> {
     fn contains_key(&self, &(i, j): &(usize, usize)) -> bool {
-        i < self.len() && j < self[i].len() && self[i][j].is_some()
+        i < self.0.len() && j < self.0[i].len() && self.0[i][j].is_some()
     }
     fn get(&self, &(i, j): &(usize, usize)) -> Option<&V> {
-        if i < self.len() {
-            if j < self.len() {
-                self[i][j].as_ref()
+        if i < self.0.len() {
+            if j < self.0.len() {
+                self.0[i][j].as_ref()
             } else {
                 None
             }
@@ -106,9 +126,9 @@ impl<V: Clone> Hashy<(usize, usize), V> for Vec<Vec<Option<V>>> {
         }
     }
     fn get_mut(&mut self, &(i, j): &(usize, usize)) -> Option<&mut V> {
-        if i < self.len() {
-            if j < self.len() {
-                self[i][j].as_mut()
+        if i < self.0.len() {
+            if j < self.0.len() {
+                self.0[i][j].as_mut()
             } else {
                 None
             }
@@ -117,24 +137,25 @@ impl<V: Clone> Hashy<(usize, usize), V> for Vec<Vec<Option<V>>> {
         }
     }
     fn get_unwrapped(&self, &(i, j): &(usize, usize)) -> &V {
-        self[i][j].as_ref().unwrap()
+        self.0[i][j].as_ref().unwrap()
     }
     fn get_mut_unwrapped(&mut self, &(i, j): &(usize, usize)) -> &mut V {
-        self[i][j].as_mut().unwrap()
+        self.0[i][j].as_mut().unwrap()
     }
     fn insert(&mut self, (i, j): (usize, usize), v: V) {
-        if i >= self.len() {
-            self.resize(i + 1, vec![None; self.len()]);
+        if i >= self.0.len() {
+            self.0.resize(i + 1, vec![None; self.0.len()]);
         }
-        if j >= self[i].len() {
-            self[i].resize(j + 1, None);
+        if j >= self.0[i].len() {
+            self.0[i].resize(j + 1, None);
         }
-        self[i][j] = Some(v);
+        self.0[i][j] = Some(v);
     }
     fn iter<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = ((usize, usize), &'a V)> + 'a> {
         let result = self
+            .0
             .as_slice()
             .iter()
             .enumerate()
