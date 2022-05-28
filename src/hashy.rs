@@ -109,16 +109,19 @@ impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
 // and get() may return a default element instead of None.
 #[derive(Debug)]
 pub struct VecMap2D<V>(Vec<Vec<V>>);
-impl<V> Default for VecMap2D<V> {
+const VECMAP_INIT_LEN: usize = 1000;
+impl<V: Clone + Default> Default for VecMap2D<V> {
     fn default() -> Self {
-        Self(Vec::new())
+        Self(vec![Default::default(); VECMAP_INIT_LEN])
     }
 }
 impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
     fn contains_key(&self, &(i, j): &(usize, usize)) -> bool {
+        // print!("c");
         i < self.0.len() && j < self.0[i].len()
     }
     fn get(&self, &(i, j): &(usize, usize)) -> Option<&V> {
+        // print!("g");
         if i < self.0.len() {
             if j < self.0.len() {
                 Some(&self.0[i][j])
@@ -130,6 +133,7 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
         }
     }
     fn get_mut(&mut self, &(i, j): &(usize, usize)) -> Option<&mut V> {
+        // print!("m");
         if i < self.0.len() {
             if j < self.0.len() {
                 Some(&mut self.0[i][j])
@@ -141,12 +145,16 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
         }
     }
     fn get_unwrapped(&self, &(i, j): &(usize, usize)) -> &V {
+        // print!("G");
         &self.0[i][j]
     }
     fn get_mut_unwrapped(&mut self, &(i, j): &(usize, usize)) -> &mut V {
+        // print!("M");
         &mut self.0[i][j]
     }
     fn insert(&mut self, (i, j): (usize, usize), v: V) {
+        // println!();
+        // print!("i ");
         if i >= self.0.len() {
             self.0.resize(i + 1, vec![Default::default(); self.0.len()]);
         }
@@ -158,6 +166,7 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
     fn iter<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = ((usize, usize), &'a V)> + 'a> {
+        // print!("t");
         let result = self
             .0
             .as_slice()
