@@ -183,7 +183,7 @@ where
         self.get_root(v1) == self.get_root(v2)
     }
     pub fn is_seen(&self, v: V) -> bool {
-        self.nodes.contains_key(&v)
+        self.nodes.valid_key(&v)
     }
     pub fn next(&self, mut v: V) -> Option<V> {
         // println!("succ {v:?}");
@@ -283,7 +283,7 @@ where
         Internal accessors
     */
     fn node(&self, v: V) -> &Node<V> {
-        self.nodes.get_unwrapped(&v)
+        self.nodes.index(&v)
     }
     fn node_parent(&self, v: V) -> Option<V> {
         self.node(v).parent
@@ -294,7 +294,7 @@ where
         (not necessarily preserving data structure invariants)
     */
     fn node_mut(&mut self, v: V) -> &mut Node<V> {
-        self.nodes.get_mut_unwrapped(&v)
+        self.nodes.index_mut(&v)
     }
     fn set_rchild(&mut self, p: V, c: Option<V>) {
         self.time.inc();

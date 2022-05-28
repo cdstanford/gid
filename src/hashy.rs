@@ -1,42 +1,40 @@
 /*
-    Wrapper trait for hashmap-like collections.
+    Wrapper trait for HashMap-like collections.
 
     Used to swap out different backend implementations easily.
     Primarily because repeated HashMap calls get extremely expensive for
     data structures based on a bunch of nodes pointing to other nodes,
     so it's nice to have a plain Vec representation.
 
-    This API is a work in progress and probably will change and be
-    cleaned up later:
-    - .get() functionality is not actually currently needed, only
-      .get_unwrapped() and .get_mut_unwrapped().
-      (See the only use of the file in avl_forest.rs)
-    - The VecMap2D below makes different assumptions than the
-      other implementations. It may insert default values into
-      the map arbitrarily, whereas the other implementations
-      use Option to track which values are seen / not seen.
-      But this is again not needed by the current clients
-      except for debugging purposes.
-    - The trait is more or less an extension of Index and IndexMut
-      and could just be named accordingly.
+    **Warning:** This does not make the same guarantees as HashMap as
+    new Default values may be added to the map at will for efficiency.
+    If tracking Some vs None is desired, use Option<V> for the value type!**
+
+    Specifically:
+    - valid_key(k) must return true if the key is safe to access
+      (but may return true even for values not explicitly added previously)
+    - ensure(k) ensures that k is a valid key and inserts the default value
+    - index(k) gets the value at the index; may panic if not a valid key
+      or may return the default value
+    - index_mut(k) gets the value at the index mutably, may panic if not
+      a valid key or may return the default value
+    - iter() iterates over key-value pairs for debugging purposes
+
+    Generally the assumption is index() and index_mut() are only called
+    on ensured keys, and valid_key() and iter() are only used for debugging
+    purposes. See avl_forest.rs for an example intended use.
 */
 
 use std::collections::HashMap;
 use std::hash::Hash;
 
 pub trait Hashy<K, V>: Default {
-    fn contains_key(&self, k: &K) -> bool;
-    // fn get(&self, k: &K) -> Option<&V>;
-    // fn get_mut(&mut self, k: &K) -> Option<&mut V>;
-    fn get_unwrapped(&self, k: &K) -> &V;
-    fn get_mut_unwrapped(&mut self, k: &K) -> &mut V;
-    // fn insert(&mut self, k: K, v: V);
+    fn valid_key(&self, k: &K) -> bool;
+    fn index(&self, k: &K) -> &V;
+    fn index_mut(&mut self, k: &K) -> &mut V;
     fn ensure(&mut self, k: K)
     where
         V: Default;
-    // Iterator -- currently used for debugging purposes only,
-    // so avoid having to do too much lifetime hacking we use
-    // a Box dyn trait object.
     fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (K, &'a V)> + 'a>;
 }
 
@@ -44,24 +42,15 @@ pub trait Hashy<K, V>: Default {
     Standard hashmap
 */
 impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
-    fn contains_key(&self, k: &K) -> bool {
+    fn valid_key(&self, k: &K) -> bool {
         Self::contains_key(self, k)
     }
-    // fn get(&self, k: &K) -> Option<&V> {
-    //     HashMap::get(self, k)
-    // }
-    // fn get_mut(&mut self, k: &K) -> Option<&mut V> {
-    //     HashMap::get_mut(self, k)
-    // }
-    fn get_unwrapped(&self, k: &K) -> &V {
+    fn index(&self, k: &K) -> &V {
         self.get(k).unwrap()
     }
-    fn get_mut_unwrapped(&mut self, k: &K) -> &mut V {
+    fn index_mut(&mut self, k: &K) -> &mut V {
         self.get_mut(k).unwrap()
     }
-    // fn insert(&mut self, k: K, v: V) {
-    //     HashMap::insert(self, k, v);
-    // }
     fn ensure(&mut self, k: K)
     where
         V: Default,
@@ -84,35 +73,15 @@ impl<V> Default for VecMap1D<V> {
     }
 }
 impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
-    fn contains_key(&self, &k: &usize) -> bool {
+    fn valid_key(&self, &k: &usize) -> bool {
         k < self.0.len() && self.0[k].is_some()
     }
-    // fn get(&self, &k: &usize) -> Option<&V> {
-    //     if k < self.0.len() {
-    //         self.0[k].as_ref()
-    //     } else {
-    //         None
-    //     }
-    // }
-    // fn get_mut(&mut self, &k: &usize) -> Option<&mut V> {
-    //     if k < self.0.len() {
-    //         self.0[k].as_mut()
-    //     } else {
-    //         None
-    //     }
-    // }
-    fn get_unwrapped(&self, &k: &usize) -> &V {
+    fn index(&self, &k: &usize) -> &V {
         self.0[k].as_ref().unwrap()
     }
-    fn get_mut_unwrapped(&mut self, &k: &usize) -> &mut V {
+    fn index_mut(&mut self, &k: &usize) -> &mut V {
         self.0[k].as_mut().unwrap()
     }
-    // fn insert(&mut self, k: usize, v: V) {
-    //     if k >= self.0.len() {
-    //         self.0.resize(k + 1, None);
-    //     }
-    //     self.0[k] = Some(v);
-    // }
     fn ensure(&mut self, k: usize)
     where
         V: Default,
@@ -141,7 +110,7 @@ impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
 
     Warning: for efficiency reasons, this map has a slightly less strict API --
     it stores Default::<V>::default() items instead of None.
-    So when using this, remember that contains_key is an overapproximation
+    So when using this, remember that valid_key is an overapproximation
     and get() may return a default element instead of None.
 */
 #[derive(Debug)]
@@ -153,53 +122,15 @@ impl<V: Clone + Default> Default for VecMap2D<V> {
     }
 }
 impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
-    fn contains_key(&self, &(i, j): &(usize, usize)) -> bool {
-        // print!("c");
+    fn valid_key(&self, &(i, j): &(usize, usize)) -> bool {
         i < self.0.len() && j < self.0[i].len()
     }
-    // fn get(&self, &(i, j): &(usize, usize)) -> Option<&V> {
-    //     // print!("g");
-    //     if i < self.0.len() {
-    //         if j < self.0.len() {
-    //             Some(&self.0[i][j])
-    //         } else {
-    //             None
-    //         }
-    //     } else {
-    //         None
-    //     }
-    // }
-    // fn get_mut(&mut self, &(i, j): &(usize, usize)) -> Option<&mut V> {
-    //     // print!("m");
-    //     if i < self.0.len() {
-    //         if j < self.0.len() {
-    //             Some(&mut self.0[i][j])
-    //         } else {
-    //             None
-    //         }
-    //     } else {
-    //         None
-    //     }
-    // }
-    fn get_unwrapped(&self, &(i, j): &(usize, usize)) -> &V {
-        // print!("G");
+    fn index(&self, &(i, j): &(usize, usize)) -> &V {
         &self.0[i][j]
     }
-    fn get_mut_unwrapped(&mut self, &(i, j): &(usize, usize)) -> &mut V {
-        // print!("M");
+    fn index_mut(&mut self, &(i, j): &(usize, usize)) -> &mut V {
         &mut self.0[i][j]
     }
-    // fn insert(&mut self, (i, j): (usize, usize), v: V) {
-    //     // println!();
-    //     // print!("i ");
-    //     if i >= self.0.len() {
-    //         self.0.resize(i + 1, vec![Default::default(); self.0.len()]);
-    //     }
-    //     if j >= self.0[i].len() {
-    //         self.0[i].resize_with(j + 1, Default::default);
-    //     }
-    //     self.0[i][j] = v;
-    // }
     fn ensure(&mut self, (i, j): (usize, usize)) {
         if i >= self.0.len() {
             self.0.resize(i + 1, vec![Default::default(); self.0.len()]);
@@ -211,7 +142,6 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
     fn iter<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = ((usize, usize), &'a V)> + 'a> {
-        // print!("t");
         Box::new(self.0.as_slice().iter().enumerate().flat_map(|(i, xs)| {
             xs.as_slice().iter().enumerate().map(move |(j, x)| ((i, j), x))
         }))
@@ -242,13 +172,13 @@ impl<V> Default for VecMapP<V> {
     }
 }
 impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMapP<V> {
-    fn contains_key(&self, &(i, j): &(usize, usize)) -> bool {
+    fn valid_key(&self, &(i, j): &(usize, usize)) -> bool {
         cantor_pair(i, j) < self.0.len()
     }
-    fn get_unwrapped(&self, &(i, j): &(usize, usize)) -> &V {
+    fn index(&self, &(i, j): &(usize, usize)) -> &V {
         &self.0[cantor_pair(i, j)]
     }
-    fn get_mut_unwrapped(&mut self, &(i, j): &(usize, usize)) -> &mut V {
+    fn index_mut(&mut self, &(i, j): &(usize, usize)) -> &mut V {
         &mut self.0[cantor_pair(i, j)]
     }
     fn ensure(&mut self, (i, j): (usize, usize))
