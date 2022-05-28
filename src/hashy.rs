@@ -41,10 +41,8 @@ pub trait Hashy<K, V>: Default {
 }
 
 /*
-    Implementers
+    Standard hashmap
 */
-
-// standard hashmap
 impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     fn contains_key(&self, k: &K) -> bool {
         Self::contains_key(self, k)
@@ -75,7 +73,9 @@ impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     }
 }
 
-// 1D Vector-based hashmap
+/*
+    1D Vector-based hashmap
+*/
 #[derive(Debug)]
 pub struct VecMap1D<V>(Vec<Option<V>>);
 impl<V> Default for VecMap1D<V> {
@@ -136,11 +136,14 @@ impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
     }
 }
 
-// 2D Vector-based hashmap
-// Warning: for efficiency reasons, this map has a slightly less strict API --
-// it stores Default::<V>::default() items instead of None.
-// So when using this, remember that contains_key is an overapproximation
-// and get() may return a default element instead of None.
+/*
+    2D Vector-based hashmap
+
+    Warning: for efficiency reasons, this map has a slightly less strict API --
+    it stores Default::<V>::default() items instead of None.
+    So when using this, remember that contains_key is an overapproximation
+    and get() may return a default element instead of None.
+*/
 #[derive(Debug)]
 pub struct VecMap2D<V>(Vec<Vec<V>>);
 const VECMAP_INIT_LEN: usize = 1000;
@@ -212,5 +215,99 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
         Box::new(self.0.as_slice().iter().enumerate().flat_map(|(i, xs)| {
             xs.as_slice().iter().enumerate().map(move |(j, x)| ((i, j), x))
         }))
+    }
+}
+
+/*
+    1D Vector-based hashmap with 2D indices -- using a pairing function
+
+    Makes the same assumptions as VecMap2D -- may insert additional
+    Default values into the map.
+*/
+fn cantor_pair(i: usize, j: usize) -> usize {
+    (i + j + 1) * (i + j) / 2 + i
+}
+fn undo_pair(k: usize) -> (usize, usize) {
+    let w = ((((8 * k + 1) as f64).sqrt() - 1.0) / 2.0) as usize;
+    let t = (w + 1) * w / 2;
+    println!("{k}, {w}, {t}");
+    (k - t, w + t - k)
+}
+
+#[derive(Debug)]
+pub struct VecMap1DP<V>(Vec<V>);
+impl<V> Default for VecMap1DP<V> {
+    fn default() -> Self {
+        Self(Vec::new())
+    }
+}
+impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap1DP<V> {
+    fn contains_key(&self, &(i, j): &(usize, usize)) -> bool {
+        cantor_pair(i, j) < self.0.len()
+    }
+    fn get_unwrapped(&self, &(i, j): &(usize, usize)) -> &V {
+        &self.0[cantor_pair(i, j)]
+    }
+    fn get_mut_unwrapped(&mut self, &(i, j): &(usize, usize)) -> &mut V {
+        &mut self.0[cantor_pair(i, j)]
+    }
+    fn ensure(&mut self, (i, j): (usize, usize))
+    where
+        V: Default,
+    {
+        let k = cantor_pair(i, j);
+        while k >= self.0.len() {
+            // double size
+            self.0.resize_with(self.0.len() * 2, Default::default);
+        }
+    }
+    fn iter<'a>(
+        &'a self,
+    ) -> Box<dyn Iterator<Item = ((usize, usize), &'a V)> + 'a> {
+        Box::new(
+            self.0
+                .as_slice()
+                .iter()
+                .enumerate()
+                .map(|(k, v)| (undo_pair(k), v)),
+        )
+    }
+}
+
+/*
+    Unit tests
+*/
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cantor_pairing() {
+        assert_eq!(cantor_pair(0, 0), 0);
+        assert_eq!(cantor_pair(0, 1), 1);
+        assert_eq!(cantor_pair(1, 0), 2);
+        assert_eq!(cantor_pair(0, 2), 3);
+        assert_eq!(cantor_pair(1, 1), 4);
+        assert_eq!(cantor_pair(2, 0), 5);
+        assert_eq!(cantor_pair(0, 3), 6);
+        assert_eq!(cantor_pair(1, 2), 7);
+        assert_eq!(cantor_pair(2, 1), 8);
+        assert_eq!(cantor_pair(3, 0), 9);
+        assert_eq!(cantor_pair(0, 4), 10);
+    }
+
+    #[test]
+    fn test_undo_pairing() {
+        assert_eq!(undo_pair(0), (0, 0));
+        assert_eq!(undo_pair(1), (0, 1));
+        assert_eq!(undo_pair(2), (1, 0));
+        assert_eq!(undo_pair(3), (0, 2));
+        assert_eq!(undo_pair(4), (1, 1));
+        assert_eq!(undo_pair(5), (2, 0));
+        assert_eq!(undo_pair(6), (0, 3));
+        assert_eq!(undo_pair(7), (1, 2));
+        assert_eq!(undo_pair(8), (2, 1));
+        assert_eq!(undo_pair(9), (3, 0));
+        assert_eq!(undo_pair(10), (0, 4));
     }
 }
