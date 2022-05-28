@@ -13,8 +13,10 @@ pub const EXAMPLE_EXPECT_EXT: &str = "_expect.json";
 pub const RESULTS_DIR: &str = "results";
 
 // Parameters for unit tests
+#[cfg(debug_assertions)]
 pub const UNIT_TEST_TIMEOUT_SECS: u64 = 10;
-pub const UNIT_TEST_TIMEOUT_EXPENSIVE: u64 = 90;
+#[cfg(not(debug_assertions))]
+pub const UNIT_TEST_TIMEOUT_SECS: u64 = 90;
 
 // Main/special directories where examples are stored,
 // optionally with expected output
