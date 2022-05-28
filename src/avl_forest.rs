@@ -101,17 +101,20 @@ where
         Primary public API
     */
     pub fn new() -> Self {
+        // println!("new()");
         let result: Self = Default::default();
         result.assert_invariant();
         result
     }
     pub fn ensure(&mut self, v: V) {
+        // println!("ensure({v:?})");
         self.time.inc();
         self.space.inc();
         self.nodes.ensure(v);
         self.assert_invariant();
     }
     pub fn get_root(&self, mut v: V) -> V {
+        // println!("get_root({v:?})");
         // Running time O(h) in the height of the tree h
         debug_assert!(self.is_seen(v));
         self.time.inc();
@@ -122,6 +125,7 @@ where
         v
     }
     pub fn concat(&mut self, v1: V, v2: V) -> bool {
+        // println!("concat({v1:?}, {v2:?})");
         // Return true if successful
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
@@ -138,6 +142,7 @@ where
         }
     }
     pub fn split(&mut self, v: V) {
+        // println!("split({:?}", v);
         debug_assert!(self.is_seen(v));
         // println!("Splitting on: {:?}", v);
         self.time.inc();
@@ -176,6 +181,7 @@ where
         Additional publicly exposed functions
     */
     pub fn same_root(&self, v1: V, v2: V) -> bool {
+        // println!("same_root({:?}, {:?})", v1, v2);
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
         self.time.inc();
@@ -183,10 +189,11 @@ where
         self.get_root(v1) == self.get_root(v2)
     }
     pub fn is_seen(&self, v: V) -> bool {
+        // println!("is_seen({:?})", v);
         self.nodes.valid_key(&v)
     }
     pub fn next(&self, mut v: V) -> Option<V> {
-        // println!("succ {v:?}");
+        // println!("next({v:?})");
         self.time.inc();
         if let Some(mut c) = self.node(v).rchild {
             while let Some(cnew) = self.node(c).lchild {
@@ -205,7 +212,7 @@ where
         None
     }
     pub fn prev(&self, mut v: V) -> Option<V> {
-        // println!("succ {v:?}");
+        // println!("prev({v:?})");
         self.time.inc();
         if let Some(mut c) = self.node(v).lchild {
             while let Some(cnew) = self.node(c).rchild {
@@ -228,12 +235,15 @@ where
         Public getters for debugging only
     */
     pub fn iter_fwd_from(&self, v: V) -> impl Iterator<Item = V> + '_ {
+        // println!("iter_fwd_from({v:?})");
         iter::successors(Some(v), move |&v| self.next(v))
     }
     pub fn get_time(&self) -> usize {
+        // println!("get_time()");
         self.time.get()
     }
     pub fn get_space(&self) -> usize {
+        // println!("get_space()");
         self.space.get()
     }
 
