@@ -13,6 +13,7 @@ use super::example::{Example, ExampleOutput, ExampleResult};
 use super::interface::StateGraph;
 use std::fmt::{self, Debug};
 use std::fs;
+use std::ops::DerefMut;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
@@ -28,17 +29,6 @@ pub enum Algorithm {
     Tarjan,
     Jump,
     Polylog,
-}
-impl Algorithm {
-    fn new_graph(&self) -> Box<dyn StateGraph> {
-        match self {
-            Algorithm::Naive => Box::new(NaiveStateGraph::new()),
-            Algorithm::Simple => Box::new(SimpleStateGraph::new()),
-            Algorithm::Tarjan => Box::new(TarjanStateGraph::new()),
-            Algorithm::Jump => Box::new(JumpStateGraph::new()),
-            Algorithm::Polylog => Box::new(PolylogStateGraph::new()),
-        }
-    }
 }
 impl FromStr for Algorithm {
     type Err = String;
@@ -65,6 +55,17 @@ impl fmt::Display for Algorithm {
         write!(f, "{}", result)
     }
 }
+impl Algorithm {
+    fn new_graph(&self) -> Box<dyn StateGraph> {
+        match self {
+            Algorithm::Naive => Box::new(NaiveStateGraph::new()),
+            Algorithm::Simple => Box::new(SimpleStateGraph::new()),
+            Algorithm::Tarjan => Box::new(TarjanStateGraph::new()),
+            Algorithm::Jump => Box::new(JumpStateGraph::new()),
+            Algorithm::Polylog => Box::new(PolylogStateGraph::new()),
+        }
+    }
+}
 
 /*
     Run examples with a given algorithm
@@ -85,7 +86,7 @@ fn run_core(
         );
     }
     let mut graph = alg.new_graph();
-    let result = example.run_with_timeout(&mut *graph, timeout);
+    let result = example.run_with_timeout(graph.deref_mut(), timeout);
 
     if verbose {
         println!("=== Output ===");
