@@ -5,8 +5,8 @@
 */
 
 use super::algorithm::{
-    JumpStateGraph, NaiveStateGraph, PolylogStateGraph, SimpleStateGraph,
-    TarjanStateGraph,
+    BFGTStateGraph, JumpStateGraph, NaiveStateGraph, PolylogStateGraph,
+    SimpleStateGraph,
 };
 use super::constants::EXAMPLE_IN_EXT;
 use super::example::{Example, ExampleOutput, ExampleResult};
@@ -26,7 +26,7 @@ use std::time::Duration;
 pub enum Algorithm {
     Naive,
     Simple,
-    Tarjan,
+    BFGT,
     Jump,
     Polylog,
 }
@@ -36,7 +36,7 @@ impl FromStr for Algorithm {
         match s.to_lowercase().as_str() {
             "n" | "naive" => Ok(Algorithm::Naive),
             "s" | "simple" => Ok(Algorithm::Simple),
-            "t" | "tarjan" => Ok(Algorithm::Tarjan),
+            "b" | "bfgt" => Ok(Algorithm::BFGT),
             "j" | "jump" => Ok(Algorithm::Jump),
             "p" | "polylog" => Ok(Algorithm::Polylog),
             _ => Err(format!("Could not parse as Algorithm: {}", s)),
@@ -48,7 +48,7 @@ impl fmt::Display for Algorithm {
         let result = match self {
             Algorithm::Naive => "naive",
             Algorithm::Simple => "simple",
-            Algorithm::Tarjan => "tarjan",
+            Algorithm::BFGT => "bfgt",
             Algorithm::Jump => "jump",
             Algorithm::Polylog => "polylog",
         };
@@ -60,7 +60,7 @@ impl Algorithm {
         match self {
             Algorithm::Naive => Box::new(NaiveStateGraph::new()),
             Algorithm::Simple => Box::new(SimpleStateGraph::new()),
-            Algorithm::Tarjan => Box::new(TarjanStateGraph::new()),
+            Algorithm::BFGT => Box::new(BFGTStateGraph::new()),
             Algorithm::Jump => Box::new(JumpStateGraph::new()),
             Algorithm::Polylog => Box::new(PolylogStateGraph::new()),
         }
@@ -145,8 +145,8 @@ pub fn assert_example(basename: &str, timeout_secs: u64) {
         assert!(naive.is_correct());
         let simple = run_core(&example, Algorithm::Simple, timeout, true);
         assert!(simple.is_correct());
-        let tarjan = run_core(&example, Algorithm::Tarjan, timeout, true);
-        assert!(tarjan.is_correct());
+        let bfgt = run_core(&example, Algorithm::BFGT, timeout, true);
+        assert!(bfgt.is_correct());
         let jump = run_core(&example, Algorithm::Jump, timeout, true);
         assert!(jump.is_correct());
         let polylog = run_core(&example, Algorithm::Polylog, timeout, true);
@@ -157,8 +157,8 @@ pub fn assert_example(basename: &str, timeout_secs: u64) {
         let expected = unwrap_timeout(&naive);
         let simple = run_core(&example, Algorithm::Simple, timeout, true);
         assert_eq!(expected, unwrap_timeout(&simple));
-        let tarjan = run_core(&example, Algorithm::Tarjan, timeout, true);
-        assert_eq!(expected, unwrap_timeout(&tarjan));
+        let bfgt = run_core(&example, Algorithm::BFGT, timeout, true);
+        assert_eq!(expected, unwrap_timeout(&bfgt));
         let jump = run_core(&example, Algorithm::Jump, timeout, true);
         assert_eq!(expected, unwrap_timeout(&jump));
         let polylog = run_core(&example, Algorithm::Polylog, timeout, true);
@@ -173,13 +173,13 @@ pub fn assert_example(basename: &str, timeout_secs: u64) {
 pub fn run_compare_csv_header() -> String {
     let header = if cfg!(debug_assertions) {
         "name, size, \
-        time (naive), time (simple), time (tarjan), time (jump), \
+        time (naive), time (simple), time (bfgt), time (jump), \
         time (polylog), \
-        space (naive), space (simple), space (tarjan), space (jump), \
+        space (naive), space (simple), space (bfgt), space (jump), \
         space (polylog)"
     } else {
         "name, size, \
-        time (naive), time (simple), time (tarjan), time (jump), \
+        time (naive), time (simple), time (bfgt), time (jump), \
         time (polylog)"
     };
     header.to_string()
@@ -194,7 +194,7 @@ pub fn run_compare(basename: &str, timeout_secs: u64) -> String {
     let timeout = Duration::from_secs(timeout_secs);
     let naive = run_core(&example, Algorithm::Naive, timeout, false);
     let simple = run_core(&example, Algorithm::Simple, timeout, false);
-    let tarjan = run_core(&example, Algorithm::Tarjan, timeout, false);
+    let bfgt = run_core(&example, Algorithm::BFGT, timeout, false);
     let jump = run_core(&example, Algorithm::Jump, timeout, false);
     let polylog = run_core(&example, Algorithm::Polylog, timeout, false);
 
@@ -204,7 +204,7 @@ pub fn run_compare(basename: &str, timeout_secs: u64) -> String {
         example.len(),
         naive.time_str(),
         simple.time_str(),
-        tarjan.time_str(),
+        bfgt.time_str(),
         jump.time_str(),
         polylog.time_str(),
     );
@@ -214,7 +214,7 @@ pub fn run_compare(basename: &str, timeout_secs: u64) -> String {
             result,
             naive.space_str(),
             simple.space_str(),
-            tarjan.space_str(),
+            bfgt.space_str(),
             jump.space_str(),
             polylog.space_str(),
         )

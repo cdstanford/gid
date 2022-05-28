@@ -6,7 +6,7 @@
     - Adding vertices with names of type V, labeled by type T
     - Adding edges either in forward or backward direction.
       Although the forward and backward may correspond in some implementations,
-      for some of the algorithms we want to support (jump and tarjan)
+      for some of the algorithms we want to support (Jump and BFGT)
       it is more flexible to add them separately.
     - Merging vertices in O(1) time (the two vertex names are now aliases)
       (requires a merge function T x T -> T)

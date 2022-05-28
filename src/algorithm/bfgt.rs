@@ -1,6 +1,6 @@
 /*
-    Implementation of the StateGraph trait using Tarjan's
-    algorithm for online strongly-connected-components (the state of the art
+    Implementation of the StateGraph trait using the BFGT algorithm
+    for online strongly-connected-components (the state of the art
     in terms of computational complexity).
 
     The algorithm we implement is described in section 4.1 of this paper:
@@ -25,7 +25,7 @@ use std::iter;
 struct Level(usize);
 
 #[derive(Debug, Default)]
-pub struct TarjanStateGraph {
+pub struct BFGTStateGraph {
     graph: DiGraph<usize, (Status, Level)>,
     // edges from open states, not yet added to the graph
     pending_edges_fwd: HashMap<usize, Vec<usize>>,
@@ -34,7 +34,7 @@ pub struct TarjanStateGraph {
     // Additional time counter for debugging
     additional_time: DebugCounter,
 }
-impl TarjanStateGraph {
+impl BFGTStateGraph {
     /* The core parameter for the algorithm: delta = sqrt(num edges) */
     fn delta(&self) -> usize {
         self.additional_time.inc();
@@ -62,7 +62,7 @@ impl TarjanStateGraph {
         // println!("Graph: {:?}", self.graph);
         // Update levels after adding an edge (v1, v2),
         // AND ensure acyclic by merging cycles.
-        // This is the main algorithm, as described in the Tarjan paper.
+        // This is the main algorithm, as described in the BFGT paper.
         // Some differences:
         // - I am using a DFS instead of a BFS. Will that change the complexity?
         // - I am not using the separate "in" edges for now, just iterating over
@@ -234,7 +234,7 @@ impl TarjanStateGraph {
         }
     }
 }
-impl StateGraph for TarjanStateGraph {
+impl StateGraph for BFGTStateGraph {
     fn new() -> Self {
         Default::default()
     }
