@@ -5,7 +5,7 @@
 */
 
 use super::algorithm::{
-    JumpStateGraph, NaiveStateGraph, SimpleStateGraph, SmartStateGraph,
+    JumpStateGraph, NaiveStateGraph, SimpleStateGraph, PolylogStateGraph,
     TarjanStateGraph,
 };
 use super::constants::EXAMPLE_IN_EXT;
@@ -22,15 +22,13 @@ use structopt::StructOpt;
     Exposed enum for which state graph implementation to use
 */
 
-// TODO: probably better to rename the different algorithms to clearer
-// names, and use better one-letter abbreviations
 #[derive(Debug, StructOpt)]
 pub enum Algorithm {
     Naive,
     Simple,
     Tarjan,
     Jump,
-    Smart,
+    Polylog,
 }
 impl FromStr for Algorithm {
     type Err = String;
@@ -40,7 +38,7 @@ impl FromStr for Algorithm {
             "s" | "simple" => Ok(Algorithm::Simple),
             "t" | "tarjan" => Ok(Algorithm::Tarjan),
             "j" | "jump" => Ok(Algorithm::Jump),
-            "a" | "smart" => Ok(Algorithm::Smart),
+            "p" | "polylog" => Ok(Algorithm::Polylog),
             _ => Err(format!("Could not parse as Algorithm: {}", s)),
         }
     }
@@ -52,7 +50,7 @@ impl fmt::Display for Algorithm {
             Algorithm::Simple => "simple",
             Algorithm::Tarjan => "tarjan",
             Algorithm::Jump => "jump",
-            Algorithm::Smart => "smart",
+            Algorithm::Polylog => "polylog",
         };
         write!(f, "{}", result)
     }
@@ -93,8 +91,8 @@ fn run_core(
             let mut graph = JumpStateGraph::new();
             example.run_with_timeout(&mut graph, timeout)
         }
-        Algorithm::Smart => {
-            let mut graph = SmartStateGraph::new();
+        Algorithm::Polylog => {
+            let mut graph = PolylogStateGraph::new();
             example.run_with_timeout(&mut graph, timeout)
         }
     };
@@ -160,8 +158,8 @@ pub fn assert_example(basename: &str, timeout_secs: u64) {
         assert!(tarjan.is_correct());
         let jump = run_core(&example, Algorithm::Jump, timeout, true);
         assert!(jump.is_correct());
-        let smart = run_core(&example, Algorithm::Smart, timeout, true);
-        assert!(smart.is_correct());
+        let polylog = run_core(&example, Algorithm::Polylog, timeout, true);
+        assert!(polylog.is_correct());
     } else {
         println!("Asserting each algorithm output matches naive...");
         let naive = run_core(&example, Algorithm::Naive, timeout, true);
@@ -172,8 +170,8 @@ pub fn assert_example(basename: &str, timeout_secs: u64) {
         assert_eq!(expected, unwrap_timeout(&tarjan));
         let jump = run_core(&example, Algorithm::Jump, timeout, true);
         assert_eq!(expected, unwrap_timeout(&jump));
-        let smart = run_core(&example, Algorithm::Smart, timeout, true);
-        assert!(smart.is_correct());
+        let polylog = run_core(&example, Algorithm::Polylog, timeout, true);
+        assert!(polylog.is_correct());
     }
 }
 
@@ -185,12 +183,13 @@ pub fn run_compare_csv_header() -> String {
     let header = if cfg!(debug_assertions) {
         "name, size, \
         time (naive), time (simple), time (tarjan), time (jump), \
-        time (smart), \
+        time (polylog), \
         space (naive), space (simple), space (tarjan), space (jump), \
-        space (smart)"
+        space (polylog)"
     } else {
         "name, size, \
-        time (naive), time (simple), time (tarjan), time (jump), time (smart)"
+        time (naive), time (simple), time (tarjan), time (jump), \
+        time (polylog)"
     };
     header.to_string()
 }
@@ -206,7 +205,7 @@ pub fn run_compare(basename: &str, timeout_secs: u64) -> String {
     let simple = run_core(&example, Algorithm::Simple, timeout, false);
     let tarjan = run_core(&example, Algorithm::Tarjan, timeout, false);
     let jump = run_core(&example, Algorithm::Jump, timeout, false);
-    let smart = run_core(&example, Algorithm::Smart, timeout, false);
+    let polylog = run_core(&example, Algorithm::Polylog, timeout, false);
 
     let result = format!(
         "{}, {}, {}, {}, {}, {}, {}",
@@ -216,7 +215,7 @@ pub fn run_compare(basename: &str, timeout_secs: u64) -> String {
         simple.time_str(),
         tarjan.time_str(),
         jump.time_str(),
-        smart.time_str(),
+        polylog.time_str(),
     );
     if cfg!(debug_assertions) {
         format!(
@@ -226,7 +225,7 @@ pub fn run_compare(basename: &str, timeout_secs: u64) -> String {
             simple.space_str(),
             tarjan.space_str(),
             jump.space_str(),
-            smart.space_str(),
+            polylog.space_str(),
         )
     } else {
         result

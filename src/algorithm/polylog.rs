@@ -1,4 +1,6 @@
 /*
+    New asymptotically best algorithm running in polylog time.
+
     Implementation that uses Euler tour trees (euler_forest.rs)
     to track which states are in the same component of the forest.
 */
@@ -34,13 +36,13 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 }
 
 #[derive(Debug, Default)]
-pub struct SmartStateGraph {
+pub struct PolylogStateGraph {
     graph: DiGraph<usize, Node>,
     euler_forest: EulerForest,
     // TODO: track time, if wanted for debug step counting
     // additional_time: DebugCounter,
 }
-impl SmartStateGraph {
+impl PolylogStateGraph {
     /* Node label manipulation */
     fn get_node(&self, v: usize) -> &Node {
         debug_assert!(self.is_seen(v));
@@ -204,7 +206,7 @@ impl SmartStateGraph {
         }
     }
 }
-impl StateGraph for SmartStateGraph {
+impl StateGraph for PolylogStateGraph {
     fn new() -> Self {
         Default::default()
     }
