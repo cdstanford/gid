@@ -162,9 +162,7 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
     Performance:
     This implementation tries to fix the problems with VecMap2D by relying
     on a single giant vector, but it doesn't seem to work, it is still
-    extremely space-hungry and crashes crashes when indices get too large.
-
-    Maybe the implementation has a bug?
+    extremely space-hungry and slow when indices get too large.
 */
 fn cantor_pair(i: usize, j: usize) -> usize {
     (i + j + 1) * (i + j) / 2 + i
