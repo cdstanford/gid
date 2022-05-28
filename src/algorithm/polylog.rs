@@ -5,6 +5,7 @@
     to track which states are in the same component of the forest.
 */
 
+use crate::debug_counter::DebugCounter;
 use crate::euler_forest::EulerForest;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
@@ -39,6 +40,7 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 pub struct PolylogStateGraph {
     graph: DiGraph<usize, Node>,
     euler_forest: EulerForest,
+    additional_space: DebugCounter,
 }
 impl PolylogStateGraph {
     /* Node label manipulation */
@@ -64,6 +66,7 @@ impl PolylogStateGraph {
     fn push_reserve(&mut self, v: usize, w: usize) {
         debug_assert!(self.is_seen(v));
         debug_assert!(!self.is_closed(v));
+        self.additional_space.inc();
         self.get_node_mut(v).reserve.push_back(w);
     }
     fn pop_reserve(&mut self, v: usize) -> Option<usize> {
@@ -238,7 +241,9 @@ impl StateGraph for PolylogStateGraph {
         self.graph.get_label(v).map(|l| l.status)
     }
     fn get_space(&self) -> usize {
-        self.graph.get_space() + self.euler_forest.get_space()
+        self.graph.get_space()
+            + self.euler_forest.get_space()
+            + self.additional_space.get()
     }
     fn get_time(&self) -> usize {
         self.graph.get_time() + self.euler_forest.get_time()

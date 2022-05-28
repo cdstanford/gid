@@ -4,7 +4,7 @@
     of states ahead at once.
 */
 
-// use crate::debug_counter::DebugCounter;
+use crate::debug_counter::DebugCounter;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
 use std::collections::{HashSet, LinkedList};
@@ -55,8 +55,7 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 #[derive(Debug, Default)]
 pub struct JumpStateGraph {
     graph: DiGraph<usize, Node>,
-    // TODO: did I forget to track time?
-    // additional_time: DebugCounter,
+    additional_space: DebugCounter,
 }
 impl JumpStateGraph {
     /* Node label manipulation */
@@ -84,6 +83,7 @@ impl JumpStateGraph {
         debug_assert!(self.is_seen(v));
         debug_assert!(!self.is_closed(v));
         self.get_node_mut(v).reserve.push_back(w);
+        self.additional_space.inc();
     }
     fn pop_reserve(&mut self, v: usize) -> Option<usize> {
         debug_assert!(self.is_seen(v));
@@ -136,6 +136,7 @@ impl JumpStateGraph {
         // println!("  Pushing jump: {}, {}", v, w);
         debug_assert!(self.is_closed(v));
         self.get_node_mut(v).jumps.push(w);
+        self.additional_space.inc();
     }
     // Not reachable getters and setters
     fn is_not_reachable(&self, v: usize, w: usize) -> bool {
@@ -145,6 +146,7 @@ impl JumpStateGraph {
     fn add_not_reachable(&mut self, v: usize, w: usize) {
         // println!("Adding not reachable: {} {}", v, w);
         self.get_node_mut(v).not_reachable.insert(w);
+        self.additional_space.inc();
     }
 
     /*
@@ -307,7 +309,7 @@ impl StateGraph for JumpStateGraph {
         self.graph.get_label(v).map(|l| l.status)
     }
     fn get_space(&self) -> usize {
-        self.graph.get_space()
+        self.graph.get_space() + self.additional_space.get()
     }
     fn get_time(&self) -> usize {
         self.graph.get_time()
