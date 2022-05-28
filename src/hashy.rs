@@ -226,6 +226,10 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMapP<V> {
 
     This is a more conventionally reasonable representation for
     sparse graph, much less space-hungry.
+
+    Performance:
+    This is the only implementation so far that manages to compete with just
+    plain HashMap, and might be better. So let's use it for now.
 */
 #[derive(Debug)]
 pub struct VecMapHy<V>(Vec<HashMap<usize, V>>);

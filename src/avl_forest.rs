@@ -43,7 +43,7 @@
 */
 
 use super::debug_counter::DebugCounter;
-use super::hashy::{Hashy, VecMap1D, VecMap2D, VecMapP};
+use super::hashy::{Hashy, VecMap1D, VecMap2D, VecMapHy, VecMapP};
 use std::cmp::{self, Ordering};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -531,6 +531,8 @@ pub type AvlForest2DVec =
     AvlForest<(usize, usize), VecMap2D<Node<(usize, usize)>>>;
 pub type AvlForestPVec =
     AvlForest<(usize, usize), VecMapP<Node<(usize, usize)>>>;
+pub type AvlForestHy =
+    AvlForest<(usize, usize), VecMapHy<Node<(usize, usize)>>>;
 
 /*
     Unit tests
