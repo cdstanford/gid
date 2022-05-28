@@ -1,23 +1,24 @@
       11 ./src/algorithm/mod.rs
-      11 ./src/lib.rs
-      30 ./src/bin/compare_stats.rs
+      12 ./src/lib.rs
+      30 ./src/bin/run_compare.rs
       36 ./src/bin/run_example.rs
       46 ./src/debug_counter.rs
       49 ./src/bin/run_all.rs
-      72 ./src/constants.rs
+      74 ./src/constants.rs
       86 ./src/algorithm/naive.rs
       90 ./src/util.rs
      116 ./src/algorithm/simple.rs
      147 ./src/interface.rs
-     182 ./src/avl_forest.rs
+     202 ./src/hashy.rs
      202 ./src/search.rs
      246 ./src/algorithm/smart.rs
      253 ./src/example.rs
      259 ./src/bin/example_gen.rs
-     260 ./src/driver.rs
+     262 ./src/driver.rs
      274 ./src/algorithm/tarjan.rs
      315 ./src/algorithm/jump.rs
      370 ./src/graph.rs
-     522 ./src/topology_tree.rs
-     626 ./tests/test_examples.rs
-    4203 total
+     386 ./src/euler_forest.rs
+     625 ./tests/test_examples.rs
+     734 ./src/avl_forest.rs
+    4825 total
