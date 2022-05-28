@@ -147,3 +147,38 @@ pub trait StateGraph {
         }
     }
 }
+
+/*
+    Boilerplate
+    Lift the trait from T to Box<T>.
+
+    This isn't strictly necessary, because from a g: Box<dyn StateGraph>
+    you can get away with something like &mut *g to get a mut to the contents,
+    but it's convenient and it seems more natural.
+*/
+impl<T: StateGraph + ?Sized> StateGraph for Box<T> {
+    fn new() -> Self {
+        panic!("Called new for Box<T> -- call on underlying T instead");
+    }
+    fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
+        T::add_transition_unchecked(self, v1, v2);
+    }
+    fn mark_closed_unchecked(&mut self, v: usize) {
+        T::mark_closed_unchecked(self, v)
+    }
+    fn mark_live_unchecked(&mut self, v: usize) {
+        T::mark_live_unchecked(self, v)
+    }
+    fn not_reachable_unchecked(&mut self, v1: usize, v2: usize) {
+        T::not_reachable_unchecked(self, v1, v2)
+    }
+    fn get_status(&self, v: usize) -> Option<Status> {
+        T::get_status(self, v)
+    }
+    fn get_space(&self) -> usize {
+        T::get_space(self)
+    }
+    fn get_time(&self) -> usize {
+        T::get_time(self)
+    }
+}
