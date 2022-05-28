@@ -85,7 +85,7 @@ fn run_core(
         );
     }
     let mut graph = alg.new();
-    let result = example.run_with_timeout(&mut graph, timeout);
+    let result = example.run_with_timeout(&mut *graph, timeout);
 
     if verbose {
         println!("=== Output ===");
