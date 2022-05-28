@@ -42,6 +42,7 @@
         http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
+use super::debug_counter::DebugCounter;
 use super::hashy::{Hashy, VecMap1D, VecMap2D};
 use std::cmp::{self, Ordering};
 use std::collections::HashMap;
@@ -74,6 +75,8 @@ where
 {
     nodes: H,
     _phantom_v: PhantomData<V>,
+    time: DebugCounter,
+    space: DebugCounter,
 }
 impl<V, H> Default for AvlForest<V, H>
 where
@@ -81,7 +84,12 @@ where
     H: Hashy<V, Node<V>>,
 {
     fn default() -> Self {
-        Self { nodes: Default::default(), _phantom_v: Default::default() }
+        Self {
+            nodes: Default::default(),
+            _phantom_v: Default::default(),
+            time: Default::default(),
+            space: Default::default(),
+        }
     }
 }
 impl<V, H> AvlForest<V, H>
@@ -98,13 +106,17 @@ where
         result
     }
     pub fn ensure(&mut self, v: V) {
+        self.time.inc();
+        self.space.inc();
         self.nodes.ensure(v);
         self.assert_invariant();
     }
     pub fn get_root(&self, mut v: V) -> V {
         // Running time O(h) in the height of the tree h
         debug_assert!(self.is_seen(v));
+        self.time.inc();
         while let Some(parent) = self.node_parent(v) {
+            self.time.inc();
             v = parent
         }
         v
@@ -113,6 +125,8 @@ where
         // Return true if successful
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
+        self.time.inc();
+
         let r1 = self.get_root(v1);
         let r2 = self.get_root(v2);
         if r1 == r2 {
@@ -126,6 +140,7 @@ where
     pub fn split(&mut self, v: V) {
         debug_assert!(self.is_seen(v));
         // println!("Splitting on: {:?}", v);
+        self.time.inc();
 
         let mut lsplit: Option<V> = self.detach_lchild(v);
         let mut rsplit: Option<V> = self.detach_rchild(v);
@@ -138,6 +153,7 @@ where
         let mut next_parent = self.node_parent(v);
         self.node_mut(v).parent = None;
         while let Some(p) = next_parent {
+            self.time.inc();
             next_parent = self.node_parent(p);
             self.node_mut(p).parent = None;
 
@@ -162,6 +178,8 @@ where
     pub fn same_root(&self, v1: V, v2: V) -> bool {
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
+        self.time.inc();
+
         self.get_root(v1) == self.get_root(v2)
     }
     pub fn is_seen(&self, v: V) -> bool {
@@ -169,13 +187,16 @@ where
     }
     pub fn next(&self, mut v: V) -> Option<V> {
         // println!("succ {v:?}");
+        self.time.inc();
         if let Some(mut c) = self.node(v).rchild {
             while let Some(cnew) = self.node(c).lchild {
+                self.time.inc();
                 c = cnew;
             }
             return Some(c);
         }
         while let Some(par) = self.node(v).parent {
+            self.time.inc();
             if self.node(par).lchild == Some(v) {
                 return Some(par);
             }
@@ -185,13 +206,16 @@ where
     }
     pub fn prev(&self, mut v: V) -> Option<V> {
         // println!("succ {v:?}");
+        self.time.inc();
         if let Some(mut c) = self.node(v).lchild {
             while let Some(cnew) = self.node(c).rchild {
+                self.time.inc();
                 c = cnew;
             }
             return Some(c);
         }
         while let Some(par) = self.node(v).parent {
+            self.time.inc();
             if self.node(par).rchild == Some(v) {
                 return Some(par);
             }
@@ -199,8 +223,18 @@ where
         }
         None
     }
+
+    /*
+        Public getters for debugging only
+    */
     pub fn iter_fwd_from(&self, v: V) -> impl Iterator<Item = V> + '_ {
         iter::successors(Some(v), move |&v| self.next(v))
+    }
+    pub fn get_time(&self) -> usize {
+        self.time.get()
+    }
+    pub fn get_space(&self) -> usize {
+        self.space.get()
     }
 
     /*
@@ -212,6 +246,7 @@ where
         debug_assert!(r1 != r2);
         debug_assert_eq!(self.node_parent(r1), None);
         debug_assert_eq!(self.node_parent(r2), None);
+        self.time.inc();
 
         let n1 = self.node(r1);
         let n2 = self.node(r2);
@@ -262,18 +297,21 @@ where
         self.nodes.get_mut_unwrapped(&v)
     }
     fn set_rchild(&mut self, p: V, c: Option<V>) {
+        self.time.inc();
         self.node_mut(p).rchild = c;
         if let Some(c0) = c {
             self.node_mut(c0).parent = Some(p);
         }
     }
     fn set_lchild(&mut self, p: V, c: Option<V>) {
+        self.time.inc();
         self.node_mut(p).lchild = c;
         if let Some(c0) = c {
             self.node_mut(c0).parent = Some(p);
         }
     }
     fn detach_lchild(&mut self, p: V) -> Option<V> {
+        self.time.inc();
         let c = self.node(p).lchild;
         if let Some(c0) = c {
             self.node_mut(p).lchild = None;
@@ -282,6 +320,7 @@ where
         c
     }
     fn detach_rchild(&mut self, p: V) -> Option<V> {
+        self.time.inc();
         let c = self.node(p).rchild;
         if let Some(c0) = c {
             self.node_mut(p).rchild = None;
@@ -294,6 +333,7 @@ where
         // (the head) and the remaining tree (tail)
         // Precondition: rt is a root
         debug_assert_eq!(self.node_parent(rt), None);
+        self.time.inc();
 
         if let Some(c) = self.detach_lchild(rt) {
             let (head, tail) = self.pop_front(c);
@@ -354,6 +394,7 @@ where
         debug_assert!(h2 <= h1 + 1);
         debug_assert!(h1 <= h2 + 2);
         self.set_height(v);
+        self.time.inc();
 
         if h1 == h2 + 2 {
             let c1 = self.node(v).lchild.unwrap();
@@ -383,6 +424,7 @@ where
         debug_assert!(h1 <= h2 + 1);
         debug_assert!(h2 <= h1 + 2);
         self.set_height(v);
+        self.time.inc();
 
         if h2 == h1 + 2 {
             let c2 = self.node(v).rchild.unwrap();
@@ -408,6 +450,7 @@ where
         // children except that they are balanced subtrees.
         // For now, I'm just implementing this by calling concat.
         // There might be a slightly better way.
+        self.time.inc();
         let c1 = self.detach_lchild(v);
         let c2 = self.detach_rchild(v);
         self.set_height(v);
@@ -421,6 +464,7 @@ where
         v
     }
     fn rotate_right(&mut self, v: V) -> V {
+        self.time.inc();
         let left = self.detach_lchild(v).unwrap();
         let mid = self.detach_rchild(left);
         self.set_lchild(v, mid);
@@ -430,6 +474,7 @@ where
         left
     }
     fn rotate_left(&mut self, v: V) -> V {
+        self.time.inc();
         let right = self.detach_rchild(v).unwrap();
         let mid = self.detach_lchild(right);
         self.set_rchild(v, mid);

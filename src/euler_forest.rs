@@ -141,6 +141,17 @@ impl EulerForest {
     }
 
     /*
+        Access debug time/space counters from avl_forest
+        (for debugging only)
+    */
+    pub fn get_time(&self) -> usize {
+        self.nodes.get_time()
+    }
+    pub fn get_space(&self) -> usize {
+        self.nodes.get_space()
+    }
+
+    /*
         Internal
     */
     fn is_seen(&self, v: IdType) -> bool {

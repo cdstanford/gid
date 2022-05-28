@@ -39,8 +39,6 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 pub struct PolylogStateGraph {
     graph: DiGraph<usize, Node>,
     euler_forest: EulerForest,
-    // TODO: track time, if wanted for debug step counting
-    // additional_time: DebugCounter,
 }
 impl PolylogStateGraph {
     /* Node label manipulation */
@@ -95,7 +93,7 @@ impl PolylogStateGraph {
         is-root
         Compare with the implementation in jump.rs
         In this implementation, we critically rely
-        on Euler tour trees for the efficient check. (TODO)
+        on Euler tour trees for the efficient check.
 
         Currently: do something naive and inefficient
     */
@@ -240,9 +238,9 @@ impl StateGraph for PolylogStateGraph {
         self.graph.get_label(v).map(|l| l.status)
     }
     fn get_space(&self) -> usize {
-        self.graph.get_space()
+        self.graph.get_space() + self.euler_forest.get_space()
     }
     fn get_time(&self) -> usize {
-        self.graph.get_time()
+        self.graph.get_time() + self.euler_forest.get_time()
     }
 }
