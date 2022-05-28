@@ -36,7 +36,7 @@ pub enum Transaction {
     The main interface
 */
 
-pub trait StateGraph: Sized {
+pub trait StateGraph {
     /*
         Functions that need to be implemented.
 
@@ -52,7 +52,9 @@ pub trait StateGraph: Sized {
     */
 
     // Constructor
-    fn new() -> Self;
+    fn new() -> Self
+    where
+        Self: Sized;
 
     // Add a new transition to the graph from an Open state to any state.
     // (If the vertex doesn't exist yet, create it and mark it open.)

@@ -206,7 +206,7 @@ impl Example {
     // it matches the expected output.
     // Additionally enforces a timeout (Duration), although
     // only at the granularity of transactions.
-    pub fn run_with_timeout<G: StateGraph>(
+    pub fn run_with_timeout<G: StateGraph + ?Sized>(
         &self,
         graph: &mut G,
         timeout: Duration,
@@ -233,7 +233,7 @@ impl Example {
             })
         }
     }
-    fn collect_output<G: StateGraph>(
+    fn collect_output<G: StateGraph + ?Sized>(
         &self,
         graph: &mut G,
     ) -> (ExampleOutput, bool) {

@@ -16,19 +16,29 @@ use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
-use structopt::StructOpt;
 
 /*
     Exposed enum for which state graph implementation to use
 */
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug)]
 pub enum Algorithm {
     Naive,
     Simple,
     Tarjan,
     Jump,
     Polylog,
+}
+impl Algorithm {
+    fn new(&self) -> Box<dyn StateGraph> {
+        match self {
+            Algorithm::Naive => Box::new(NaiveStateGraph::new()),
+            Algorithm::Simple => Box::new(SimpleStateGraph::new()),
+            Algorithm::Tarjan => Box::new(TarjanStateGraph::new()),
+            Algorithm::Jump => Box::new(JumpStateGraph::new()),
+            Algorithm::Polylog => Box::new(PolylogStateGraph::new()),
+        }
+    }
 }
 impl FromStr for Algorithm {
     type Err = String;
@@ -74,28 +84,8 @@ fn run_core(
             timeout.as_secs()
         );
     }
-    let result = match alg {
-        Algorithm::Naive => {
-            let mut graph = NaiveStateGraph::new();
-            example.run_with_timeout(&mut graph, timeout)
-        }
-        Algorithm::Simple => {
-            let mut graph = SimpleStateGraph::new();
-            example.run_with_timeout(&mut graph, timeout)
-        }
-        Algorithm::Tarjan => {
-            let mut graph = TarjanStateGraph::new();
-            example.run_with_timeout(&mut graph, timeout)
-        }
-        Algorithm::Jump => {
-            let mut graph = JumpStateGraph::new();
-            example.run_with_timeout(&mut graph, timeout)
-        }
-        Algorithm::Polylog => {
-            let mut graph = PolylogStateGraph::new();
-            example.run_with_timeout(&mut graph, timeout)
-        }
-    };
+    let mut graph = alg.new();
+    let result = example.run_with_timeout(&mut *graph, timeout);
 
     if verbose {
         println!("=== Output ===");
