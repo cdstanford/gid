@@ -103,21 +103,25 @@ impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
 }
 
 // 2D Vector-based hashmap
+// Warning: for efficiency reasons, this map has a slightly less strict API --
+// it stores Default::<V>::default() items instead of None.
+// So when using this, remember that contains_key is an overapproximation
+// and get() may return a default element instead of None.
 #[derive(Debug)]
-pub struct VecMap2D<V>(Vec<Vec<Option<V>>>);
+pub struct VecMap2D<V>(Vec<Vec<V>>);
 impl<V> Default for VecMap2D<V> {
     fn default() -> Self {
         Self(Vec::new())
     }
 }
-impl<V: Clone> Hashy<(usize, usize), V> for VecMap2D<V> {
+impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
     fn contains_key(&self, &(i, j): &(usize, usize)) -> bool {
-        i < self.0.len() && j < self.0[i].len() && self.0[i][j].is_some()
+        i < self.0.len() && j < self.0[i].len()
     }
     fn get(&self, &(i, j): &(usize, usize)) -> Option<&V> {
         if i < self.0.len() {
             if j < self.0.len() {
-                self.0[i][j].as_ref()
+                Some(&self.0[i][j])
             } else {
                 None
             }
@@ -128,7 +132,7 @@ impl<V: Clone> Hashy<(usize, usize), V> for VecMap2D<V> {
     fn get_mut(&mut self, &(i, j): &(usize, usize)) -> Option<&mut V> {
         if i < self.0.len() {
             if j < self.0.len() {
-                self.0[i][j].as_mut()
+                Some(&mut self.0[i][j])
             } else {
                 None
             }
@@ -137,19 +141,19 @@ impl<V: Clone> Hashy<(usize, usize), V> for VecMap2D<V> {
         }
     }
     fn get_unwrapped(&self, &(i, j): &(usize, usize)) -> &V {
-        self.0[i][j].as_ref().unwrap()
+        &self.0[i][j]
     }
     fn get_mut_unwrapped(&mut self, &(i, j): &(usize, usize)) -> &mut V {
-        self.0[i][j].as_mut().unwrap()
+        &mut self.0[i][j]
     }
     fn insert(&mut self, (i, j): (usize, usize), v: V) {
         if i >= self.0.len() {
-            self.0.resize(i + 1, vec![None; self.0.len()]);
+            self.0.resize(i + 1, vec![Default::default(); self.0.len()]);
         }
         if j >= self.0[i].len() {
-            self.0[i].resize(j + 1, None);
+            self.0[i].resize_with(j + 1, Default::default);
         }
-        self.0[i][j] = Some(v);
+        self.0[i][j] = v;
     }
     fn iter<'a>(
         &'a self,
@@ -163,9 +167,8 @@ impl<V: Clone> Hashy<(usize, usize), V> for VecMap2D<V> {
                 xs.as_slice()
                     .iter()
                     .enumerate()
-                    .map(move |(j, x)| Some((i, j)).zip(x.as_ref()))
-            })
-            .flatten();
+                    .map(move |(j, x)| ((i, j), x))
+            });
         Box::new(result)
     }
 }
