@@ -235,13 +235,13 @@ fn undo_pair(k: usize) -> (usize, usize) {
 }
 
 #[derive(Debug)]
-pub struct VecMap1DP<V>(Vec<V>);
-impl<V> Default for VecMap1DP<V> {
+pub struct VecMapP<V>(Vec<V>);
+impl<V> Default for VecMapP<V> {
     fn default() -> Self {
         Self(Vec::new())
     }
 }
-impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap1DP<V> {
+impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMapP<V> {
     fn contains_key(&self, &(i, j): &(usize, usize)) -> bool {
         cantor_pair(i, j) < self.0.len()
     }
