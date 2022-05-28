@@ -9,16 +9,16 @@
       90 ./src/util.rs
      116 ./src/algorithm/simple.rs
      149 ./src/interface.rs
-     202 ./src/hashy.rs
      202 ./src/search.rs
      251 ./src/algorithm/polylog.rs
      252 ./src/driver.rs
      253 ./src/example.rs
      259 ./src/bin/example_gen.rs
-     281 ./src/algorithm/tarjan.rs
+     281 ./src/algorithm/bfgt.rs
+     308 ./src/hashy.rs
      317 ./src/algorithm/jump.rs
      370 ./src/graph.rs
      381 ./src/euler_forest.rs
      625 ./tests/test_examples.rs
-     779 ./src/avl_forest.rs
-    4871 total
+     793 ./src/avl_forest.rs
+    4991 total
