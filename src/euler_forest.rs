@@ -40,7 +40,7 @@
        http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
-use super::avl_forest::AvlForestHM;
+use super::avl_forest::AvlForestPVec;
 use std::fmt::Debug;
 
 // For this file, we use usize to identify vertices.
@@ -66,7 +66,7 @@ fn vert_id(v: IdType) -> NodeId {
 */
 #[derive(Debug, Default)]
 pub struct EulerForest {
-    nodes: AvlForestHM<NodeId>,
+    nodes: AvlForestPVec,
 }
 impl EulerForest {
     pub fn new() -> Self {

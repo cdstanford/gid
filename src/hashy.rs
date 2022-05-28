@@ -167,38 +167,44 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
     Maybe the implementation has a bug?
 */
 fn cantor_pair(i: usize, j: usize) -> usize {
+    print!("p");
     (i + j + 1) * (i + j) / 2 + i
 }
 fn undo_pair(k: usize) -> (usize, usize) {
+    print!("u");
     let w = ((((8 * k + 1) as f64).sqrt() - 1.0) / 2.0) as usize;
     let t = (w + 1) * w / 2;
-    println!("{k}, {w}, {t}");
     (k - t, w + t - k)
 }
 
 #[derive(Debug)]
 pub struct VecMapP<V>(Vec<V>);
-impl<V> Default for VecMapP<V> {
+impl<V: Default> Default for VecMapP<V> {
     fn default() -> Self {
-        Self(Vec::new())
+        Self(vec![Default::default()])
     }
 }
 impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMapP<V> {
     fn valid_key(&self, &(i, j): &(usize, usize)) -> bool {
+        print!("v");
         cantor_pair(i, j) < self.0.len()
     }
     fn index(&self, &(i, j): &(usize, usize)) -> &V {
+        print!("g");
         &self.0[cantor_pair(i, j)]
     }
     fn index_mut(&mut self, &(i, j): &(usize, usize)) -> &mut V {
+        print!("m");
         &mut self.0[cantor_pair(i, j)]
     }
     fn ensure(&mut self, (i, j): (usize, usize))
     where
         V: Default,
     {
+        print!("\nE ");
         let k = cantor_pair(i, j);
         let l = self.0.len();
+        debug_assert!(l >= 1);
         while k >= self.0.len() {
             // double size
             self.0.resize_with(2 * l, Default::default);
@@ -208,6 +214,7 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMapP<V> {
     fn iter<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = ((usize, usize), &'a V)> + 'a> {
+        print!("\nI ");
         Box::new(
             self.0
                 .as_slice()
