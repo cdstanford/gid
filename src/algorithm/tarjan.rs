@@ -14,6 +14,7 @@
     simple.rs, which could be improved.
 */
 
+use crate::debug_counter::DebugCounter;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
 use std::collections::{HashMap, HashSet};
@@ -30,10 +31,13 @@ pub struct TarjanStateGraph {
     pending_edges_fwd: HashMap<usize, Vec<usize>>,
     // count of graph edges
     edge_counter: usize,
+    // Additional time counter for debugging
+    additional_time: DebugCounter,
 }
 impl TarjanStateGraph {
     /* The core parameter for the algorithm: delta = sqrt(num edges) */
     fn delta(&self) -> usize {
+        self.additional_time.inc();
         (self.edge_counter as f64).sqrt() as usize
     }
 
@@ -74,6 +78,7 @@ impl TarjanStateGraph {
         debug_assert!(
             self.is_closed(v2) || self.graph.iter_fwd_edges(v2).count() == 0
         );
+        self.additional_time.inc();
 
         // ===== STEP 1: Test Order =====
         let level1 = self.get_level(v1);
@@ -114,6 +119,7 @@ impl TarjanStateGraph {
 
         // ===== STEP 3: Search Forward =====
         if count == self.delta() || level2 < level1 {
+            self.additional_time.inc();
             // println!("Step 3 enabled");
             // search didn't complete OR level(v2) is too low
             let new_level = {
@@ -161,6 +167,7 @@ impl TarjanStateGraph {
         // ===== STEP 4: Form Component =====
         if found_cycle {
             // println!("Step 4 enabled (reason: found cycle)");
+            self.additional_time.inc();
             debug_assert_eq!(level1, level2);
             debug_assert!(v1 != v2);
             // This part is roughly the same as merge_all_cycles in simple.rs
@@ -266,9 +273,9 @@ impl StateGraph for TarjanStateGraph {
         self.graph.get_label(v).map(|l| l.0)
     }
     fn get_space(&self) -> usize {
-        self.graph.get_space()
+        self.graph.get_space() + self.edge_counter
     }
     fn get_time(&self) -> usize {
-        self.graph.get_time()
+        self.graph.get_time() + self.additional_time.get()
     }
 }
