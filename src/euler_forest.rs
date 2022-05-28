@@ -70,13 +70,10 @@ pub struct EulerForest {
 }
 impl EulerForest {
     pub fn new() -> Self {
-        let result: Self = Default::default();
-        result.assert_invariant();
-        result
+        Default::default()
     }
     pub fn ensure_vertex(&mut self, v: IdType) {
         self.nodes.ensure(vert_id(v));
-        self.assert_invariant();
     }
     pub fn add_edge(&mut self, v1: IdType, v2: IdType) {
         debug_assert!(self.is_seen(v1));
@@ -105,8 +102,6 @@ impl EulerForest {
         {
             self.nodes.concat(r, node);
         }
-
-        self.assert_invariant();
     }
     pub fn remove_edge(&mut self, v1: IdType, v2: IdType) {
         debug_assert!(self.is_seen(v1));
@@ -133,8 +128,6 @@ impl EulerForest {
         if let Some((u4, u1)) = u4.zip(u1) {
             self.nodes.concat(u4, u1);
         }
-
-        self.assert_invariant();
     }
     pub fn same_root(&self, v1: IdType, v2: IdType) -> bool {
         self.nodes.same_root(vert_id(v1), vert_id(v2))
@@ -157,15 +150,6 @@ impl EulerForest {
     fn is_seen(&self, v: IdType) -> bool {
         self.nodes.is_seen(vert_id(v))
     }
-
-    /*
-        Invariant check
-        TODO
-    */
-    #[cfg(debug_assertions)]
-    fn assert_invariant(&self) {}
-    #[cfg(not(debug_assertions))]
-    fn assert_invariant(&self) {}
 }
 
 /*
