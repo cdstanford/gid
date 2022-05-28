@@ -208,6 +208,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(debug_assertions)]
     #[should_panic]
     fn test_edge_nonexistent_2() {
         let mut g = EulerForest::new();
