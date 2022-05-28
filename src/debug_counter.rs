@@ -32,13 +32,13 @@ impl DebugCounter {
         // self.val.update(|x| x + 1);
         self.val.set(self.val.get() + 1);
     }
+    #[cfg(not(debug_assertions))]
+    pub fn inc(&self) {}
+
     #[cfg(debug_assertions)]
     pub fn get(&self) -> usize {
         self.val.get()
     }
-
-    #[cfg(not(debug_assertions))]
-    pub fn inc(&self) {}
     #[cfg(not(debug_assertions))]
     pub fn get(&self) -> usize {
         panic!("Tried to get debug counter in release mode.")
