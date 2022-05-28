@@ -17,6 +17,9 @@ pub trait Hashy<K, V>: Default {
     fn get_unwrapped(&self, k: &K) -> &V;
     fn get_mut_unwrapped(&mut self, k: &K) -> &mut V;
     fn insert(&mut self, k: K, v: V);
+    fn ensure(&mut self, k: K)
+    where
+        V: Default;
     // Iterator -- currently used for debugging purposes only,
     // so avoid having to do too much lifetime hacking we use
     // a Box dyn trait object.
@@ -46,6 +49,12 @@ impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     }
     fn insert(&mut self, k: K, v: V) {
         HashMap::insert(self, k, v);
+    }
+    fn ensure(&mut self, k: K)
+    where
+        V: Default,
+    {
+        self.entry(k).or_insert_with(Default::default);
     }
     fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (K, &'a V)> + 'a> {
         Box::new(self.iter().map(|(k, v)| (k.clone(), v)))
@@ -89,6 +98,17 @@ impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
             self.0.resize(k + 1, None);
         }
         self.0[k] = Some(v);
+    }
+    fn ensure(&mut self, k: usize)
+    where
+        V: Default,
+    {
+        if k >= self.0.len() {
+            self.0.resize(k + 1, None);
+        }
+        if self.0[k].is_none() {
+            self.0[k] = Some(Default::default());
+        }
     }
     fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = (usize, &'a V)> + 'a> {
         let result = self
@@ -163,21 +183,20 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
         }
         self.0[i][j] = v;
     }
+    fn ensure(&mut self, (i, j): (usize, usize)) {
+        if i >= self.0.len() {
+            self.0.resize(i + 1, vec![Default::default(); self.0.len()]);
+        }
+        if j >= self.0[i].len() {
+            self.0[i].resize_with(j + 1, Default::default);
+        }
+    }
     fn iter<'a>(
         &'a self,
     ) -> Box<dyn Iterator<Item = ((usize, usize), &'a V)> + 'a> {
         // print!("t");
-        let result = self
-            .0
-            .as_slice()
-            .iter()
-            .enumerate()
-            .flat_map(|(i, xs)| {
-                xs.as_slice()
-                    .iter()
-                    .enumerate()
-                    .map(move |(j, x)| ((i, j), x))
-            });
-        Box::new(result)
+        Box::new(self.0.as_slice().iter().enumerate().flat_map(|(i, xs)| {
+            xs.as_slice().iter().enumerate().map(move |(j, x)| ((i, j), x))
+        }))
     }
 }

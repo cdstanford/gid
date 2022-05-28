@@ -98,9 +98,7 @@ where
         result
     }
     pub fn ensure(&mut self, v: V) {
-        if !self.is_seen(v) {
-            self.nodes.insert(v, Default::default());
-        }
+        self.nodes.ensure(v);
         self.assert_invariant();
     }
     pub fn get_root(&self, mut v: V) -> V {
