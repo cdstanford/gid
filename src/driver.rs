@@ -30,7 +30,7 @@ pub enum Algorithm {
     Polylog,
 }
 impl Algorithm {
-    fn new(&self) -> Box<dyn StateGraph> {
+    fn new_graph(&self) -> Box<dyn StateGraph> {
         match self {
             Algorithm::Naive => Box::new(NaiveStateGraph::new()),
             Algorithm::Simple => Box::new(SimpleStateGraph::new()),
@@ -84,7 +84,7 @@ fn run_core(
             timeout.as_secs()
         );
     }
-    let mut graph = alg.new();
+    let mut graph = alg.new_graph();
     let result = example.run_with_timeout(&mut *graph, timeout);
 
     if verbose {
