@@ -8,17 +8,17 @@
       86 ./src/algorithm/naive.rs
       90 ./src/util.rs
      116 ./src/algorithm/simple.rs
-     147 ./src/interface.rs
+     149 ./src/interface.rs
      202 ./src/hashy.rs
      202 ./src/search.rs
-     246 ./src/algorithm/smart.rs
+     251 ./src/algorithm/polylog.rs
+     252 ./src/driver.rs
      253 ./src/example.rs
      259 ./src/bin/example_gen.rs
-     262 ./src/driver.rs
-     274 ./src/algorithm/tarjan.rs
-     315 ./src/algorithm/jump.rs
+     281 ./src/algorithm/tarjan.rs
+     317 ./src/algorithm/jump.rs
      370 ./src/graph.rs
-     386 ./src/euler_forest.rs
+     381 ./src/euler_forest.rs
      625 ./tests/test_examples.rs
-     734 ./src/avl_forest.rs
-    4825 total
+     779 ./src/avl_forest.rs
+    4871 total
