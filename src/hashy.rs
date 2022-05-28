@@ -40,6 +40,10 @@ pub trait Hashy<K, V>: Default {
 
 /*
     Standard hashmap
+
+    Performance:
+    This implementation has a high constant overhead, but is
+    space-efficient and generally reliable, serves as a good baseline.
 */
 impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     fn valid_key(&self, k: &K) -> bool {
@@ -64,6 +68,10 @@ impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
 
 /*
     1D Vector-based hashmap
+
+    Performance:
+    This implementation is not heavily tested as it can't be used
+    for avl_forest.rs.
 */
 #[derive(Debug)]
 pub struct VecMap1D<V>(Vec<Option<V>>);
@@ -108,10 +116,10 @@ impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
 /*
     2D Vector-based hashmap
 
-    Warning: for efficiency reasons, this map has a slightly less strict API --
-    it stores Default::<V>::default() items instead of None.
-    So when using this, remember that valid_key is an overapproximation
-    and get() may return a default element instead of None.
+    Performance:
+    This implementation is extremely space-hungry (O(n^2) in largest index,
+    not necessarily contiguous memory regions)
+    and crashes when indices get too large.
 */
 #[derive(Debug)]
 pub struct VecMap2D<V>(Vec<Vec<V>>);
@@ -151,8 +159,12 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
 /*
     1D Vector-based hashmap with 2D indices -- using a pairing function
 
-    Makes the same assumptions as VecMap2D -- may insert additional
-    Default values into the map.
+    Performance:
+    This implementation tries to fix the problems with VecMap2D by relying
+    on a single giant vector, but it doesn't seem to work, it is still
+    extremely space-hungry and crashes crashes when indices get too large.
+
+    Maybe the implementation has a bug?
 */
 fn cantor_pair(i: usize, j: usize) -> usize {
     (i + j + 1) * (i + j) / 2 + i
@@ -186,9 +198,11 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMapP<V> {
         V: Default,
     {
         let k = cantor_pair(i, j);
+        let l = self.0.len();
         while k >= self.0.len() {
             // double size
-            self.0.resize_with(self.0.len() * 2, Default::default);
+            self.0.resize_with(2 * l, Default::default);
+            debug_assert_eq!(self.0.len(), 2 * l)
         }
     }
     fn iter<'a>(
