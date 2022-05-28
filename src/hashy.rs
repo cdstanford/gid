@@ -5,6 +5,20 @@
     Primarily because repeated HashMap calls get extremely expensive for
     data structures based on a bunch of nodes pointing to other nodes,
     so it's nice to have a plain Vec representation.
+
+    This API is a work in progress and probably will change and be
+    cleaned up later:
+    - .get() functionality is not actually currently needed, only
+      .get_unwrapped() and .get_mut_unwrapped().
+      (See the only use of the file in avl_forest.rs)
+    - The VecMap2D below makes different assumptions than the
+      other implementations. It may insert default values into
+      the map arbitrarily, whereas the other implementations
+      use Option to track which values are seen / not seen.
+      But this is again not needed by the current clients
+      except for debugging purposes.
+    - The trait is more or less an extension of Index and IndexMut
+      and could just be named accordingly.
 */
 
 use std::collections::HashMap;
@@ -12,11 +26,11 @@ use std::hash::Hash;
 
 pub trait Hashy<K, V>: Default {
     fn contains_key(&self, k: &K) -> bool;
-    fn get(&self, k: &K) -> Option<&V>;
-    fn get_mut(&mut self, k: &K) -> Option<&mut V>;
+    // fn get(&self, k: &K) -> Option<&V>;
+    // fn get_mut(&mut self, k: &K) -> Option<&mut V>;
     fn get_unwrapped(&self, k: &K) -> &V;
     fn get_mut_unwrapped(&mut self, k: &K) -> &mut V;
-    fn insert(&mut self, k: K, v: V);
+    // fn insert(&mut self, k: K, v: V);
     fn ensure(&mut self, k: K)
     where
         V: Default;
@@ -35,21 +49,21 @@ impl<K: Clone + Hash + Eq, V> Hashy<K, V> for HashMap<K, V> {
     fn contains_key(&self, k: &K) -> bool {
         Self::contains_key(self, k)
     }
-    fn get(&self, k: &K) -> Option<&V> {
-        HashMap::get(self, k)
-    }
-    fn get_mut(&mut self, k: &K) -> Option<&mut V> {
-        HashMap::get_mut(self, k)
-    }
+    // fn get(&self, k: &K) -> Option<&V> {
+    //     HashMap::get(self, k)
+    // }
+    // fn get_mut(&mut self, k: &K) -> Option<&mut V> {
+    //     HashMap::get_mut(self, k)
+    // }
     fn get_unwrapped(&self, k: &K) -> &V {
         self.get(k).unwrap()
     }
     fn get_mut_unwrapped(&mut self, k: &K) -> &mut V {
         self.get_mut(k).unwrap()
     }
-    fn insert(&mut self, k: K, v: V) {
-        HashMap::insert(self, k, v);
-    }
+    // fn insert(&mut self, k: K, v: V) {
+    //     HashMap::insert(self, k, v);
+    // }
     fn ensure(&mut self, k: K)
     where
         V: Default,
@@ -73,32 +87,32 @@ impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
     fn contains_key(&self, &k: &usize) -> bool {
         k < self.0.len() && self.0[k].is_some()
     }
-    fn get(&self, &k: &usize) -> Option<&V> {
-        if k < self.0.len() {
-            self.0[k].as_ref()
-        } else {
-            None
-        }
-    }
-    fn get_mut(&mut self, &k: &usize) -> Option<&mut V> {
-        if k < self.0.len() {
-            self.0[k].as_mut()
-        } else {
-            None
-        }
-    }
+    // fn get(&self, &k: &usize) -> Option<&V> {
+    //     if k < self.0.len() {
+    //         self.0[k].as_ref()
+    //     } else {
+    //         None
+    //     }
+    // }
+    // fn get_mut(&mut self, &k: &usize) -> Option<&mut V> {
+    //     if k < self.0.len() {
+    //         self.0[k].as_mut()
+    //     } else {
+    //         None
+    //     }
+    // }
     fn get_unwrapped(&self, &k: &usize) -> &V {
         self.0[k].as_ref().unwrap()
     }
     fn get_mut_unwrapped(&mut self, &k: &usize) -> &mut V {
         self.0[k].as_mut().unwrap()
     }
-    fn insert(&mut self, k: usize, v: V) {
-        if k >= self.0.len() {
-            self.0.resize(k + 1, None);
-        }
-        self.0[k] = Some(v);
-    }
+    // fn insert(&mut self, k: usize, v: V) {
+    //     if k >= self.0.len() {
+    //         self.0.resize(k + 1, None);
+    //     }
+    //     self.0[k] = Some(v);
+    // }
     fn ensure(&mut self, k: usize)
     where
         V: Default,
@@ -140,30 +154,30 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
         // print!("c");
         i < self.0.len() && j < self.0[i].len()
     }
-    fn get(&self, &(i, j): &(usize, usize)) -> Option<&V> {
-        // print!("g");
-        if i < self.0.len() {
-            if j < self.0.len() {
-                Some(&self.0[i][j])
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-    fn get_mut(&mut self, &(i, j): &(usize, usize)) -> Option<&mut V> {
-        // print!("m");
-        if i < self.0.len() {
-            if j < self.0.len() {
-                Some(&mut self.0[i][j])
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
+    // fn get(&self, &(i, j): &(usize, usize)) -> Option<&V> {
+    //     // print!("g");
+    //     if i < self.0.len() {
+    //         if j < self.0.len() {
+    //             Some(&self.0[i][j])
+    //         } else {
+    //             None
+    //         }
+    //     } else {
+    //         None
+    //     }
+    // }
+    // fn get_mut(&mut self, &(i, j): &(usize, usize)) -> Option<&mut V> {
+    //     // print!("m");
+    //     if i < self.0.len() {
+    //         if j < self.0.len() {
+    //             Some(&mut self.0[i][j])
+    //         } else {
+    //             None
+    //         }
+    //     } else {
+    //         None
+    //     }
+    // }
     fn get_unwrapped(&self, &(i, j): &(usize, usize)) -> &V {
         // print!("G");
         &self.0[i][j]
@@ -172,17 +186,17 @@ impl<V: Clone + Default> Hashy<(usize, usize), V> for VecMap2D<V> {
         // print!("M");
         &mut self.0[i][j]
     }
-    fn insert(&mut self, (i, j): (usize, usize), v: V) {
-        // println!();
-        // print!("i ");
-        if i >= self.0.len() {
-            self.0.resize(i + 1, vec![Default::default(); self.0.len()]);
-        }
-        if j >= self.0[i].len() {
-            self.0[i].resize_with(j + 1, Default::default);
-        }
-        self.0[i][j] = v;
-    }
+    // fn insert(&mut self, (i, j): (usize, usize), v: V) {
+    //     // println!();
+    //     // print!("i ");
+    //     if i >= self.0.len() {
+    //         self.0.resize(i + 1, vec![Default::default(); self.0.len()]);
+    //     }
+    //     if j >= self.0[i].len() {
+    //         self.0[i].resize_with(j + 1, Default::default);
+    //     }
+    //     self.0[i][j] = v;
+    // }
     fn ensure(&mut self, (i, j): (usize, usize)) {
         if i >= self.0.len() {
             self.0.resize(i + 1, vec![Default::default(); self.0.len()]);
