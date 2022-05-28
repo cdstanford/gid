@@ -6,6 +6,6 @@ pub mod tarjan;
 
 pub use jump::JumpStateGraph;
 pub use naive::NaiveStateGraph;
-pub use simple::SimpleStateGraph;
 pub use polylog::PolylogStateGraph;
+pub use simple::SimpleStateGraph;
 pub use tarjan::TarjanStateGraph;

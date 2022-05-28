@@ -5,7 +5,7 @@
 */
 
 use super::algorithm::{
-    JumpStateGraph, NaiveStateGraph, SimpleStateGraph, PolylogStateGraph,
+    JumpStateGraph, NaiveStateGraph, PolylogStateGraph, SimpleStateGraph,
     TarjanStateGraph,
 };
 use super::constants::EXAMPLE_IN_EXT;
