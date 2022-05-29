@@ -140,9 +140,8 @@ impl EulerForest {
     }
     pub fn same_root(&self, v1: IdType, v2: IdType) -> bool {
         // println!("=== SameRoot({v1}, {v2}) ===");
-        let result = self.nodes.same_root(vert_id(v1), vert_id(v2));
+        self.nodes.same_root(vert_id(v1), vert_id(v2))
         // println!("");
-        result
     }
 
     /*
