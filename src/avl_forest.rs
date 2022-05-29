@@ -101,20 +101,20 @@ where
         Primary public API
     */
     pub fn new() -> Self {
-        print!("\nN() ");
+        // print!("\nN() ");
         let result: Self = Default::default();
         result.assert_invariant();
         result
     }
     pub fn ensure(&mut self, v: V) {
-        print!("\nE({v:?}) ");
+        // print!("\nE({v:?}) ");
         self.time.inc();
         self.space.inc();
         self.nodes.ensure(v);
         self.assert_invariant();
     }
     pub fn get_root(&self, mut v: V) -> V {
-        print!("R({v:?}) ");
+        // print!("R({v:?}) ");
         // Running time O(h) in the height of the tree h
         debug_assert!(self.is_seen(v));
         self.time.inc();
@@ -125,7 +125,7 @@ where
         v
     }
     pub fn concat(&mut self, v1: V, v2: V) -> bool {
-        print!("\nC({v1:?},{v2:?}) ");
+        // print!("\nC({v1:?},{v2:?}) ");
         // Return true if successful
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
@@ -142,7 +142,7 @@ where
         }
     }
     pub fn split(&mut self, v: V) {
-        print!("\nS({v:?} ");
+        // print!("\nS({v:?} ");
         debug_assert!(self.is_seen(v));
         // println!("Splitting on: {:?}", v);
         self.time.inc();
@@ -181,7 +181,7 @@ where
         Additional publicly exposed functions
     */
     pub fn same_root(&self, v1: V, v2: V) -> bool {
-        print!("= ");
+        // print!("= ");
         // println!("same_root({:?}, {:?})", v1, v2);
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
@@ -190,12 +190,12 @@ where
         self.get_root(v1) == self.get_root(v2)
     }
     pub fn is_seen(&self, v: V) -> bool {
-        print!("?({v:?}) ");
+        // print!("?({v:?}) ");
         // println!("is_seen({:?})", v);
         self.nodes.valid_key(&v)
     }
     pub fn next(&self, mut v: V) -> Option<V> {
-        print!("N({v:?}) ");
+        // print!("N({v:?}) ");
         // println!("next({v:?})");
         self.time.inc();
         if let Some(mut c) = self.node(v).rchild {
@@ -215,7 +215,7 @@ where
         None
     }
     pub fn prev(&self, mut v: V) -> Option<V> {
-        print!("P({v:?}) ");
+        // print!("P({v:?}) ");
         self.time.inc();
         if let Some(mut c) = self.node(v).lchild {
             while let Some(cnew) = self.node(c).rchild {
@@ -238,7 +238,7 @@ where
         Public getters for debugging only
     */
     pub fn iter_fwd_from(&self, v: V) -> impl Iterator<Item = V> + '_ {
-        print!("Iter({v:?}) ");
+        // print!("Iter({v:?}) ");
         iter::successors(Some(v), move |&v| self.next(v))
     }
     pub fn get_time(&self) -> usize {
@@ -255,7 +255,7 @@ where
         Recursive function called by concat
     */
     fn concat_roots(&mut self, mut r1: V, mut r2: V) -> V {
-        print!("c");
+        // print!("c");
         // println!("Concat roots: {r1:?} {r2:?}");
         debug_assert!(r1 != r2);
         debug_assert_eq!(self.node_parent(r1), None);
@@ -311,7 +311,7 @@ where
         self.nodes.index_mut(&v)
     }
     fn set_rchild(&mut self, p: V, c: Option<V>) {
-        print!("r");
+        // print!("r");
         self.time.inc();
         self.node_mut(p).rchild = c;
         if let Some(c0) = c {
@@ -319,7 +319,7 @@ where
         }
     }
     fn set_lchild(&mut self, p: V, c: Option<V>) {
-        print!("l");
+        // print!("l");
         self.time.inc();
         self.node_mut(p).lchild = c;
         if let Some(c0) = c {
@@ -327,7 +327,7 @@ where
         }
     }
     fn detach_lchild(&mut self, p: V) -> Option<V> {
-        print!("d");
+        // print!("d");
         self.time.inc();
         let c = self.node(p).lchild;
         if let Some(c0) = c {
@@ -337,7 +337,7 @@ where
         c
     }
     fn detach_rchild(&mut self, p: V) -> Option<V> {
-        print!("e");
+        // print!("e");
         self.time.inc();
         let c = self.node(p).rchild;
         if let Some(c0) = c {
@@ -347,7 +347,7 @@ where
         c
     }
     fn pop_front(&mut self, rt: V) -> (V, Option<V>) {
-        print!("p");
+        // print!("p");
         // Pop the leftmost element of the tree containing v, returning it
         // (the head) and the remaining tree (tail)
         // Precondition: rt is a root
@@ -389,7 +389,7 @@ where
         1 + cmp::max(h1, h2)
     }
     fn set_height(&mut self, v: V) {
-        print!("h");
+        // print!("h");
         self.node_mut(v).height = self.compute_height(v);
     }
 
@@ -405,7 +405,7 @@ where
         (h == 1 + cmp::max(h1, h2)) && (h1 <= h2 + 1) && (h2 <= h1 + 1)
     }
     fn rebalance_lheavy(&mut self, mut v: V) -> V {
-        print!("]");
+        // print!("]");
         // O(1) rebalance at v
         // Preconditions:
         // - v is a root, but height may not be set correctly
@@ -436,7 +436,7 @@ where
         v
     }
     fn rebalance_rheavy(&mut self, mut v: V) -> V {
-        print!("[");
+        // print!("[");
         // O(1) rebalance at v
         // Preconditions:
         // - v is a root, but height may not be set correctly
@@ -467,7 +467,7 @@ where
         v
     }
     fn rebalance_full(&mut self, mut v: V) -> V {
-        print!("|");
+        // print!("|");
         // println!("rebalance full: {:?} ({:?})", v, self.node(v));
         // O(log n) rebalance at v, assuming nothing about the two
         // children except that they are balanced subtrees.
@@ -487,7 +487,7 @@ where
         v
     }
     fn rotate_right(&mut self, v: V) -> V {
-        print!(">");
+        // print!(">");
         self.time.inc();
         let left = self.detach_lchild(v).unwrap();
         let mid = self.detach_rchild(left);
@@ -498,7 +498,7 @@ where
         left
     }
     fn rotate_left(&mut self, v: V) -> V {
-        print!("<");
+        // print!("<");
         self.time.inc();
         let right = self.detach_rchild(v).unwrap();
         let mid = self.detach_lchild(right);
@@ -514,7 +514,7 @@ where
     */
     #[cfg(debug_assertions)]
     fn assert_invariant(&self) {
-        print!("\nI() ");
+        // print!("\nI() ");
         for (v, node) in self.nodes.iter() {
             // Parent points to children
             if let Some(p) = node.parent {

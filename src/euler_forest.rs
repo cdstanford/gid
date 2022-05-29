@@ -70,12 +70,16 @@ pub struct EulerForest {
 }
 impl EulerForest {
     pub fn new() -> Self {
+        // println!("");
         Default::default()
     }
     pub fn ensure_vertex(&mut self, v: IdType) {
+        // print!("=== Ensure({v}) ===");
         self.nodes.ensure(vert_id(v));
+        // println!("");
     }
     pub fn add_edge(&mut self, v1: IdType, v2: IdType) {
+        // print!("=== Add({v1}, {v2}) ===");
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
         debug_assert!(!self.same_root(v1, v2));
@@ -102,8 +106,11 @@ impl EulerForest {
         {
             self.nodes.concat(r, node);
         }
+
+        // println!("");
     }
     pub fn remove_edge(&mut self, v1: IdType, v2: IdType) {
+        // print!("=== Remove({v1}, {v2}) ===");
         debug_assert!(self.is_seen(v1));
         debug_assert!(self.is_seen(v2));
         debug_assert!(self.same_root(v1, v2));
@@ -128,9 +135,14 @@ impl EulerForest {
         if let Some((u4, u1)) = u4.zip(u1) {
             self.nodes.concat(u4, u1);
         }
+
+        // println!("");
     }
     pub fn same_root(&self, v1: IdType, v2: IdType) -> bool {
-        self.nodes.same_root(vert_id(v1), vert_id(v2))
+        // println!("=== SameRoot({v1}, {v2}) ===");
+        let result = self.nodes.same_root(vert_id(v1), vert_id(v2));
+        // println!("");
+        result
     }
 
     /*
