@@ -22,7 +22,7 @@ use std::time::Duration;
     Exposed enum for which state graph implementation to use
 */
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Algorithm {
     Naive,
     Simple,
@@ -117,6 +117,23 @@ pub fn run_single_example(
     let example = Example::load_from(basename);
     let timeout = Duration::from_secs(timeout_secs);
     run_core(&example, algorithm, timeout, true);
+}
+
+/*
+    Lists of algorithms
+*/
+pub const ALL_ALGS: &[Algorithm] = &[
+    Algorithm::Naive,
+    Algorithm::Simple,
+    Algorithm::BFGT,
+    Algorithm::Jump,
+    Algorithm::Polylog,
+];
+pub fn algs_excluding(exclude: &[Algorithm]) -> Vec<Algorithm> {
+    ALL_ALGS.iter().filter(|&x| !exclude.contains(x)).cloned().collect()
+}
+pub fn algs_all() -> Vec<Algorithm> {
+    algs_excluding(&[])
 }
 
 /*

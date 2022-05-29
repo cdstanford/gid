@@ -11,8 +11,8 @@ use structopt::StructOpt;
     about = "Run a state graph algorithm on an example input."
 )]
 struct Args {
-    // Path to example without file extension.
-    // e.g. "examples/handwritten/2"
+    #[structopt(help = "Path to example without file extension \
+        (e.g. 'examples/handwritten/2')")]
     basename: String,
 
     #[structopt(short, long, default_value = "Naive")]

@@ -5,7 +5,7 @@
 */
 
 use state_graph::constants::{ALL_EXAMPLE_DIRS, RESULTS_DIR};
-use state_graph::driver;
+use state_graph::driver::{self, Algorithm};
 use state_graph::util;
 use structopt::StructOpt;
 
@@ -15,6 +15,9 @@ use structopt::StructOpt;
     about = "Run all algorithms on every known example input."
 )]
 struct Args {
+    #[structopt(short, long, help = "List of algorithms to exclude")]
+    exclude: Vec<Algorithm>,
+
     #[structopt(short, long, default_value = "10")]
     timeout: u64,
 }
@@ -23,9 +26,11 @@ impl Args {
         println!("========= Run All =========");
         let datetime = util::current_datetime_str();
         let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
+        let algs = driver::algs_excluding(&self.exclude);
         println!("Current Datetime: {:?}", datetime);
         println!("Mode: {}", mode);
         println!("Timeout: {}s", self.timeout);
+        println!("Algs: {:?} (excluding {:?})", algs, self.exclude);
         let mut result_lines = vec![driver::run_compare_csv_header()];
         for dir in ALL_EXAMPLE_DIRS {
             println!("======= directory: {} =======", dir);
