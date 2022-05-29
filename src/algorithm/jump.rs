@@ -217,6 +217,12 @@ impl JumpStateGraph {
     */
     fn initialize_jumps(&mut self, v: usize) {
         // println!("Initializing jumps from: {}", v);
+        let mut to_visit = vec![v];
+        while let Some(x) = to_visit.pop() {
+            self.initialize_jumps_step(&mut to_visit, x);
+        }
+    }
+    fn initialize_jumps_step(&mut self, to_visit: &mut Vec<usize>, v: usize) {
         while let Some(w) = self.pop_reserve(v) {
             if self.is_dead(w) {
                 // println!("  (dead)");
@@ -245,17 +251,13 @@ impl JumpStateGraph {
             .filter(|&u| self.is_unknown(u))
             .filter(|&u| self.graph.is_same_vertex(self.get_first_jump(u), v))
             .collect();
-        // First set to_recurse as open so that recursive calls won't mess
-        // with them
+        // Set to_recurse as open so that recursive calls won't mess with them;
+        // then add them to the visit list
         for &u in &to_recurse {
             // println!("  Recursing on: {}", u);
             self.clear_jumps(u);
             self.set_status(u, Status::Open);
-        }
-        // Then go through and initialize jumps for each one
-        for &u in &to_recurse {
-            // println!("  Recursing on: {}", u);
-            self.initialize_jumps(u);
+            to_visit.push(u);
         }
     }
 
