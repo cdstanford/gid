@@ -153,33 +153,25 @@ pub fn unwrap_timeout(res: &ExampleResult) -> &ExampleOutput {
 pub fn assert_example(basename: &str, timeout_secs: u64) {
     let example = Example::load_from(basename);
     let timeout = Duration::from_secs(timeout_secs);
+    let algs = algs_all();
 
     // If example has expected output, check each algorithm is correct
     // separately. Otherwise, compare them with respect to each other.
     if example.expected.is_some() {
         println!("Asserting each algorithm output matches expected...");
-        let naive = run_core(&example, Algorithm::Naive, timeout, true);
-        assert!(naive.is_correct());
-        let simple = run_core(&example, Algorithm::Simple, timeout, true);
-        assert!(simple.is_correct());
-        let bfgt = run_core(&example, Algorithm::BFGT, timeout, true);
-        assert!(bfgt.is_correct());
-        let jump = run_core(&example, Algorithm::Jump, timeout, true);
-        assert!(jump.is_correct());
-        let polylog = run_core(&example, Algorithm::Polylog, timeout, true);
-        assert!(polylog.is_correct());
+        for alg in algs {
+            let out = run_core(&example, alg, timeout, true);
+            assert!(out.is_correct());
+        }
     } else {
-        println!("Asserting each algorithm output matches naive...");
-        let naive = run_core(&example, Algorithm::Naive, timeout, true);
-        let expected = unwrap_timeout(&naive);
-        let simple = run_core(&example, Algorithm::Simple, timeout, true);
-        assert_eq!(expected, unwrap_timeout(&simple));
-        let bfgt = run_core(&example, Algorithm::BFGT, timeout, true);
-        assert_eq!(expected, unwrap_timeout(&bfgt));
-        let jump = run_core(&example, Algorithm::Jump, timeout, true);
-        assert_eq!(expected, unwrap_timeout(&jump));
-        let polylog = run_core(&example, Algorithm::Polylog, timeout, true);
-        assert!(polylog.is_correct());
+        assert!(!algs.is_empty());
+        println!("Asserting each algorithm output matches {}...", algs[0]);
+        let out = run_core(&example, algs[0], timeout, true);
+        let expected = unwrap_timeout(&out);
+        for &alg in algs.iter().skip(1) {
+            let out = run_core(&example, alg, timeout, true);
+            assert_eq!(expected, unwrap_timeout(&out));
+        }
     }
 }
 
