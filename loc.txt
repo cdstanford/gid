@@ -10,7 +10,7 @@
      116 ./src/algorithm/simple.rs
      149 ./src/interface.rs
      202 ./src/search.rs
-     251 ./src/algorithm/polylog.rs
+     250 ./src/algorithm/polylog.rs
      252 ./src/driver.rs
      253 ./src/example.rs
      259 ./src/bin/example_gen.rs
@@ -21,4 +21,4 @@
      393 ./src/euler_forest.rs
      625 ./tests/test_examples.rs
      809 ./src/avl_forest.rs
-    5019 total
+    5018 total

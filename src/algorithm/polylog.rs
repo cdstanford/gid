@@ -178,7 +178,6 @@ impl PolylogStateGraph {
         for &u in &to_recurse {
             self.set_status(u, Status::Open);
             let (orig_u, orig_v) = self.clear_succ(u);
-            // TODO: we might need to know u, v are canonical here. Do we?
             self.euler_forest.remove_edge(orig_u, orig_v);
         }
         // Then go through and check dead for each one
