@@ -145,6 +145,12 @@ impl PolylogStateGraph {
         }
     }
     fn check_dead(&mut self, v: usize) {
+        let mut to_visit = vec![v];
+        while let Some(x) = to_visit.pop() {
+            self.check_dead_step(&mut to_visit, x);
+        }
+    }
+    fn check_dead_step(&mut self, to_visit: &mut Vec<usize>, v: usize) {
         debug_assert!(self.is_open(v));
         while let Some(w) = self.pop_reserve(v) {
             if self.is_dead(w) {
@@ -179,11 +185,7 @@ impl PolylogStateGraph {
             self.set_status(u, Status::Open);
             let (orig_u, orig_v) = self.clear_succ(u);
             self.euler_forest.remove_edge(orig_u, orig_v);
-        }
-        // Then go through and check dead for each one
-        for &u in &to_recurse {
-            // println!("  Recursing on: {}", u);
-            self.check_dead(u);
+            to_visit.push(u);
         }
     }
 
