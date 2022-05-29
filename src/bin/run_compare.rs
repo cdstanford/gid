@@ -16,16 +16,6 @@ struct Args {
                         (e.g. 'examples/handwritten/2')")]
     basename: String,
 
-    // Currently, I think just the exclude option is sufficient.
-    // Could bring this back later if useful.
-    // #[structopt(
-    //     short,
-    //     long,
-    //     help = "List of algorithms to include \
-    //             (if not provided, run all available)"
-    // )]
-    // include: Option<Vec<Algorithm>>,
-
     #[structopt(short, long, help = "List of algorithms to exclude")]
     exclude: Vec<Algorithm>,
 
@@ -35,8 +25,7 @@ struct Args {
 impl Args {
     fn run(&self) {
         let algs = driver::algs_excluding(&self.exclude);
-        println!("Algs: {:?}, exclude: {:?}", algs, self.exclude);
-        driver::run_compare(&self.basename, self.timeout);
+        driver::run_compare(&self.basename, &algs, self.timeout);
     }
 }
 

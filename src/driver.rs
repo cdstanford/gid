@@ -22,7 +22,7 @@ use std::time::Duration;
     Exposed enum for which state graph implementation to use
 */
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Algorithm {
     Naive,
     Simple,
@@ -187,57 +187,43 @@ pub fn assert_example(basename: &str, timeout_secs: u64) {
     Performance comparison
 */
 
-pub fn run_compare_csv_header() -> String {
-    let header = if cfg!(debug_assertions) {
-        "name, size, \
-        time (naive), time (simple), time (bfgt), time (jump), \
-        time (polylog), \
-        space (naive), space (simple), space (bfgt), space (jump), \
-        space (polylog)"
-    } else {
-        "name, size, \
-        time (naive), time (simple), time (bfgt), time (jump), \
-        time (polylog)"
-    };
-    header.to_string()
+pub fn run_compare_csv_header(algs: &[Algorithm]) -> String {
+    let mut header = "name, size, timeout".to_string();
+    for alg in algs {
+        header += &format!(", time ({})", alg);
+        if cfg!(debug_assertions) {
+            header += &format!(", space ({})", alg);
+        }
+    }
+    header
 }
-pub fn run_compare(basename: &str, timeout_secs: u64) -> String {
+pub fn run_compare(
+    basename: &str,
+    algs: &[Algorithm],
+    timeout_secs: u64,
+) -> String {
     // Returns results in CSV format
 
     let example = Example::load_from(basename);
     println!("===== {} =====", example.name());
     println!("Example size: {}, timeout: {}s", example.len(), timeout_secs);
+    let mut result =
+        format!("{}, {}, {}", example.name(), example.len(), timeout_secs);
 
     let timeout = Duration::from_secs(timeout_secs);
-    let naive = run_core(&example, Algorithm::Naive, timeout, false);
-    let simple = run_core(&example, Algorithm::Simple, timeout, false);
-    let bfgt = run_core(&example, Algorithm::BFGT, timeout, false);
-    let jump = run_core(&example, Algorithm::Jump, timeout, false);
-    let polylog = run_core(&example, Algorithm::Polylog, timeout, false);
-
-    let result = format!(
-        "{}, {}, {}, {}, {}, {}, {}",
-        example.name(),
-        example.len(),
-        naive.time_str(),
-        simple.time_str(),
-        bfgt.time_str(),
-        jump.time_str(),
-        polylog.time_str(),
-    );
-    if cfg!(debug_assertions) {
-        format!(
-            "{}, {}, {}, {}, {}, {}",
-            result,
-            naive.space_str(),
-            simple.space_str(),
-            bfgt.space_str(),
-            jump.space_str(),
-            polylog.space_str(),
-        )
-    } else {
-        result
+    for &alg in algs {
+        let out = run_core(&example, alg, timeout, false);
+        result += &format!(", {}", out.time_str());
+        if cfg!(debug_assertions) {
+            result += &format!(", {}", out.space_str());
+        }
     }
+
+    // Uncomment to debug the CSV output to make sure it matches
+    // println!("{}", result);
+    // println!("{}", run_compare_csv_header(algs));
+
+    result
 }
 
 /*

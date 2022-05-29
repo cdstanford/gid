@@ -31,12 +31,12 @@ impl Args {
         println!("Mode: {}", mode);
         println!("Timeout: {}s", self.timeout);
         println!("Algs: {:?} (excluding {:?})", algs, self.exclude);
-        let mut result_lines = vec![driver::run_compare_csv_header()];
+        let mut result_lines = vec![driver::run_compare_csv_header(&algs)];
         for dir in ALL_EXAMPLE_DIRS {
             println!("======= directory: {} =======", dir);
             for basename in driver::example_basenames_in_dir(dir) {
-                let result = driver::run_compare(&basename, self.timeout);
-                result_lines.push(result);
+                let ln = driver::run_compare(&basename, &algs, self.timeout);
+                result_lines.push(ln);
             }
         }
         println!("========= Results =========");
