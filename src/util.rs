@@ -1,15 +1,21 @@
 /*
-    Utility for file I/O and JSON serialization
+    System utility functions
+
+    (File I/O, JSON serialization, system time, etc.)
 */
 
 use chrono::offset::Local;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::fmt::Debug;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{BufReader, BufWriter, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
+
+/*
+    File I/O
+*/
 
 fn path_reader<P>(path: P) -> BufReader<File>
 where
@@ -68,6 +74,33 @@ where
     for line in &lines {
         writeln!(writer, "{}", line).unwrap();
     }
+}
+
+/*
+    Walk a directory
+
+    It is truly hilarious how many layers of indirection it takes
+    to go through Rust's various String and OS abstractions
+
+    TODO: do this recursively
+*/
+
+pub fn walk_files_rec(dir: &str) -> impl Iterator<Item = String> + '_ {
+    fs::read_dir(PathBuf::from(dir))
+        .unwrap_or_else(|err| {
+            panic!("couldn't view files in directory: {} ({})", dir, err)
+        })
+        .map(move |file| {
+            file.unwrap_or_else(|err| {
+                panic!("error viewing file in directory: {} ({})", dir, err)
+            })
+        })
+        .map(|file| file.path().into_os_string())
+        .map(|osstr| {
+            osstr.into_string().unwrap_or_else(|err| {
+                panic!("found file path with invalid unicode ({:?})", err)
+            })
+        })
 }
 
 /*

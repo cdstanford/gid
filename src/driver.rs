@@ -11,10 +11,9 @@ use super::algorithm::{
 use super::constants::EXAMPLE_IN_EXT;
 use super::example::{Example, ExampleOutput, ExampleResult};
 use super::interface::StateGraph;
+use super::util;
 use std::fmt::{self, Debug};
-use std::fs;
 use std::ops::DerefMut;
-use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -221,26 +220,11 @@ pub fn run_compare(
 /*
     Get all example basenames in a directory
 
-    It is truly hilarious how many layers of indirection it takes
-    to go through Rust's various String and OS abstractions
+    TODO: do it recursively
 */
 
 pub fn example_basenames_in_dir(dir: &str) -> Vec<String> {
-    fs::read_dir(PathBuf::from(dir))
-        .unwrap_or_else(|err| {
-            panic!("couldn't view files in directory: {} ({})", dir, err)
-        })
-        .map(|file| {
-            file.unwrap_or_else(|err| {
-                panic!("error viewing file in directory: {} ({})", dir, err)
-            })
-        })
-        .map(|file| file.path().into_os_string())
-        .map(|osstr| {
-            osstr.into_string().unwrap_or_else(|err| {
-                panic!("found file path with invalid unicode ({:?})", err)
-            })
-        })
+    util::walk_files_rec(dir)
         .map(|path| path.strip_suffix(EXAMPLE_IN_EXT).map(String::from))
         .flatten()
         .collect()
