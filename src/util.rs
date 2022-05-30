@@ -105,7 +105,10 @@ pub fn paths_in(dir: &str) -> impl Iterator<Item = String> + '_ {
 // Recursively visit all directories in a directory,
 // calling the closure cb
 // https://doc.rust-lang.org/std/fs/fn.read_dir.html#examples
-pub fn walk_dirs_rec<F: Fn(&Path)>(dir: &Path, cb: &F) -> io::Result<()> {
+pub fn walk_dirs_rec<F: FnMut(&Path)>(
+    dir: &Path,
+    cb: &mut F,
+) -> io::Result<()> {
     if dir.is_dir() {
         cb(dir);
         for entry in fs::read_dir(dir)? {

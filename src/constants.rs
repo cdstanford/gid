@@ -98,17 +98,25 @@ fn validate_example_dirs_complete() {
     use crate::util;
     use std::path::Path;
 
-    fn validate_dir(dir: &Path) {
+    let mut total: usize = 0;
+
+    // Mutably borrows 'total'
+    // Interesting that Rc is not needed here, since the closure
+    // goes out of scope before we need to access total again.
+    let mut validate_dir = |dir: &Path| {
         println!("Checking path is registered in constants.rs: {:?}", dir);
         let dir_str = dir.to_str().unwrap_or_else(|| {
             panic!("Could not convert path to string: {:?}", dir);
         });
         assert!(ALL_EXAMPLE_DIRS.contains(&dir_str));
-    }
+        total += 1;
+    };
 
-    util::walk_dirs_rec(Path::new("examples"), &validate_dir).unwrap_or_else(
-        |err| {
+    util::walk_dirs_rec(Path::new("examples"), &mut validate_dir)
+        .unwrap_or_else(|err| {
             panic!("Error when walking examples dir: {:?}", err);
-        },
-    );
+        });
+
+    // Check total is correct
+    assert_eq!(total, ALL_EXAMPLE_DIRS.len());
 }
