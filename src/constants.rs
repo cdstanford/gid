@@ -46,6 +46,7 @@ pub const EX_DIR_RLIB_SUB2: &str = "examples/regex/regexlib/RegexSubset/unsat";
 pub const ALL_EXAMPLE_DIRS: &[&str] = &[
     EX_DIR_GENERATED,
     EX_DIR_HANDWRITTEN,
+    EX_DIR_RANDOM,
     EX_DIR_REGEX_COMP,
     EX_DIR_REGEX_DATE,
     EX_DIR_REGEX_LOOP,
