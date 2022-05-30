@@ -18,6 +18,9 @@ struct Args {
     #[structopt(short, long, help = "List of algorithms to exclude")]
     exclude: Vec<Algorithm>,
 
+    #[structopt(short, long, help = "Print files, without processing")]
+    print: bool,
+
     #[structopt(short, long, default_value = "10")]
     timeout: u64,
 }
@@ -35,17 +38,26 @@ impl Args {
         for dir in ALL_EXAMPLE_DIRS {
             println!("======= directory: {} =======", dir);
             for basename in driver::example_basenames_in_dir(dir) {
-                let ln = driver::run_compare(&basename, &algs, self.timeout);
-                result_lines.push(ln);
+                if self.print {
+                    println!("{}", basename);
+                } else {
+                    result_lines.push(driver::run_compare(
+                        &basename,
+                        &algs,
+                        self.timeout,
+                    ));
+                }
             }
         }
-        println!("========= Results =========");
-        let filepath = format!(
-            "{}/{}_{}_t{}.csv",
-            RESULTS_DIR, datetime, mode, self.timeout
-        );
-        util::lines_to_file(&filepath, result_lines);
-        println!("Results saved to: {}", filepath);
+        if !self.print {
+            println!("========= Results =========");
+            let filepath = format!(
+                "{}/{}_{}_t{}.csv",
+                RESULTS_DIR, datetime, mode, self.timeout
+            );
+            util::lines_to_file(&filepath, result_lines);
+            println!("Results saved to: {}", filepath);
+        }
     }
 }
 
