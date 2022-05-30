@@ -9,7 +9,7 @@ use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::fmt::Debug;
 use std::fs::{self, File};
-use std::io::{BufReader, BufWriter, Write};
+use std::io::{self, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
@@ -77,15 +77,14 @@ where
 }
 
 /*
-    Walk a directory
-
-    It is truly hilarious how many layers of indirection it takes
-    to go through Rust's various String and OS abstractions
-
-    TODO: do this recursively
+    Path walking functions
 */
 
-pub fn walk_files_rec(dir: &str) -> impl Iterator<Item = String> + '_ {
+// Walk files in a directory
+// Could also just use the walkdir crate for this.
+// It is truly hilarious how many layers of indirection it takes
+// to go through Rust's various String and OS abstractions
+pub fn paths_in(dir: &str) -> impl Iterator<Item = String> + '_ {
     fs::read_dir(PathBuf::from(dir))
         .unwrap_or_else(|err| {
             panic!("couldn't view files in directory: {} ({})", dir, err)
@@ -101,6 +100,20 @@ pub fn walk_files_rec(dir: &str) -> impl Iterator<Item = String> + '_ {
                 panic!("found file path with invalid unicode ({:?})", err)
             })
         })
+}
+
+// Recursively visit all directories in a directory,
+// calling the closure cb
+// https://doc.rust-lang.org/std/fs/fn.read_dir.html#examples
+pub fn walk_dirs_rec<F: Fn(&Path)>(dir: &Path, cb: &F) -> io::Result<()> {
+    if dir.is_dir() {
+        cb(dir);
+        for entry in fs::read_dir(dir)? {
+            let path = entry?.path();
+            walk_dirs_rec(&path, cb)?;
+        }
+    }
+    Ok(())
 }
 
 /*

@@ -219,12 +219,10 @@ pub fn run_compare(
 
 /*
     Get all example basenames in a directory
-
-    TODO: do it recursively
 */
 
 pub fn example_basenames_in_dir(dir: &str) -> Vec<String> {
-    util::walk_files_rec(dir)
+    util::paths_in(dir)
         .map(|path| path.strip_suffix(EXAMPLE_IN_EXT).map(String::from))
         .flatten()
         .collect()
