@@ -241,14 +241,14 @@ fn main() {
     }
     // Generate and save random examples
     // Use random seeds 1-10
-    for &n in &[3, 10, 30, 100, 300, 1000, 3000, 10000] {
+    for &n in &[10, 30, 100, 300, 1000, 3000, 10000] {
         for &d in &[1, 2, 3, 10] {
             for seed in 1..=10 {
                 random_sparse(n, d, seed).save();
             }
         }
     }
-    for &n in &[3, 10, 30, 100, 300, 1000, 3000] {
+    for &n in &[10, 30, 100, 300, 1000, 3000] {
         for &d in &[1, 2, 3] {
             for seed in 1..=10 {
                 random_dense(n, d, seed).save();
