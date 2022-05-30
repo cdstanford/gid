@@ -18,13 +18,23 @@ pub const UNIT_TEST_TIMEOUT_SECS: u64 = 30;
 #[cfg(not(debug_assertions))]
 pub const UNIT_TEST_TIMEOUT_SECS: u64 = 300;
 
-// Main/special directories where examples are stored,
-// optionally with expected output
+/*
+    ALL example directories where examples are stored.
+    The unit tests below validate that these exist and the list is exhaustive.
+*/
+
+// Parent directories (only contain subdirs)
+const EX_DIR: &str = "examples";
+const EX_DIR_REGEX: &str = "examples/regex";
+const EX_DIR_RLIB: &str = "examples/regex/regexlib";
+const EX_DIR_RLIB_M: &str = "examples/regex/regexlib/RegexMembership";
+const EX_DIR_RLIB_INTER: &str = "examples/regex/regexlib/RegexIntersection";
+const EX_DIR_RLIB_SUB: &str = "examples/regex/regexlib/RegexSubset";
+// Generated and handwritten examples (optionally with expected output)
 pub const EX_DIR_GENERATED: &str = "examples/generated";
 pub const EX_DIR_RANDOM: &str = "examples/random";
 pub const EX_DIR_HANDWRITTEN: &str = "examples/handwritten";
-
-// All other directories (no expected output)
+// Regex examples (no expected output)
 pub const EX_DIR_REGEX_COMP: &str = "examples/regex/complement";
 pub const EX_DIR_REGEX_DATE: &str = "examples/regex/date";
 pub const EX_DIR_REGEX_LOOP: &str = "examples/regex/loop";
@@ -44,6 +54,12 @@ pub const EX_DIR_RLIB_SUB2: &str = "examples/regex/regexlib/RegexSubset/unsat";
 
 // All the above directories in a list
 pub const ALL_EXAMPLE_DIRS: &[&str] = &[
+    EX_DIR,
+    EX_DIR_REGEX,
+    EX_DIR_RLIB,
+    EX_DIR_RLIB_M,
+    EX_DIR_RLIB_INTER,
+    EX_DIR_RLIB_SUB,
     EX_DIR_GENERATED,
     EX_DIR_HANDWRITTEN,
     EX_DIR_RANDOM,
@@ -63,13 +79,36 @@ pub const ALL_EXAMPLE_DIRS: &[&str] = &[
     EX_DIR_RLIB_SUB2,
 ];
 
-// Unit test to check that all directories exist (does not check vice versa)
+/*
+    Unit tests to check that all directories exist and vice versa
+*/
+
 #[test]
-fn validate_example_dirs() {
+fn validate_example_dirs_exist() {
     use std::path::Path;
 
     for dir in ALL_EXAMPLE_DIRS {
         println!("Checking path is directory: {}", dir);
         assert!(Path::new(dir).is_dir());
     }
+}
+
+#[test]
+fn validate_example_dirs_complete() {
+    use crate::util;
+    use std::path::Path;
+
+    fn validate_dir(dir: &Path) {
+        println!("Checking path is registered in constants.rs: {:?}", dir);
+        let dir_str = dir.to_str().unwrap_or_else(|| {
+            panic!("Could not convert path to string: {:?}", dir);
+        });
+        assert!(ALL_EXAMPLE_DIRS.contains(&dir_str));
+    }
+
+    util::walk_dirs_rec(Path::new("examples"), &validate_dir).unwrap_or_else(
+        |err| {
+            panic!("Error when walking examples dir: {:?}", err);
+        },
+    );
 }
