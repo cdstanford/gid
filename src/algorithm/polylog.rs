@@ -181,11 +181,16 @@ impl PolylogStateGraph {
         self.set_status(v, Status::Dead);
         // Second set to_recurse as open so that recursive calls won't mess
         // with them
+        let mut first_iter = true;
         for &u in &to_recurse {
             self.set_status(u, Status::Open);
-            let (orig_u, orig_v) = self.clear_succ(u);
-            self.euler_forest.remove_edge(orig_u, orig_v);
             to_visit.push(u);
+            let (orig_u, orig_v) = self.clear_succ(u);
+            if first_iter {
+                first_iter = false;
+            } else {
+                self.euler_forest.remove_edge(orig_u, orig_v);
+            }
         }
     }
 
