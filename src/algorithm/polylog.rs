@@ -23,15 +23,6 @@ struct Node {
     // to preserve the original ID in case of vertex merging.
     next: Option<(usize, usize)>,
 
-    // Jump node -- jump to root
-    // should be the node itself for Open root nodes -- and None
-    // for nodes that have been modified too many times and are
-    // now relying on the Euler trees impl
-    jump: Option<usize>,
-
-    // Jump fuel exhausted
-    exhausted: bool,
-
     // Categorized status, same as in other algorithms
     status: Status,
 }
@@ -41,8 +32,6 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
     debug_assert!(n1.status == Status::Unknown || n1.status == Status::Open);
     debug_assert!(n2.status == Status::Unknown || n2.status == Status::Open);
     debug_assert_eq!(result.status, Status::Open);
-    debug_assert_eq!(result.jump, None);
-    result.exhausted = n1.exhausted || n2.exhausted;
     result.reserve.append(&mut n1.reserve);
     result.reserve.append(&mut n2.reserve);
     result
@@ -91,24 +80,14 @@ impl PolylogStateGraph {
         debug_assert!(self.is_closed(v));
         self.get_node(v).next.map(|(_, w)| w)
     }
-    fn get_jump(&self, v: usize) -> Option<usize> {
-        debug_assert!(self.is_closed(v));
-        self.get_node(v).jump
-    }
     fn set_succ(&mut self, v: usize, w: usize) {
         debug_assert_eq!(self.get_succ(v), None);
-        debug_assert_eq!(self.get_jump(v), None);
-        let vmut = self.get_node_mut(v);
-        vmut.next = Some((v, w));
-        if !vmut.exhausted {
-            vmut.jump = Some(w);
-        }
+        self.get_node_mut(v).next = Some((v, w));
     }
     // Clear the node's successor and return the edge
     fn clear_succ(&mut self, v: usize) -> (usize, usize) {
         debug_assert!(self.get_succ(v).is_some());
         let vmut = self.get_node_mut(v);
-        vmut.jump = None;
         let mut result = None;
         mem::swap(&mut result, &mut vmut.next);
         result.unwrap_or_else(|| {
