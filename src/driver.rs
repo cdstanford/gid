@@ -5,8 +5,8 @@
 */
 
 use super::algorithm::{
-    BFGTStateGraph, JumpStateGraph, NaiveStateGraph, PolylogStateGraph,
-    SimpleStateGraph,
+    BFGTStateGraph, JumpStateGraph, NaiveStateGraph, OptimizedStateGraph,
+    PolylogStateGraph, SimpleStateGraph,
 };
 use super::constants::EXAMPLE_IN_EXT;
 use super::example::{Example, ExampleOutput, ExampleResult};
@@ -28,6 +28,7 @@ pub enum Algorithm {
     BFGT,
     Jump,
     Polylog,
+    Optimized,
 }
 impl FromStr for Algorithm {
     type Err = String;
@@ -38,6 +39,7 @@ impl FromStr for Algorithm {
             "b" | "bfgt" => Ok(Algorithm::BFGT),
             "j" | "jump" => Ok(Algorithm::Jump),
             "p" | "polylog" => Ok(Algorithm::Polylog),
+            "o" | "optimized" => Ok(Algorithm::Optimized),
             _ => Err(format!("Could not parse as Algorithm: {}", s)),
         }
     }
@@ -50,6 +52,7 @@ impl fmt::Display for Algorithm {
             Algorithm::BFGT => "bfgt",
             Algorithm::Jump => "jump",
             Algorithm::Polylog => "polylog",
+            Algorithm::Optimized => "optimized",
         };
         write!(f, "{}", result)
     }
@@ -62,6 +65,7 @@ impl Algorithm {
             Algorithm::BFGT => Box::new(BFGTStateGraph::new()),
             Algorithm::Jump => Box::new(JumpStateGraph::new()),
             Algorithm::Polylog => Box::new(PolylogStateGraph::new()),
+            Algorithm::Optimized => Box::new(OptimizedStateGraph::new()),
         }
     }
 }
@@ -127,6 +131,7 @@ pub const ALL_ALGS: &[Algorithm] = &[
     Algorithm::BFGT,
     Algorithm::Jump,
     Algorithm::Polylog,
+    Algorithm::Optimized,
 ];
 pub fn algs_excluding(exclude: &[Algorithm]) -> Vec<Algorithm> {
     ALL_ALGS.iter().filter(|&x| !exclude.contains(x)).cloned().collect()
