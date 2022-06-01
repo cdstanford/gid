@@ -11,6 +11,7 @@ use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
 use std::collections::{HashSet, LinkedList};
 use std::iter;
+use std::mem;
 
 #[derive(Debug, Default, PartialEq)]
 struct Node {
@@ -85,8 +86,10 @@ impl PolylogStateGraph {
     }
     // Clear the node's successor and return the edge
     fn clear_succ(&mut self, v: usize) -> (usize, usize) {
+        debug_assert!(self.get_succ(v).is_some());
+        let vmut = self.get_node_mut(v);
         let mut result = None;
-        std::mem::swap(&mut result, &mut self.get_node_mut(v).next);
+        mem::swap(&mut result, &mut vmut.next);
         result.unwrap_or_else(|| {
             panic!("Called clear_succ on node without a successor");
         })
@@ -183,9 +186,9 @@ impl PolylogStateGraph {
         // with them
         let mut first_iter = true;
         for &u in &to_recurse {
+            let (orig_u, orig_v) = self.clear_succ(u);
             self.set_status(u, Status::Open);
             to_visit.push(u);
-            let (orig_u, orig_v) = self.clear_succ(u);
             if first_iter {
                 first_iter = false;
             } else {
