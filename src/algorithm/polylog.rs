@@ -98,10 +98,9 @@ impl PolylogStateGraph {
     /*
         is-root
         Compare with the implementation in jump.rs
+
         In this implementation, we critically rely
         on Euler tour trees for the efficient check.
-
-        Currently: do something naive and inefficient
     */
     fn is_root(&mut self, v: usize, end: usize) -> bool {
         debug_assert!(self.is_unknown(v) || self.is_open(v));
@@ -116,8 +115,7 @@ impl PolylogStateGraph {
     }
 
     /*
-        Merge the path from vertex v to the Open vertex it currently points
-        to.
+        Merge the path from v to the Open vertex it currently points to.
     */
     fn merge_path_from(&mut self, v: usize) {
         let to_merge: Vec<usize> = {
@@ -138,6 +136,7 @@ impl PolylogStateGraph {
     }
 
     /*
+        check_dead:
         Initialize function for a newly closed vertex, to find an univisted
         vertex.
     */
@@ -164,7 +163,7 @@ impl PolylogStateGraph {
                 self.merge_path_from(w);
             } else {
                 // No further work, set successor and return
-                // println!("  (setting jump and returning)");
+                // println!("  (setting successor and returning)");
                 self.set_status(v, Status::Unknown);
                 self.set_succ(v, w);
                 self.euler_forest.add_edge(v, w);
@@ -243,9 +242,7 @@ impl StateGraph for PolylogStateGraph {
         self.set_status(v, Status::Live);
         self.calculate_new_live_states(v);
     }
-    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
-        // Ignore NotReachable
-    }
+    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {}
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).map(|l| l.status)
     }
