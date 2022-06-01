@@ -239,7 +239,7 @@ impl StateGraph for PolylogStateGraph {
     fn mark_live_unchecked(&mut self, v: usize) {
         // println!("# Marking live: {}", v);
         self.graph.ensure_vertex(v);
-        self.euler_forest.ensure_vertex(v);
+        // self.euler_forest.ensure_vertex(v);
         self.set_status(v, Status::Live);
         self.calculate_new_live_states(v);
     }
