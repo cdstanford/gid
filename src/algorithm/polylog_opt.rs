@@ -96,7 +96,6 @@ impl OptimizedStateGraph {
         self.get_node(v).next.map(|(_, w)| w)
     }
     fn get_jump(&self, v: usize) -> Option<usize> {
-        debug_assert!(self.is_closed(v));
         self.get_node(v).jump
     }
     fn set_succ(&mut self, v: usize, w: usize) {
@@ -177,6 +176,7 @@ impl OptimizedStateGraph {
             // easier than checking for is_dead() and handlign that case.
             // Dead jump will resolve to exhausted on the next call.
             if let Some(jj) = self.get_jump(j) {
+                debug_assert!(self.is_closed(j));
                 self.get_node_mut(v).jump = Some(jj);
             }
             result
