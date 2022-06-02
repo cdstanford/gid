@@ -149,7 +149,7 @@ impl OptimizedStateGraph {
             // );
             // Also should mean that it's already added to the Euler forest
             debug_assert!(self.euler_forest.is_seen(v));
-            debug_assert!(self.euler_forest.is_seen(end));
+            self.euler_forest.ensure_vertex(end);
             return self.euler_forest.same_root(v, end);
         }
         // Jump case
