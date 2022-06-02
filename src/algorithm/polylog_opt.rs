@@ -104,40 +104,83 @@ impl OptimizedStateGraph {
         debug_assert_eq!(self.get_jump(v), None);
         let vmut = self.get_node_mut(v);
         vmut.next = Some((v, w));
-        if !vmut.exhausted {
+        if vmut.exhausted {
+            self.euler_forest.add_edge(v, w);
+        } else {
             vmut.jump = Some(w);
         }
     }
     // Clear the node's successor and return the edge
-    fn clear_succ(&mut self, v: usize) -> (usize, usize) {
+    fn clear_succ(&mut self, v: usize) {
         debug_assert!(self.get_succ(v).is_some());
         let vmut = self.get_node_mut(v);
         vmut.jump = None;
         let mut result = None;
         mem::swap(&mut result, &mut vmut.next);
-        result.unwrap_or_else(|| {
-            panic!("Called clear_succ on node without a successor");
-        })
+        debug_assert!(result.is_some());
+        if vmut.exhausted {
+            let (u0, v0) = result.unwrap();
+            self.euler_forest.remove_edge(u0, v0);
+        }
     }
 
     /*
         is-root
-        Compare with the implementation in jump.rs
-        In this implementation, we critically rely
-        on Euler tour trees for the efficient check.
+        Compare with the implementation in jump.rs and polylog.rs
 
-        Currently: do something naive and inefficient
+        Optimization: if the node is not exhausted, we try to first
+        use the jump vertex to jump quickly to the root.
+        If exhausted, we fallback on the Euler forest.
     */
     fn is_root(&mut self, v: usize, end: usize) -> bool {
         debug_assert!(self.is_unknown(v) || self.is_open(v));
         debug_assert!(self.is_open(end));
-        self.euler_forest.same_root(v, end)
-        // The following naive implementation works too, not using euler_forest
-        // if self.is_open(v) {
-        //     self.graph.is_same_vertex(v, end)
-        // } else {
-        //     self.is_root(self.get_succ(v).unwrap(), end)
-        // }
+
+        if self.is_open(v) {
+            return self.graph.is_same_vertex(v, end);
+        } else if self.get_node(v).exhausted {
+            // exhausted means the jump node was dead
+            debug_assert!(self.is_dead(self.get_jump(v).unwrap()));
+            // Also should mean that it's already added to the Euler forest
+            debug_assert!(self.euler_forest.is_seen(v));
+            debug_assert!(self.euler_forest.is_seen(end));
+            return self.euler_forest.same_root(v, end);
+        }
+        // Jump case
+        let j = self.get_jump(v).unwrap();
+        if self.is_dead(j) {
+            // Mark exhausted, and all successors as necessary
+            self.get_node_mut(v).exhausted = true;
+            self.euler_forest.ensure_vertex(v);
+            let mut v = v;
+            while let Some(w) = self.get_succ(v) {
+                self.set_succ(v, w); // adds to euler_forest as well
+                if self.get_node(w).exhausted {
+                    debug_assert!(self.euler_forest.is_seen(v));
+                    debug_assert!(self.euler_forest.is_seen(end));
+                    return self.euler_forest.same_root(v, end);
+                }
+                self.get_node_mut(w).exhausted = true;
+                self.euler_forest.ensure_vertex(w);
+                v = w;
+            }
+            debug_assert_eq!(
+                self.graph.is_same_vertex(v, end),
+                self.euler_forest.same_root(v, end)
+            );
+            self.graph.is_same_vertex(v, end)
+        } else {
+            // recursive call
+            let result = self.is_root(j, end);
+            // update jump pointer
+            // note this might set it to dead in some cases, but seems
+            // easier than checking for is_dead() and handlign that case.
+            // Dead jump will resolve to exhausted on the next call.
+            if let Some(jj) = self.get_jump(j) {
+                self.get_node_mut(v).jump = Some(jj);
+            }
+            result
+        }
     }
 
     /*
@@ -188,11 +231,9 @@ impl OptimizedStateGraph {
                 // println!("  (merging {} -> {} -> ... -> {})", v, w, w_end);
                 self.merge_path_from(w);
             } else {
-                // No further work, set successor and return
-                // println!("  (setting jump and returning)");
+                // Set successor and return
                 self.set_status(v, Status::Unknown);
                 self.set_succ(v, w);
-                self.euler_forest.add_edge(v, w);
                 return;
             }
         }
@@ -209,16 +250,10 @@ impl OptimizedStateGraph {
         self.set_status(v, Status::Dead);
         // Second set to_recurse as open so that recursive calls won't mess
         // with them
-        let mut first_iter = true;
         for &u in &to_recurse {
-            let (orig_u, orig_v) = self.clear_succ(u);
+            self.clear_succ(u);
             self.set_status(u, Status::Open);
             to_visit.push(u);
-            if first_iter {
-                first_iter = false;
-            } else {
-                self.euler_forest.remove_edge(orig_u, orig_v);
-            }
         }
     }
 
