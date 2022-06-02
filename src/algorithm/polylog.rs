@@ -90,9 +90,7 @@ impl PolylogStateGraph {
         let vmut = self.get_node_mut(v);
         let mut result = None;
         mem::swap(&mut result, &mut vmut.next);
-        result.unwrap_or_else(|| {
-            panic!("Called clear_succ on node without a successor");
-        })
+        result.unwrap()
     }
 
     /*
