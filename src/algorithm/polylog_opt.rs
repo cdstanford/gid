@@ -103,7 +103,9 @@ impl OptimizedStateGraph {
         let vmut = self.get_node_mut(v);
         vmut.next = Some((v, w));
         if vmut.exhausted {
+            self.euler_forest.ensure_vertex(w);
             self.euler_forest.add_edge(v, w);
+            self.mark_exhausted_from(w);
         } else {
             vmut.jump = Some(w);
         }
@@ -260,6 +262,12 @@ impl OptimizedStateGraph {
             } else if self.is_root(w, v) {
                 // Merge cycle and continue
                 // println!("  (merging {} -> {} -> ... -> {})", v, w, w_end);
+                if self.get_node(v).exhausted {
+                    self.mark_exhausted_from(w);
+                    debug_assert!(self.euler_forest.same_root(v, w));
+                } else {
+                    debug_assert!(!self.get_node(w).exhausted);
+                }
                 self.merge_path_from(w);
             } else {
                 // Set successor and return
