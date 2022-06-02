@@ -154,31 +154,24 @@ impl OptimizedStateGraph {
         let j = self.get_jump(v).unwrap();
         if self.is_dead(j) {
             // Mark exhausted, and all successors as necessary
-            self.get_node_mut(v).exhausted = true;
-            self.euler_forest.ensure_vertex(v);
-            let mut v = v;
-            while let Some(w) = self.get_succ(v) {
-                // This line may not be necessary, it only matters
-                // if node.next is (v', w) where v != v' but equivalent...
-                self.get_node_mut(v).next = Some((v, w));
-                self.euler_forest.ensure_vertex(w);
-                self.euler_forest.add_edge(v, w);
-
-                if self.get_node(w).exhausted {
-                    debug_assert!(self.euler_forest.is_seen(v));
-                    debug_assert!(self.euler_forest.is_seen(end));
-                    return self.euler_forest.same_root(v, end);
-                }
-
-                self.get_node_mut(w).exhausted = true;
-                v = w;
+            let v_end = self.mark_exhausted_from(v);
+            debug_assert!(self.euler_forest.is_seen(v));
+            debug_assert!(self.euler_forest.is_seen(v_end));
+            debug_assert!(self.euler_forest.is_seen(end));
+            if self.is_open(v_end) {
+                debug_assert!(
+                    (v_end == end)
+                        || (self.graph.is_same_vertex(v_end, end)
+                            == self.euler_forest.same_root(v_end, end))
+                );
+                debug_assert_eq!(
+                    self.graph.is_same_vertex(v_end, end),
+                    self.euler_forest.same_root(v_end, end)
+                );
+                self.graph.is_same_vertex(v_end, end)
+            } else {
+                self.euler_forest.same_root(v_end, end)
             }
-            debug_assert!(self.is_open(v));
-            debug_assert_eq!(
-                self.graph.is_same_vertex(v, end),
-                self.euler_forest.same_root(v, end)
-            );
-            self.graph.is_same_vertex(v, end)
         } else {
             // recursive call
             let result = self.is_root(j, end);
@@ -192,6 +185,33 @@ impl OptimizedStateGraph {
             }
             result
         }
+    }
+
+    /*
+        Mark the path from vertex v to the Open vertex it currently points
+        to as exhausted.
+        Return the first exhausted vertex found.
+    */
+    fn mark_exhausted_from(&mut self, mut v: usize) -> usize {
+        if self.get_node(v).exhausted {
+            return v;
+        }
+        self.get_node_mut(v).exhausted = true;
+        self.euler_forest.ensure_vertex(v);
+        while let Some(w) = self.get_succ(v) {
+            // This line may not be necessary, it only matters
+            // if node.next is (v', w) where v != v' but equivalent...
+            self.get_node_mut(v).next = Some((v, w));
+            self.euler_forest.ensure_vertex(w);
+            self.euler_forest.add_edge(v, w);
+            if self.get_node(w).exhausted {
+                return w;
+            }
+            self.get_node_mut(w).exhausted = true;
+            v = w;
+        }
+        debug_assert!(self.is_open(v));
+        v
     }
 
     /*
