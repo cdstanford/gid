@@ -201,6 +201,7 @@ impl OptimizedStateGraph {
         self.get_node_mut(v).exhausted = true;
         self.euler_forest.ensure_vertex(v);
         while let Some(w) = self.get_succ(v) {
+            debug_assert!(self.is_unknown(w) || self.is_open(w));
             // This line may not be necessary, it only matters
             // if node.next is (v', w) where v != v' but equivalent...
             self.get_node_mut(v).next = Some((v, w));
@@ -322,8 +323,6 @@ impl StateGraph for OptimizedStateGraph {
     fn add_transition_unchecked(&mut self, v1: usize, v2: usize) {
         // println!("# Adding transition: {}, {}", v1, v2);
         self.graph.ensure_edge_bck(v1, v2);
-        self.euler_forest.ensure_vertex(v1);
-        self.euler_forest.ensure_vertex(v2);
         self.calculate_new_live_states(v2);
         if !self.is_live(v1) {
             self.push_reserve(v1, v2);
@@ -332,19 +331,15 @@ impl StateGraph for OptimizedStateGraph {
     fn mark_closed_unchecked(&mut self, v: usize) {
         // println!("# Marking closed: {}", v);
         self.graph.ensure_vertex(v);
-        self.euler_forest.ensure_vertex(v);
         self.check_dead(v);
     }
     fn mark_live_unchecked(&mut self, v: usize) {
         // println!("# Marking live: {}", v);
         self.graph.ensure_vertex(v);
-        // self.euler_forest.ensure_vertex(v);
         self.set_status(v, Status::Live);
         self.calculate_new_live_states(v);
     }
-    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
-        // Ignore NotReachable
-    }
+    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {}
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).map(|l| l.status)
     }
