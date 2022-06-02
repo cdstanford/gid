@@ -103,6 +103,8 @@ fn test_19() {
 }
 #[test]
 fn test_20() {
+    // this test is a tree graph.
+    // originally called tree_3
     assert_one(EX_DIR_HANDWRITTEN, "20");
 }
 #[test]
@@ -114,8 +116,8 @@ fn test_22() {
     assert_one(EX_DIR_HANDWRITTEN, "22");
 }
 #[test]
-fn test_tree() {
-    assert_one(EX_DIR_HANDWRITTEN, "tree_3");
+fn test_23() {
+    assert_one(EX_DIR_HANDWRITTEN, "23");
 }
 
 /*
