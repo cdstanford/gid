@@ -131,7 +131,6 @@ pub const ALL_ALGS: &[Algorithm] = &[
     Algorithm::BFGT,
     Algorithm::Jump,
     Algorithm::Polylog,
-    Algorithm::Optimized,
 ];
 pub fn algs_excluding(exclude: &[Algorithm]) -> Vec<Algorithm> {
     ALL_ALGS.iter().filter(|&x| !exclude.contains(x)).cloned().collect()
