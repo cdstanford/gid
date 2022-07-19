@@ -137,3 +137,19 @@ pub fn time_since(t: &SystemTime) -> Duration {
 pub fn current_datetime_str() -> String {
     Local::now().format("%Y-%m-%d-%H%M%S").to_string()
 }
+
+#[test]
+fn test_current_datetime_str() {
+    let cur = current_datetime_str();
+    println!("Current datetime string: {}", cur);
+    let chars: Vec<char> = cur.chars().collect();
+    assert_eq!(chars.len(), 17);
+    assert_eq!(chars[0], '2');
+    assert_eq!(chars[1], '0');
+    for i in [2, 3, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16] {
+        assert!(chars[i].is_ascii_digit());
+    }
+    for i in [4, 7, 10] {
+        assert_eq!(chars[i], '-');
+    }
+}
