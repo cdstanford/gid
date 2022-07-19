@@ -139,8 +139,9 @@ pub fn time_since(t: &SystemTime) -> Duration {
 pub fn current_datetime_str() -> String {
     let dt: OffsetDateTime = SystemTime::now().into();
     let dt_fmt = format_description::parse(
-        "[year]-[month]-[day]-[hour][minute][second]"
-    ).unwrap();
+        "[year]-[month]-[day]-[hour][minute][second]",
+    )
+    .unwrap();
     dt.format(&dt_fmt).unwrap()
     // Old implementation using Chrono
     // Local::now().format("%Y-%m-%d-%H%M%S").to_string()
