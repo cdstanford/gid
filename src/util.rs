@@ -4,7 +4,6 @@
     (File I/O, JSON serialization, system time, etc.)
 */
 
-use chrono::offset::Local;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use std::fmt::Debug;
@@ -12,6 +11,7 @@ use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
+use time::{format_description, OffsetDateTime};
 
 /*
     File I/O
@@ -134,8 +134,16 @@ pub fn time_since(t: &SystemTime) -> Duration {
 }
 
 // Current datetime for use in file names
+// Note: removed dependence on chrono on 2022-07-19; as a result,
+// now this uses time::OffsetDateTime, which is UTC rather than local time.
 pub fn current_datetime_str() -> String {
-    Local::now().format("%Y-%m-%d-%H%M%S").to_string()
+    let dt: OffsetDateTime = SystemTime::now().into();
+    let dt_fmt = format_description::parse(
+        "[year]-[month]-[day]-[hour][minute][second]"
+    ).unwrap();
+    dt.format(&dt_fmt).unwrap()
+    // Old implementation using Chrono
+    // Local::now().format("%Y-%m-%d-%H%M%S").to_string()
 }
 
 #[test]
