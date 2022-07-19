@@ -11,7 +11,8 @@ use std::fs::{self, File};
 use std::io::{self, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
-use time::{format_description, OffsetDateTime};
+use time::macros::format_description;
+use time::OffsetDateTime;
 
 /*
     File I/O
@@ -138,10 +139,8 @@ pub fn time_since(t: &SystemTime) -> Duration {
 // now this uses time::OffsetDateTime, which is UTC rather than local time.
 pub fn current_datetime_str() -> String {
     let dt: OffsetDateTime = SystemTime::now().into();
-    let dt_fmt = format_description::parse(
-        "[year]-[month]-[day]-[hour][minute][second]",
-    )
-    .unwrap();
+    let dt_fmt =
+        format_description!("[year]-[month]-[day]-[hour][minute][second]");
     dt.format(&dt_fmt).unwrap()
     // Old implementation using Chrono
     // Local::now().format("%Y-%m-%d-%H%M%S").to_string()
