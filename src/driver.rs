@@ -228,7 +228,6 @@ pub fn run_compare(
 
 pub fn example_basenames_in_dir(dir: &str) -> Vec<String> {
     util::paths_in(dir)
-        .map(|path| path.strip_suffix(EXAMPLE_IN_EXT).map(String::from))
-        .flatten()
+        .filter_map(|path| path.strip_suffix(EXAMPLE_IN_EXT).map(String::from))
         .collect()
 }

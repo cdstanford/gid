@@ -132,6 +132,7 @@ impl OptimizedStateGraph {
         use the jump vertex to jump quickly to the root.
         If exhausted, we fallback on the Euler forest.
     */
+    #[allow(clippy::wrong_self_convention)]
     fn is_root(&mut self, v: usize, end: usize) -> bool {
         debug_assert!(self.is_unknown(v) || self.is_open(v));
         debug_assert!(self.is_open(end));

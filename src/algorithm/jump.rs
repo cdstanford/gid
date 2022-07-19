@@ -166,6 +166,7 @@ impl JumpStateGraph {
         Also shortcuts using the NotReachable sets if it can determine
         early that w is not reachable from v.
     */
+    #[allow(clippy::wrong_self_convention)]
     fn is_root(&mut self, v: usize, end: usize) -> bool {
         debug_assert!(self.is_unknown(v) || self.is_open(v));
         debug_assert!(self.is_open(end));

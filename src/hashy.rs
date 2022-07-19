@@ -107,8 +107,7 @@ impl<V: Clone> Hashy<usize, V> for VecMap1D<V> {
             .as_slice()
             .iter()
             .enumerate()
-            .map(|(i, v)| Some(i).zip(v.as_ref()))
-            .flatten();
+            .filter_map(|(i, v)| Some(i).zip(v.as_ref()));
         Box::new(result)
     }
 }
