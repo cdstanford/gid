@@ -36,11 +36,11 @@ impl SimpleStateGraph {
         debug_assert!(self.is_u_or_d(v));
         let fwd_reachable: HashSet<usize> =
             self.graph.dfs_fwd(iter::once(v), |w| self.is_u_or_d(w)).collect();
-        let bi_reachable: HashSet<usize> = self
+        for u in self
             .graph
             .dfs_bck(iter::once(v), |u| fwd_reachable.contains(&u))
-            .collect();
-        for &u in &bi_reachable {
+            .fresh_clone()
+        {
             // println!("  Found bireachable: {}", u);
             debug_assert!(u != v);
             self.merge_vertices(u, v);
@@ -49,19 +49,15 @@ impl SimpleStateGraph {
     fn check_dead_iterative(&mut self, v: usize) {
         // Check if v is dead and recurse on back edges.
         // println!("  Checking if dead iteratively from: {}", v);
-        let now_dead: HashSet<usize> = self
+        for u in self
             .graph
             .topo_search_bck(
                 iter::once(v),
                 |u| self.is_u_or_d(u),
                 |w| !self.is_dead(w),
             )
-            .collect();
-        debug_assert!(
-            now_dead.is_empty()
-                || now_dead.contains(&self.graph.get_canon_vertex(v))
-        );
-        for &u in now_dead.iter() {
+            .fresh_clone()
+        {
             // println!("  Marking dead: {}", u);
             self.graph.overwrite_vertex(u, Status::Dead);
         }
