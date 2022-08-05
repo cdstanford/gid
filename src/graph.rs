@@ -28,6 +28,7 @@ use disjoint_sets::UnionFind;
 use std::collections::{HashMap, LinkedList};
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::iter;
 
 // Newtypes to keep different types of ID straight
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
@@ -209,23 +210,22 @@ where
     }
     pub fn topo_search_bck<'a>(
         &'a self,
-        candidate_starts: impl Iterator<Item = V> + 'a,
+        source: V,
         include_bck: impl (Fn(V) -> bool) + Clone + 'a,
         include_fwd: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
-        // Visit vertices starting from candidate_starts in a topologically
+        // Visit vertices starting from 'source' in a topologically
         // sorted order going backwards. The guarantee is that for each vertex
         // v returned by the search, all forward vertices from v (restricted to
         // those in 'include_fwd') have already been returned, and v is either
-        // in 'candidate_starts' or a backward vertex from an already returned
+        // 'source' or a backward vertex from an already returned
         // vertex (restricted to those in 'include_bck').
-        // The search includes 'candidate_starts' if they qualify for these
-        // conditions.
+        // The search includes 'source' if it qualifies for these conditions.
         // Remember that self-loops in the graph are ignored after a merge, so
         // these conditions skip self-loop edges.
         // See search::TopologicalSearch for more details.
         TopologicalSearch::new(
-            candidate_starts.map(move |v| self.get_canon_vertex(v)),
+            iter::once(self.get_canon_vertex(source)),
             move |v| {
                 let include_bck = include_bck.clone();
                 self.iter_bck_edges(v).filter(move |&w| include_bck(w))

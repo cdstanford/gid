@@ -51,11 +51,7 @@ impl SimpleStateGraph {
         // println!("  Checking if dead iteratively from: {}", v);
         for u in self
             .graph
-            .topo_search_bck(
-                iter::once(v),
-                |u| self.is_u_or_d(u),
-                |w| !self.is_dead(w),
-            )
+            .topo_search_bck(v, |u| self.is_u_or_d(u), |w| !self.is_dead(w))
             .fresh_clone()
         {
             // println!("  Marking dead: {}", u);

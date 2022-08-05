@@ -203,19 +203,11 @@ impl BFGTStateGraph {
     }
     fn check_dead_iterative(&mut self, v: usize) {
         // This is the same procedure as in Simple
-        let now_dead: HashSet<usize> = self
+        for u in self
             .graph
-            .topo_search_bck(
-                iter::once(v),
-                |u| self.is_u_or_d(u),
-                |w| !self.is_dead(w),
-            )
-            .collect();
-        debug_assert!(
-            now_dead.is_empty()
-                || now_dead.contains(&self.graph.get_canon_vertex(v))
-        );
-        for &u in now_dead.iter() {
+            .topo_search_bck(v, |u| self.is_u_or_d(u), |w| !self.is_dead(w))
+            .fresh_clone()
+        {
             self.set_status(u, Status::Dead);
         }
     }
