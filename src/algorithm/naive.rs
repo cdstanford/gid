@@ -39,10 +39,12 @@ impl NaiveStateGraph {
         // Initialize
         let (unkdead, openlive): (HashSet<usize>, HashSet<usize>) =
             self.graph.iter_vertices().partition(|&v| self.is_u_or_d(v));
-        let not_dead: HashSet<usize> = self
-            .graph
-            .dfs_bck(openlive.iter().copied(), |v| unkdead.contains(&v))
-            .collect();
+        let mut not_dead = HashSet::new();
+        for &u in openlive.iter() {
+            not_dead.extend(
+                self.graph.dfs_bck(iter::once(u), |v| unkdead.contains(&v)),
+            );
+        }
 
         // Mark not-not-dead states as dead
         for &v in unkdead.iter() {
