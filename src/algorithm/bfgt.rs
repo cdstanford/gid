@@ -95,7 +95,7 @@ impl BFGTStateGraph {
         set_bck.insert(v1);
         for u in self
             .graph
-            .dfs_bck(iter::once(v1), |u| {
+            .dfs_bck(v1, |u| {
                 // println!("Step 2 DFS back trying: {}", u);
                 debug_assert!(!self.is_dead(u));
                 debug_assert!(
@@ -139,7 +139,7 @@ impl BFGTStateGraph {
             self.set_level(v2, new_level);
             let level_to_increase: Vec<usize> = self
                 .graph
-                .dfs_fwd(iter::once(v2), |w| {
+                .dfs_fwd(v2, |w| {
                     // println!("Step 3 DFS fwd trying: {}", w);
                     debug_assert!(self.get_level(w) >= level2);
                     set_bck.contains(&w) || self.get_level(w) < new_level
@@ -176,7 +176,7 @@ impl BFGTStateGraph {
             let v2 = self.graph.get_canon_vertex(v2);
             let fwd_reachable: HashSet<usize> = self
                 .graph
-                .dfs_fwd(iter::once(v2), |w| {
+                .dfs_fwd(v2, |w| {
                     debug_assert!(self.get_level(w) >= level1);
                     self.get_level(w) == level1
                 })
@@ -186,7 +186,7 @@ impl BFGTStateGraph {
             debug_assert!(fwd_reachable.contains(&(v2)));
             let bi_reachable: HashSet<usize> = self
                 .graph
-                .dfs_bck(iter::once(v1), |u| fwd_reachable.contains(&u))
+                .dfs_bck(v1, |u| fwd_reachable.contains(&u))
                 .chain(iter::once(v1))
                 .collect();
             debug_assert!(bi_reachable.contains(&(v1)));
@@ -214,10 +214,8 @@ impl BFGTStateGraph {
     fn calculate_new_live_states(&mut self, v: usize) {
         // Same fn as in Naive
         if self.is_live(v) {
-            for u in self
-                .graph
-                .dfs_bck(iter::once(v), |u| !self.is_live_bck(u))
-                .fresh_clone()
+            for u in
+                self.graph.dfs_bck(v, |u| !self.is_live_bck(u)).fresh_clone()
             {
                 self.set_status(u, Status::Live);
             }

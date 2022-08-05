@@ -305,10 +305,8 @@ impl OptimizedStateGraph {
     fn calculate_new_live_states(&mut self, v: usize) {
         // Same fn as in Naive
         if self.is_live(v) {
-            for u in self
-                .graph
-                .dfs_bck(iter::once(v), |u| !self.is_live_bck(u))
-                .fresh_clone()
+            for u in
+                self.graph.dfs_bck(v, |u| !self.is_live_bck(u)).fresh_clone()
             {
                 self.set_status(u, Status::Live);
             }

@@ -178,14 +178,14 @@ where
     }
     pub fn dfs_fwd<'a>(
         &'a self,
-        sources: impl Iterator<Item = V> + 'a,
+        source: V,
         include: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
         // Depth-first search forward from 'sources', NOT including 'sources',
         // and excluding vertices in the graph not satisfying 'include'.
         // Precondition: everything in 'sources' should be seen
         DepthFirstSearch::new(
-            sources.map(move |v| self.get_canon_vertex(v)),
+            iter::once(self.get_canon_vertex(source)),
             move |v| {
                 let include = include.clone();
                 self.iter_fwd_edges(v).filter(move |&w| include(w))
@@ -194,14 +194,14 @@ where
     }
     pub fn dfs_bck<'a>(
         &'a self,
-        sources: impl Iterator<Item = V> + 'a,
+        source: V,
         include: impl (Fn(V) -> bool) + Clone + 'a,
     ) -> impl Iterator<Item = V> + 'a {
         // Depth-first search backward from 'sources', NOT including 'sources',
         // and excluding vertices in the graph not satisfying 'include'.
         // Precondition: everything in 'sources' should be seen
         DepthFirstSearch::new(
-            sources.map(move |v| self.get_canon_vertex(v)),
+            iter::once(self.get_canon_vertex(source)),
             move |v| {
                 let include = include.clone();
                 self.iter_bck_edges(v).filter(move |&w| include(w))

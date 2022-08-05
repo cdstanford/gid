@@ -10,7 +10,6 @@ use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
 use crate::util::FreshClone;
 use std::collections::HashSet;
-use std::iter;
 
 #[derive(Debug, Default)]
 pub struct NaiveStateGraph {
@@ -20,10 +19,8 @@ impl NaiveStateGraph {
     fn calculate_new_live_states(&mut self, v: usize) {
         // Mark all states Live backwards from v, but not including v
         if self.is_live(v) {
-            for u in self
-                .graph
-                .dfs_bck(iter::once(v), |u| !self.is_live_bck(u))
-                .fresh_clone()
+            for u in
+                self.graph.dfs_bck(v, |u| !self.is_live_bck(u)).fresh_clone()
             {
                 self.graph.overwrite_vertex(u, Status::Live);
             }
@@ -41,9 +38,7 @@ impl NaiveStateGraph {
             self.graph.iter_vertices().partition(|&v| self.is_u_or_d(v));
         let mut not_dead = HashSet::new();
         for &u in openlive.iter() {
-            not_dead.extend(
-                self.graph.dfs_bck(iter::once(u), |v| unkdead.contains(&v)),
-            );
+            not_dead.extend(self.graph.dfs_bck(u, |v| unkdead.contains(&v)));
         }
 
         // Mark not-not-dead states as dead

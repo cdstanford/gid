@@ -15,7 +15,6 @@ use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
 use crate::util::FreshClone;
 use std::collections::HashSet;
-use std::iter;
 
 #[derive(Debug, Default)]
 pub struct SimpleStateGraph {
@@ -35,11 +34,9 @@ impl SimpleStateGraph {
         // (assuming no other cycles in closed states)
         debug_assert!(self.is_u_or_d(v));
         let fwd_reachable: HashSet<usize> =
-            self.graph.dfs_fwd(iter::once(v), |w| self.is_u_or_d(w)).collect();
-        for u in self
-            .graph
-            .dfs_bck(iter::once(v), |u| fwd_reachable.contains(&u))
-            .fresh_clone()
+            self.graph.dfs_fwd(v, |w| self.is_u_or_d(w)).collect();
+        for u in
+            self.graph.dfs_bck(v, |u| fwd_reachable.contains(&u)).fresh_clone()
         {
             // println!("  Found bireachable: {}", u);
             debug_assert!(u != v);
@@ -61,10 +58,8 @@ impl SimpleStateGraph {
     fn calculate_new_live_states(&mut self, v: usize) {
         // Same fn as in Naive
         if self.is_live(v) {
-            for u in self
-                .graph
-                .dfs_bck(iter::once(v), |u| !self.is_live_bck(u))
-                .fresh_clone()
+            for u in
+                self.graph.dfs_bck(v, |u| !self.is_live_bck(u)).fresh_clone()
             {
                 self.graph.overwrite_vertex(u, Status::Live);
             }
