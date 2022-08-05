@@ -9,6 +9,7 @@ use crate::debug_counter::DebugCounter;
 use crate::euler_forest::EulerForest;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
+use crate::util::FreshClone;
 use std::collections::{HashSet, LinkedList};
 use std::iter;
 use std::mem;
@@ -201,14 +202,11 @@ impl PolylogStateGraph {
     fn calculate_new_live_states(&mut self, v: usize) {
         // Same fn as in Naive
         if self.is_live(v) {
-            let new_live: HashSet<usize> = self
+            for u in self
                 .graph
-                .dfs_bck(iter::once(v), |u| {
-                    debug_assert!(!self.is_dead(u));
-                    !self.is_live(u)
-                })
-                .collect();
-            for &u in new_live.iter() {
+                .dfs_bck(iter::once(v), |u| !self.is_live_bck(u))
+                .fresh_clone()
+            {
                 self.set_status(u, Status::Live);
             }
         }

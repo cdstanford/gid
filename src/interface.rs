@@ -133,6 +133,14 @@ pub trait StateGraph {
     fn is_closed(&self, v: usize) -> bool {
         !self.is_open(v)
     }
+    fn is_live_bck(&self, v: usize) -> bool {
+        // Helper function that happens to be useful going backwards to
+        // check for live states
+        // Return true if an unknown, live, or open state is live
+        debug_assert!(self.is_seen(v));
+        debug_assert!(!self.is_dead(v));
+        self.is_live(v)
+    }
     fn is_u_or_d(&self, v: usize) -> bool {
         self.is_dead(v) || self.is_unknown(v)
     }
