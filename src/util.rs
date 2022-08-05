@@ -161,3 +161,56 @@ fn test_current_datetime_str() {
         assert_eq!(chars[i], '-');
     }
 }
+
+/*
+    Fresh Clone -- a useful method for iterators
+
+    Consumes the input iterator, collecting its items and producing
+    a fresh iterator which owns all of its inputs.
+
+    This allows, for example, removing all elements from a vector
+    from an iterator over that vector (see test_fresh_clone_2).
+
+    Note that .fresh_clone() doesn't work as expected on an
+    iterator over references, since it just produces a new collected
+    iterator over the same references. It would be nice to disallow
+    this in the impl FreshClone block but I don't know how to ensure
+    that I::Item is an owned and not a reference type.
+*/
+pub trait FreshClone {
+    type Result: Iterator;
+    fn fresh_clone(self) -> Self::Result;
+}
+
+impl<I: Iterator> FreshClone for I {
+    type Result = std::vec::IntoIter<I::Item>;
+    fn fresh_clone(self) -> Self::Result {
+        self.collect::<Vec<I::Item>>().into_iter()
+    }
+}
+
+#[test]
+fn test_fresh_clone_1() {
+    let v1: Vec<usize> = vec![1, 2, 3];
+    let r1: Vec<usize> = v1.iter().fresh_clone().copied().collect();
+    assert_eq!(v1, r1);
+    assert_eq!(r1.len(), 3);
+    let r2: Vec<usize> = Vec::new().iter().fresh_clone().copied().collect();
+    assert!(r2.is_empty());
+    let r3: Vec<usize> =
+        v1.iter().chain(v1.iter()).fresh_clone().copied().collect();
+    assert_eq!(r3, vec![1, 2, 3, 1, 2, 3]);
+}
+
+#[test]
+fn test_fresh_clone_2() {
+    let mut v: Vec<usize> = vec![1, 2, 3];
+    // Notes:
+    // - doesn't work if .fresh_clone() is removed
+    // - doesn't work without .copied() -- we have to create a fresh clone
+    //   for the usize values, not the &usize values
+    for i in v.iter().copied().fresh_clone() {
+        v.retain(|&x| x != i);
+    }
+    assert!(v.is_empty());
+}
