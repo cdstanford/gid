@@ -101,8 +101,7 @@ impl PolylogStateGraph {
         In this implementation, we critically rely
         on Euler tour trees for the efficient check.
     */
-    #[allow(clippy::wrong_self_convention)]
-    fn is_root(&mut self, v: usize, end: usize) -> bool {
+    fn is_root(&self, v: usize, end: usize) -> bool {
         debug_assert!(self.is_unknown(v) || self.is_open(v));
         debug_assert!(self.is_open(end));
         self.euler_forest.same_root(v, end)
