@@ -1,5 +1,5 @@
 /*
-    Our new implementation of the StateGraph trait.
+    A fast, practical algorithm for the StateGraph trait.
     Uses "jump" pointers to jump from each state a large number
     of states ahead at once.
 */
@@ -8,6 +8,7 @@ use crate::debug_counter::DebugCounter;
 use crate::graph::DiGraph;
 use crate::interface::{StateGraph, Status};
 use crate::util::FreshClone;
+use std::cell::RefCell;
 use std::collections::{HashSet, LinkedList};
 use std::iter;
 
@@ -18,7 +19,8 @@ const NOT_REACHABLE_MAX: usize = 10;
 struct Node {
     // Jump list: nonempty for closed vertices.
     // First is a real edge, and the ith is approximately 2^i edges forward.
-    jumps: Vec<usize>,
+    // Use interior mutability because it is updated on 'get' operations.
+    jumps: RefCell<Vec<usize>>,
 
     // Reserve list: forward edges not added to graph.
     reserve: LinkedList<usize>,
@@ -75,7 +77,7 @@ impl JumpStateGraph {
         self.get_node_mut(v).status = status;
         // Mark live in particular deletes jumps and reserve edges.
         if status == Status::Live {
-            self.get_node_mut(v).jumps.clear();
+            self.get_node_mut(v).jumps.get_mut().clear();
             self.get_node_mut(v).reserve.clear();
         }
     }
@@ -92,51 +94,54 @@ impl JumpStateGraph {
         self.get_node_mut(v).reserve.pop_back()
     }
     // Jump list getters / setters
+    fn jumps_empty(&self, v: usize) -> bool {
+        self.get_node(v).jumps.borrow().is_empty()
+    }
     fn get_nth_jump(&self, v: usize, n: usize) -> usize {
         debug_assert!(self.is_closed(v));
-        debug_assert!(self.get_node(v).jumps.len() > n);
-        self.get_node(v).jumps[n]
+        debug_assert!(self.get_node(v).jumps.borrow().len() > n);
+        self.get_node(v).jumps.borrow()[n]
     }
     fn get_first_jump(&self, v: usize) -> usize {
         // println!("get_first_jump: {} {}", v, self.is_closed(v));
         debug_assert!(self.is_closed(v));
-        debug_assert!(!self.get_node(v).jumps.is_empty());
+        debug_assert!(!self.jumps_empty(v));
         self.get_nth_jump(v, 0)
     }
     fn get_last_jump(&self, v: usize) -> usize {
         // Get the current last element in the jumps list.
         debug_assert!(self.is_closed(v));
-        debug_assert!(!self.get_node(v).jumps.is_empty());
-        *self.get_node(v).jumps.last().unwrap()
+        debug_assert!(!self.jumps_empty(v));
+        *self.get_node(v).jumps.borrow().last().unwrap()
     }
     fn get_num_jumps(&self, v: usize) -> usize {
         // Get the length of the jumps list
         // (open vertices implicitly have no jumps)
         if self.is_closed(v) {
-            debug_assert!(!self.get_node(v).jumps.is_empty());
-            self.get_node(v).jumps.len()
+            debug_assert!(!self.jumps_empty(v));
+            self.get_node(v).jumps.borrow().len()
         } else {
             0
         }
     }
-    fn pop_last_jump(&mut self, v: usize) {
+    fn pop_last_jump(&self, v: usize) {
         // Remove the current last element in the jumps list.
         // println!("  Popping last jump: {}", v);
         debug_assert!(self.is_closed(v));
-        debug_assert!(!self.get_node(v).jumps.is_empty());
-        self.get_node_mut(v).jumps.pop();
+        debug_assert!(!self.jumps_empty(v));
+        self.get_node(v).jumps.borrow_mut().pop();
     }
     fn clear_jumps(&mut self, v: usize) {
         // println!("  Clearing jumps: {}", v);
         debug_assert!(self.is_closed(v));
-        debug_assert!(!self.get_node(v).jumps.is_empty());
-        self.get_node_mut(v).jumps.clear();
+        debug_assert!(!self.jumps_empty(v));
+        self.get_node_mut(v).jumps.get_mut().clear();
     }
-    fn push_last_jump(&mut self, v: usize, w: usize) {
+    fn push_last_jump(&self, v: usize, w: usize) {
         // Add a last element to the jumps list.
         // println!("  Pushing jump: {}, {}", v, w);
         debug_assert!(self.is_closed(v));
-        self.get_node_mut(v).jumps.push(w);
+        self.get_node(v).jumps.borrow_mut().push(w);
         self.additional_space.inc();
     }
     // Not reachable getters and setters
@@ -166,9 +171,10 @@ impl JumpStateGraph {
 
         Also shortcuts using the NotReachable sets if it can determine
         early that w is not reachable from v.
+
+        Uses interior mutability to modify the jumps list.
     */
-    #[allow(clippy::wrong_self_convention)]
-    fn is_root(&mut self, v: usize, end: usize) -> bool {
+    fn is_root(&self, v: usize, end: usize) -> bool {
         debug_assert!(self.is_unknown(v) || self.is_open(v));
         debug_assert!(self.is_open(end));
         if self.is_open(v) {
@@ -236,7 +242,7 @@ impl JumpStateGraph {
             } else {
                 // No further work, set jump and return
                 // println!("  (setting jump and returning)");
-                debug_assert!(self.get_node(v).jumps.is_empty());
+                debug_assert!(self.jumps_empty(v));
                 self.set_status(v, Status::Unknown);
                 self.graph.ensure_edge_fwd(v, w);
                 self.push_last_jump(v, w);
