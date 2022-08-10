@@ -127,10 +127,11 @@ pub fn walk_dirs_rec<F: FnMut(&Path)>(
 // Time elapsed with error message
 pub fn time_since(t: &SystemTime) -> Duration {
     t.elapsed().unwrap_or_else(|err| {
-        panic!(
-            "Getting system time elapsed failed (was system clock reset?): {}",
+        eprintln!(
+            "Warning: SystemTime elapsed failed (was system clock reset?): {}",
             err
-        )
+        );
+        Duration::ZERO
     })
 }
 
