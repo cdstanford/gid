@@ -186,7 +186,9 @@ impl BFGTStateGraph {
             debug_assert!(fwd_reachable.contains(&(v2)));
             let bi_reachable: HashSet<usize> = self
                 .graph
-                .dfs_bck(v1, |u| fwd_reachable.contains(&u))
+                .dfs_bck(v1, |u| {
+                    self.is_unknown(u) && fwd_reachable.contains(&u)
+                })
                 .collect();
             debug_assert!(bi_reachable.contains(&(v2)));
             for &u in &bi_reachable {
