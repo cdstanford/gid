@@ -1,24 +1,25 @@
-      11 ./src/algorithm/mod.rs
       12 ./src/lib.rs
-      30 ./src/bin/run_compare.rs
+      13 ./src/algorithm/mod.rs
+      34 ./src/bin/run_compare.rs
       36 ./src/bin/run_example.rs
       46 ./src/debug_counter.rs
-      49 ./src/bin/run_all.rs
-      74 ./src/constants.rs
-      86 ./src/algorithm/naive.rs
-      90 ./src/util.rs
-     116 ./src/algorithm/simple.rs
-     149 ./src/interface.rs
+      66 ./src/bin/run_all.rs
+      81 ./src/algorithm/naive.rs
+     101 ./src/algorithm/simple.rs
+     122 ./src/constants.rs
+     157 ./src/interface.rs
      202 ./src/search.rs
-     250 ./src/algorithm/polylog.rs
-     252 ./src/driver.rs
+     217 ./src/util.rs
+     232 ./src/driver.rs
+     251 ./src/algorithm/polylog.rs
      253 ./src/example.rs
-     259 ./src/bin/example_gen.rs
-     281 ./src/algorithm/bfgt.rs
-     308 ./src/hashy.rs
-     317 ./src/algorithm/jump.rs
+     258 ./src/bin/example_gen.rs
+     268 ./src/algorithm/bfgt.rs
+     307 ./src/hashy.rs
+     322 ./src/algorithm/jump.rs
+     351 ./src/algorithm/polylog_opt.rs
      370 ./src/graph.rs
-     393 ./src/euler_forest.rs
-     625 ./tests/test_examples.rs
+     389 ./src/euler_forest.rs
+     643 ./tests/test_examples.rs
      809 ./src/avl_forest.rs
-    5018 total
+    5540 total
