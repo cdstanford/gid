@@ -14,9 +14,9 @@ pub const RESULTS_DIR: &str = "results";
 
 // Parameters for unit tests
 #[cfg(debug_assertions)]
-pub const UNIT_TEST_TIMEOUT_SECS: u64 = 30;
+pub const UNIT_TEST_TIMEOUT_SECS: u64 = 60;
 #[cfg(not(debug_assertions))]
-pub const UNIT_TEST_TIMEOUT_SECS: u64 = 300;
+pub const UNIT_TEST_TIMEOUT_SECS: u64 = 3600;
 
 /*
     ALL example directories where examples are stored.
