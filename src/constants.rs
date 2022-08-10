@@ -12,12 +12,6 @@ pub const EXAMPLE_EXPECT_EXT: &str = "_expect.json";
 // Output directory used by run_all
 pub const RESULTS_DIR: &str = "results";
 
-// Parameters for unit tests
-#[cfg(debug_assertions)]
-pub const UNIT_TEST_TIMEOUT_SECS: u64 = 60;
-#[cfg(not(debug_assertions))]
-pub const UNIT_TEST_TIMEOUT_SECS: u64 = 3600;
-
 /*
     ALL example directories where examples are stored.
     The unit tests below validate that these exist and the list is exhaustive.

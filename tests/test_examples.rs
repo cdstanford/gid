@@ -10,14 +10,11 @@ use state_graph::driver;
 */
 
 fn assert_one(dir: &str, name: &str) {
-    driver::assert_example(
-        &format!("{}/{}", dir, name),
-        UNIT_TEST_TIMEOUT_SECS,
-    );
+    driver::assert_example(&format!("{}/{}", dir, name), None);
 }
 fn assert_all(dir: &str) {
     for basename in driver::example_basenames_in_dir(dir) {
-        driver::assert_example(&basename, UNIT_TEST_TIMEOUT_SECS);
+        driver::assert_example(&basename, None);
     }
 }
 

@@ -153,8 +153,9 @@ pub fn unwrap_timeout(res: &ExampleResult) -> &ExampleOutput {
     })
 }
 
-pub fn assert_example(basename: &str, timeout_secs: u64) {
+pub fn assert_example(basename: &str, timeout_secs: Option<u64>) {
     let example = Example::load_from(basename);
+    let timeout_secs = timeout_secs.unwrap_or(u64::MAX);
     let timeout = Duration::from_secs(timeout_secs);
     let algs = algs_all();
 
