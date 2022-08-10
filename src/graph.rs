@@ -128,14 +128,14 @@ where
         // Note that when vertices are merged, edges aren't. So the same vertex
         // could appear more than once in the iterator; but iter_edges enforces
         // that self-loops are filtered out.
-        assert!(self.is_seen(v));
+        debug_assert!(self.is_seen(v));
         self.iter_edges(v, &self.fwd_edges)
     }
     pub fn iter_bck_edges(&self, v: V) -> impl Iterator<Item = V> + '_ {
         // Note that when vertices are merged, edges aren't. So the same vertex
         // could appear more than once in the iterator; but iter_edges enforces
         // that self-loops are filtered out.
-        assert!(self.is_seen(v));
+        debug_assert!(self.is_seen(v));
         self.iter_edges(v, &self.bck_edges)
     }
     pub fn merge_using<F>(&mut self, v1: V, v2: V, merge_fun: F)
@@ -144,8 +144,8 @@ where
     {
         // Panics if v1 or v2 aren't seen
         // Uses function F to merge labels
-        assert!(self.is_seen(v1));
-        assert!(self.is_seen(v2));
+        debug_assert!(self.is_seen(v1));
+        debug_assert!(self.is_seen(v2));
 
         self.time.inc();
         let canon1 = self.get_canon_id_unwrapped(v1);
@@ -170,7 +170,7 @@ where
     }
     pub fn merge(&mut self, v1: V, v2: V) {
         // Panics if v1 or v2 aren't seen, or if their labels differ
-        assert_eq!(self.get_label(v1), self.get_label(v2));
+        debug_assert_eq!(self.get_label(v1), self.get_label(v2));
         self.merge_using(v1, v2, |t1, t2| {
             debug_assert_eq!(t1, t2);
             t1
