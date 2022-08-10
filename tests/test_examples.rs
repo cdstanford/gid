@@ -123,6 +123,10 @@ fn test_23() {
 fn test_24() {
     assert_one(EX_DIR_HANDWRITTEN, "24");
 }
+#[test]
+fn test_25() {
+    assert_one(EX_DIR_HANDWRITTEN, "25");
+}
 
 /*
     Auto-generated examples
