@@ -1,8 +1,0 @@
-
-# cargo-vet audits file
-
-[[audits.syn]]
-who = "Caleb Stanford <caleb.pirsquared@gmail.com>"
-criteria = "safe-to-deploy"
-delta = "1.0.99 -> 1.0.100"
-
