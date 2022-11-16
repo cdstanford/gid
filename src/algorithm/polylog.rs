@@ -187,6 +187,9 @@ impl PolylogStateGraph {
             let (orig_u, orig_v) = self.clear_succ(u);
             self.set_status(u, Status::Open);
             to_visit.push(u);
+            // Here it's fine to just do:
+            // self.euler_forest.remove_edge(orig_u, orig_v)
+            // But as a slight optimization we skip on the first iteration
             if first_iter {
                 first_iter = false;
             } else {
