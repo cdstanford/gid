@@ -86,9 +86,6 @@ impl StateGraph for SimpleStateGraph {
         self.graph.overwrite_vertex(v, Status::Live);
         self.calculate_new_live_states(v);
     }
-    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {
-        // Ignore NotReachable
-    }
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).copied()
     }

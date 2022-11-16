@@ -29,7 +29,6 @@ pub enum Transaction {
     Add(usize, usize),
     Close(usize),
     Live(usize),
-    NotReachable(usize, usize),
 }
 
 /*
@@ -45,7 +44,6 @@ pub trait StateGraph {
           and that the source is Open.
         - mark_closed_unchecked can assume that its vertex is Open.
         - mark_live_unchecked can assume that its vertex is Open.
-        - not_reachable_unchecked can assume that the two vertices are distinct.
 
         Derived checked versions are then provided as safer wrappers around
         these.
@@ -65,9 +63,6 @@ pub trait StateGraph {
 
     // Mark an open state as live.
     fn mark_live_unchecked(&mut self, v: usize);
-
-    // Indicate non-reachability between two nodes.
-    fn not_reachable_unchecked(&mut self, v1: usize, v2: usize);
 
     // Return whether v is Open, or v is Closed but there is a path from
     // v to an Open state (Unknown), or there is no such path (Dead).
@@ -109,10 +104,6 @@ pub trait StateGraph {
             self.mark_live_unchecked(v);
         }
     }
-    fn not_reachable(&mut self, v1: usize, v2: usize) {
-        debug_assert!(v1 != v2);
-        self.not_reachable_unchecked(v1, v2);
-    }
 
     // Some conveniences
     fn is_seen(&self, v: usize) -> bool {
@@ -151,7 +142,6 @@ pub trait StateGraph {
             Transaction::Add(v1, v2) => self.add_transition(v1, v2),
             Transaction::Close(v1) => self.mark_closed(v1),
             Transaction::Live(v1) => self.mark_live(v1),
-            Transaction::NotReachable(v1, v2) => self.not_reachable(v1, v2),
         }
     }
 }

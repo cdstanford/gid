@@ -239,7 +239,6 @@ impl StateGraph for PolylogStateGraph {
         self.set_status(v, Status::Live);
         self.calculate_new_live_states(v);
     }
-    fn not_reachable_unchecked(&mut self, _v1: usize, _v2: usize) {}
     fn get_status(&self, v: usize) -> Option<Status> {
         self.graph.get_label(v).map(|l| l.status)
     }

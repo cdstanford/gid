@@ -43,10 +43,6 @@ impl ExampleInput {
                 Transaction::Live(v1) => {
                     result.insert(v1);
                 }
-                Transaction::NotReachable(v1, v2) => {
-                    result.insert(v1);
-                    result.insert(v2);
-                }
             }
         }
         result

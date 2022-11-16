@@ -1,7 +1,4 @@
 [
-    {"NotReachable": [1,0]},
-    {"NotReachable": [2,1]},
-    {"NotReachable": [3,2]},
     {"Add": [0,1]},
     {"Close": 0},
     {"Add": [1,2]},
