@@ -173,6 +173,112 @@ fn gen_reverseunkloop(n: usize) -> Example {
     paramed_example("reverseunkloop", n, ex_in, expect)
 }
 
+fn gen_complete(n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in 0..n {
+        for j in 0..n {
+            if i != j {
+                ex_in.push(Transaction::Add(i, j));
+            }
+        }
+        ex_in.push(Transaction::Close(i));
+    }
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: (0..n).collect(),
+        unknown: vec![],
+        open: vec![],
+    };
+    paramed_example("complete", n, ex_in, expect)
+}
+
+fn gen_completeunk(n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in 0..n {
+        for j in 0..=n {
+            if i != j {
+                ex_in.push(Transaction::Add(i, j));
+            }
+        }
+        ex_in.push(Transaction::Close(i));
+    }
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: vec![],
+        unknown: (0..n).collect(),
+        open: vec![n],
+    };
+    paramed_example("unkcomplete", n, ex_in, expect)
+}
+
+fn gen_completeacyclic(n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in 0..n {
+        for j in (i+1)..n {
+            ex_in.push(Transaction::Add(i, j));
+        }
+        ex_in.push(Transaction::Close(i));
+    }
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: (0..n).collect(),
+        unknown: vec![],
+        open: vec![],
+    };
+    paramed_example("completeacyclic", n, ex_in, expect)
+}
+
+fn gen_completeacyclicunk(n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in 0..n {
+        for j in (i+1)..=n {
+            ex_in.push(Transaction::Add(i, j));
+        }
+        ex_in.push(Transaction::Close(i));
+    }
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: vec![],
+        unknown: (0..n).collect(),
+        open: vec![n],
+    };
+    paramed_example("unkcompleteacyclic", n, ex_in, expect)
+}
+
+fn gen_completeacyclicrev(n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in (0..n).rev() {
+        for j in (i+1)..n {
+            ex_in.push(Transaction::Add(i, j));
+        }
+        ex_in.push(Transaction::Close(i));
+    }
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: (0..n).collect(),
+        unknown: vec![],
+        open: vec![],
+    };
+    paramed_example("revcompleteacyclic", n, ex_in, expect)
+}
+
+fn gen_completeacyclicunkrev(n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in (0..n).rev() {
+        for j in (i+1)..=n {
+            ex_in.push(Transaction::Add(i, j));
+        }
+        ex_in.push(Transaction::Close(i));
+    }
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: vec![],
+        unknown: (0..n).collect(),
+        open: vec![n],
+    };
+    paramed_example("unkrevcompleteacyclic", n, ex_in, expect)
+}
+
 /*
     Random example generators
 */
@@ -229,7 +335,7 @@ fn random_dense(n: usize, p: usize, seed: u64) -> Example {
 
 fn main() {
     // Generate and save parameterized examples
-    for &i in &[3, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000] {
+    for &i in &[3, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000, 300000] {
         gen_line(i).save();
         gen_reverseline(i).save();
         gen_unkline(i).save();
@@ -239,16 +345,24 @@ fn main() {
         gen_reverseloop(i).save();
         gen_reverseunkloop(i).save();
     }
+    for &i in &[3, 10, 30, 100, 300, 1000] {
+        gen_complete(i).save();
+        gen_completeunk(i).save();
+        gen_completeacyclic(i).save();
+        gen_completeacyclicunk(i).save();
+        gen_completeacyclicrev(i).save();
+        gen_completeacyclicunkrev(i).save();
+    }
     // Generate and save random examples
     // Use random seeds 1-10
-    for &n in &[10, 30, 100, 300, 1000, 3000, 10000] {
+    for &n in &[10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000] {
         for &d in &[1, 2, 3, 10] {
             for seed in 1..=10 {
                 random_sparse(n, d, seed).save();
             }
         }
     }
-    for &n in &[10, 30, 100, 300, 1000, 3000] {
+    for &n in &[10, 30, 100, 300, 1000, 3000, 10000] {
         for &d in &[1, 2, 3] {
             for seed in 1..=10 {
                 random_dense(n, d, seed).save();
