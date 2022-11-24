@@ -220,6 +220,21 @@ fn test_complete_acyclic() {
 }
 
 #[test]
+fn test_bipartite() {
+    assert_one(EX_DIR_GENERATED, "bipartite_3_3");
+    assert_one(EX_DIR_GENERATED, "bipartite_10_10");
+    assert_one(EX_DIR_GENERATED, "bipartite_100_10");
+    assert_one(EX_DIR_GENERATED, "bipartite_10_100");
+    assert_one(EX_DIR_GENERATED, "bipartite_100_100");
+    assert_one(EX_DIR_GENERATED, "unkbipartite_3_3");
+    assert_one(EX_DIR_GENERATED, "unkbipartite_10_10");
+    assert_one(EX_DIR_GENERATED, "unkbipartite_100_10");
+    assert_one(EX_DIR_GENERATED, "unkbipartite_10_100");
+    assert_one(EX_DIR_GENERATED, "unkbipartite_100_100");
+}
+
+
+#[test]
 #[ignore]
 fn test_generated_expensive() {
     // Omitted generated examples: _300, _3000, _10000
