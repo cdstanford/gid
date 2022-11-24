@@ -541,14 +541,19 @@ where
 /*
     Specializations with particular HashMap implementation backings
 */
+// Generic
 pub type AvlForestHM<V> = AvlForest<V, HashMap<V, Node<V>>>;
+
+// Specific to usize
+pub type AvlForestHMusize = AvlForestHM<usize>;
 pub type AvlForest1DVec = AvlForest<usize, VecMap1D<Node<usize>>>;
-pub type AvlForest2DVec =
-    AvlForest<(usize, usize), VecMap2D<Node<(usize, usize)>>>;
-pub type AvlForestPVec =
-    AvlForest<(usize, usize), VecMapP<Node<(usize, usize)>>>;
-pub type AvlForestHy =
-    AvlForest<(usize, usize), VecMapHy<Node<(usize, usize)>>>;
+
+// Specific to pairs
+type UPair = (usize, usize);
+pub type AvlForestHMPair = AvlForestHM<UPair>;
+pub type AvlForest2DVec = AvlForest<UPair, VecMap2D<Node<UPair>>>;
+pub type AvlForestPVec = AvlForest<UPair, VecMapP<Node<UPair>>>;
+pub type AvlForestHy = AvlForest<UPair, VecMapHy<Node<UPair>>>;
 
 /*
     Unit tests
