@@ -32,12 +32,12 @@
       Greg Frederickson.
       SIAM Journal on Computing, 1985.
       (Original definition of topology trees)
-    -  Randomized Fully Dynamic Graph Algorithms with Polylogarithmic Time
-       per Operation.
-       Monika R. Henzinger and Valerie King.
-       JACM, 1999.
-     - Useful notes:
-       http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
+    - Randomized Fully Dynamic Graph Algorithms with Polylogarithmic Time
+      per Operation.
+      Monika R. Henzinger and Valerie King.
+      JACM, 1999.
+    - Useful notes:
+      http://courses.csail.mit.edu/6.851/spring07/scribe/lec05.pdf
 */
 
 use super::avl_forest::AvlForestHy as AvlForest;

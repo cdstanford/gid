@@ -1,5 +1,5 @@
 /*
-    New asymptotically best algorithm running in polylog time.
+    New asymptotically best algorithm running in log(m) time for m updates.
 
     Implementation that uses Euler tour trees (euler_forest.rs)
     to track which states are in the same component of the forest.
@@ -39,12 +39,12 @@ fn merge_nodes(mut n1: Node, mut n2: Node) -> Node {
 }
 
 #[derive(Debug, Default)]
-pub struct PolylogStateGraph {
+pub struct LogStateGraph {
     graph: DiGraph<usize, Node>,
     euler_forest: EulerForest,
     additional_space: DebugCounter,
 }
-impl PolylogStateGraph {
+impl LogStateGraph {
     /* Node label manipulation */
     fn get_node(&self, v: usize) -> &Node {
         debug_assert!(self.is_seen(v));
@@ -212,7 +212,7 @@ impl PolylogStateGraph {
         }
     }
 }
-impl StateGraph for PolylogStateGraph {
+impl StateGraph for LogStateGraph {
     fn new() -> Self {
         Default::default()
     }

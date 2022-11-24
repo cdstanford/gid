@@ -5,7 +5,7 @@
 */
 
 use super::algorithm::{
-    BFGTStateGraph, JumpStateGraph, NaiveStateGraph, PolylogStateGraph,
+    BFGTStateGraph, JumpStateGraph, LogStateGraph, NaiveStateGraph,
     SimpleStateGraph,
 };
 use super::constants::EXAMPLE_IN_EXT;
@@ -26,8 +26,8 @@ pub enum Algorithm {
     Naive,
     Simple,
     BFGT,
+    Log,
     Jump,
-    Polylog,
 }
 impl FromStr for Algorithm {
     type Err = String;
@@ -36,8 +36,8 @@ impl FromStr for Algorithm {
             "n" | "naive" => Ok(Algorithm::Naive),
             "s" | "simple" => Ok(Algorithm::Simple),
             "b" | "bfgt" => Ok(Algorithm::BFGT),
+            "l" | "log" => Ok(Algorithm::Log),
             "j" | "jump" => Ok(Algorithm::Jump),
-            "p" | "polylog" => Ok(Algorithm::Polylog),
             _ => Err(format!("Could not parse as Algorithm: {}", s)),
         }
     }
@@ -48,8 +48,8 @@ impl fmt::Display for Algorithm {
             Algorithm::Naive => "naive",
             Algorithm::Simple => "simple",
             Algorithm::BFGT => "bfgt",
+            Algorithm::Log => "log",
             Algorithm::Jump => "jump",
-            Algorithm::Polylog => "polylog",
         };
         write!(f, "{}", result)
     }
@@ -60,8 +60,8 @@ impl Algorithm {
             Algorithm::Naive => Box::new(NaiveStateGraph::new()),
             Algorithm::Simple => Box::new(SimpleStateGraph::new()),
             Algorithm::BFGT => Box::new(BFGTStateGraph::new()),
+            Algorithm::Log => Box::new(LogStateGraph::new()),
             Algorithm::Jump => Box::new(JumpStateGraph::new()),
-            Algorithm::Polylog => Box::new(PolylogStateGraph::new()),
         }
     }
 }
@@ -125,8 +125,8 @@ pub const ALL_ALGS: &[Algorithm] = &[
     Algorithm::Naive,
     Algorithm::Simple,
     Algorithm::BFGT,
+    Algorithm::Log,
     Algorithm::Jump,
-    Algorithm::Polylog,
 ];
 pub fn algs_excluding(exclude: &[Algorithm]) -> Vec<Algorithm> {
     ALL_ALGS.iter().filter(|&x| !exclude.contains(x)).cloned().collect()
