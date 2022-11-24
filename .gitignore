@@ -5,6 +5,8 @@ examples/generated/*_300000_in.json
 examples/generated/*_300000_expect.json
 examples/generated/*complete*_1000_in.json
 examples/generated/*complete*_1000_expect.json
+examples/generated/*bipartite_1000_1000_in.json
+examples/generated/*bipartite_1000_1000_expect.json
 examples/random/dense_10000_*
 examples/random/sparse_30000_*
 examples/random/sparse_100000_*

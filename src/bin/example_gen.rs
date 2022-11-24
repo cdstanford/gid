@@ -279,6 +279,48 @@ fn gen_completeacyclicunkrev(n: usize) -> Example {
     paramed_example("unkrevcompleteacyclic", n, ex_in, expect)
 }
 
+fn gen_bipartite(m: usize, n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in 0..m {
+        for j in m..(m+n) {
+            ex_in.push(Transaction::Add(i, j));
+        }
+        ex_in.push(Transaction::Close(i));
+    }
+    for j in m..(m+n) {
+        ex_in.push(Transaction::Close(j));
+    }
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: (0..(m+n)).collect(),
+        unknown: vec![],
+        open: vec![],
+    };
+    let mn = format!("{}_{}", m, n);
+    paramed_example("bipartite", mn, ex_in, expect)
+}
+
+fn gen_unkbipartite(m: usize, n: usize) -> Example {
+    let mut ex_in = ExampleInput(vec![]);
+    for i in 0..m {
+        for j in m..=(m+n) {
+            ex_in.push(Transaction::Add(i, j));
+        }
+        ex_in.push(Transaction::Close(i));
+    }
+    for j in m..(m+n) {
+        ex_in.push(Transaction::Close(j));
+    }
+    let expect = ExampleOutput {
+        live: vec![],
+        dead: vec![],
+        unknown: (0..(m+n)).collect(),
+        open: vec![m+n],
+    };
+    let mn = format!("{}_{}", m, n);
+    paramed_example("unkbipartite", mn, ex_in, expect)
+}
+
 /*
     Random example generators
 */
@@ -352,6 +394,12 @@ fn main() {
         gen_completeacyclicunk(i).save();
         gen_completeacyclicrev(i).save();
         gen_completeacyclicunkrev(i).save();
+        gen_bipartite(i, i).save();
+        gen_unkbipartite(i, i).save();
+        gen_bipartite(i, 10).save();
+        gen_unkbipartite(i, 10).save();
+        gen_bipartite(10, i).save();
+        gen_unkbipartite(10, i).save();
     }
     // Generate and save random examples
     // Use random seeds 1-10
