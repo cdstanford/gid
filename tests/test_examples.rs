@@ -194,6 +194,32 @@ fn test_reverseunkloop() {
 }
 
 #[test]
+fn test_complete() {
+    assert_one(EX_DIR_GENERATED, "complete_3");
+    assert_one(EX_DIR_GENERATED, "complete_10");
+    assert_one(EX_DIR_GENERATED, "complete_30");
+    assert_one(EX_DIR_GENERATED, "unkcomplete_3");
+    assert_one(EX_DIR_GENERATED, "unkcomplete_10");
+    assert_one(EX_DIR_GENERATED, "unkcomplete_30");
+}
+
+#[test]
+fn test_complete_acyclic() {
+    assert_one(EX_DIR_GENERATED, "completeacyclic_3");
+    assert_one(EX_DIR_GENERATED, "completeacyclic_10");
+    assert_one(EX_DIR_GENERATED, "completeacyclic_30");
+    assert_one(EX_DIR_GENERATED, "unkcompleteacyclic_3");
+    assert_one(EX_DIR_GENERATED, "unkcompleteacyclic_10");
+    assert_one(EX_DIR_GENERATED, "unkcompleteacyclic_30");
+    assert_one(EX_DIR_GENERATED, "revcompleteacyclic_3");
+    assert_one(EX_DIR_GENERATED, "revcompleteacyclic_10");
+    assert_one(EX_DIR_GENERATED, "revcompleteacyclic_30");
+    assert_one(EX_DIR_GENERATED, "unkrevcompleteacyclic_3");
+    assert_one(EX_DIR_GENERATED, "unkrevcompleteacyclic_10");
+    assert_one(EX_DIR_GENERATED, "unkrevcompleteacyclic_30");
+}
+
+#[test]
 #[ignore]
 fn test_generated_expensive() {
     // Omitted generated examples: _300, _3000, _10000
