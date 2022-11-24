@@ -377,7 +377,7 @@ fn random_dense(n: usize, p: usize, seed: u64) -> Example {
 
 fn main() {
     // Generate and save parameterized examples
-    for &i in &[3, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000, 300000] {
+    for &i in &[3, 10, 30, 100, 300, 1000, 3000, 10000, 30000, 100000] {
         gen_line(i).save();
         gen_reverseline(i).save();
         gen_unkline(i).save();

@@ -1,8 +1,6 @@
 /target
 /results
 .DS_Store
-examples/generated/*_300000_in.json
-examples/generated/*_300000_expect.json
 examples/generated/*complete*_1000_in.json
 examples/generated/*complete*_1000_expect.json
 examples/generated/*bipartite_1000_1000_in.json
