@@ -313,8 +313,8 @@ fn gen_unkbipartite(m: usize, n: usize) -> Example {
     }
     let expect = ExampleOutput {
         live: vec![],
-        dead: vec![],
-        unknown: (0..(m+n)).collect(),
+        dead: (m..(m+n)).collect(),
+        unknown: (0..m).collect(),
         open: vec![m+n],
     };
     let mn = format!("{}_{}", m, n);
