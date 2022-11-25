@@ -6,16 +6,11 @@ use state_graph::constants::*;
 use state_graph::driver;
 
 /*
-    Helper functions
+    Helper function
 */
 
 fn assert_one(dir: &str, name: &str) {
     driver::assert_example(&format!("{}/{}", dir, name), None);
-}
-fn assert_all(dir: &str) {
-    for basename in driver::example_basenames_in_dir(dir) {
-        driver::assert_example(&basename, None);
-    }
 }
 
 /*
@@ -255,12 +250,18 @@ fn test_generated_expensive() {
 
 #[test]
 fn test_regex_comp() {
-    assert_all(EX_DIR_REGEX_COMP);
+    assert_one(EX_DIR_REGEX_COMP, "comp1_inclusion_unsat");
+    assert_one(EX_DIR_REGEX_COMP, "comp1_nonempty_trivial_sat");
+    assert_one(EX_DIR_REGEX_COMP, "comp2_inclusion_sat");
+    assert_one(EX_DIR_REGEX_COMP, "simple_complement_unsat");
 }
 
 #[test]
 fn test_regex_inter() {
-    assert_all(EX_DIR_REGEX_INTER);
+    assert_one(EX_DIR_REGEX_INTER, "demo_unsat");
+    assert_one(EX_DIR_REGEX_INTER, "inter_mod2_unsat");
+    assert_one(EX_DIR_REGEX_INTER, "inter_mod3_unsat");
+    assert_one(EX_DIR_REGEX_INTER, "zelkova_fmcad18_example_explicit_inter_unsat");
 }
 
 #[test]
