@@ -12,13 +12,13 @@
      217 ./src/util.rs
      229 ./src/driver.rs
      249 ./src/example.rs
-     253 ./src/algorithm/polylog.rs
-     258 ./src/bin/example_gen.rs
+     253 ./src/algorithm/log.rs
      265 ./src/algorithm/bfgt.rs
      283 ./src/algorithm/jump.rs
      307 ./src/hashy.rs
      370 ./src/graph.rs
      389 ./src/euler_forest.rs
-     640 ./tests/test_examples.rs
-     809 ./src/avl_forest.rs
-    5115 total
+     420 ./src/bin/example_gen.rs
+     681 ./tests/test_examples.rs
+     814 ./src/avl_forest.rs
+    5323 total
