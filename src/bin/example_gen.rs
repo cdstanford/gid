@@ -4,11 +4,11 @@
     I am using the examples both for unit testing and performance analysis.
 */
 
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
 use guided_digraph::constants::{EX_DIR_GENERATED, EX_DIR_RANDOM};
 use guided_digraph::example::{Example, ExampleInput, ExampleOutput};
 use guided_digraph::interface::Transaction;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 use std::fmt::Display;
 
 /*
@@ -214,7 +214,7 @@ fn gen_completeunk(n: usize) -> Example {
 fn gen_completeacyclic(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..n {
-        for j in (i+1)..n {
+        for j in (i + 1)..n {
             ex_in.push(Transaction::Add(i, j));
         }
         ex_in.push(Transaction::Close(i));
@@ -231,7 +231,7 @@ fn gen_completeacyclic(n: usize) -> Example {
 fn gen_completeacyclicunk(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..n {
-        for j in (i+1)..=n {
+        for j in (i + 1)..=n {
             ex_in.push(Transaction::Add(i, j));
         }
         ex_in.push(Transaction::Close(i));
@@ -248,7 +248,7 @@ fn gen_completeacyclicunk(n: usize) -> Example {
 fn gen_completeacyclicrev(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in (0..n).rev() {
-        for j in (i+1)..n {
+        for j in (i + 1)..n {
             ex_in.push(Transaction::Add(i, j));
         }
         ex_in.push(Transaction::Close(i));
@@ -265,7 +265,7 @@ fn gen_completeacyclicrev(n: usize) -> Example {
 fn gen_completeacyclicunkrev(n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in (0..n).rev() {
-        for j in (i+1)..=n {
+        for j in (i + 1)..=n {
             ex_in.push(Transaction::Add(i, j));
         }
         ex_in.push(Transaction::Close(i));
@@ -282,17 +282,17 @@ fn gen_completeacyclicunkrev(n: usize) -> Example {
 fn gen_bipartite(m: usize, n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..m {
-        for j in m..(m+n) {
+        for j in m..(m + n) {
             ex_in.push(Transaction::Add(i, j));
         }
         ex_in.push(Transaction::Close(i));
     }
-    for j in m..(m+n) {
+    for j in m..(m + n) {
         ex_in.push(Transaction::Close(j));
     }
     let expect = ExampleOutput {
         live: vec![],
-        dead: (0..(m+n)).collect(),
+        dead: (0..(m + n)).collect(),
         unknown: vec![],
         open: vec![],
     };
@@ -303,19 +303,19 @@ fn gen_bipartite(m: usize, n: usize) -> Example {
 fn gen_unkbipartite(m: usize, n: usize) -> Example {
     let mut ex_in = ExampleInput(vec![]);
     for i in 0..m {
-        for j in m..=(m+n) {
+        for j in m..=(m + n) {
             ex_in.push(Transaction::Add(i, j));
         }
         ex_in.push(Transaction::Close(i));
     }
-    for j in m..(m+n) {
+    for j in m..(m + n) {
         ex_in.push(Transaction::Close(j));
     }
     let expect = ExampleOutput {
         live: vec![],
-        dead: (m..(m+n)).collect(),
+        dead: (m..(m + n)).collect(),
         unknown: (0..m).collect(),
-        open: vec![m+n],
+        open: vec![m + n],
     };
     let mn = format!("{}_{}", m, n);
     paramed_example("unkbipartite", mn, ex_in, expect)

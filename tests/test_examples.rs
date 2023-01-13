@@ -228,7 +228,6 @@ fn test_bipartite() {
     assert_one(EX_DIR_GENERATED, "unkbipartite_100_100");
 }
 
-
 #[test]
 #[ignore]
 fn test_generated_expensive() {
@@ -261,7 +260,10 @@ fn test_regex_inter() {
     assert_one(EX_DIR_REGEX_INTER, "demo_unsat");
     assert_one(EX_DIR_REGEX_INTER, "inter_mod2_unsat");
     assert_one(EX_DIR_REGEX_INTER, "inter_mod3_unsat");
-    assert_one(EX_DIR_REGEX_INTER, "zelkova_fmcad18_example_explicit_inter_unsat");
+    assert_one(
+        EX_DIR_REGEX_INTER,
+        "zelkova_fmcad18_example_explicit_inter_unsat",
+    );
 }
 
 #[test]
