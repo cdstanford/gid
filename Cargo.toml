@@ -7,6 +7,10 @@ license = "MIT"
 description = "A data structure for incremental live and dead state detection in an abstract transition system"
 repository = "https://github.com/cdstanford/gid"
 readme = "README.md"
+exclude = [
+    "regex-smt-benchmarks",
+    "examples",
+]
 
 [dependencies]
 disjoint-sets = "0.4.2"
