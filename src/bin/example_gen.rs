@@ -6,9 +6,9 @@
 
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use state_graph::constants::{EX_DIR_GENERATED, EX_DIR_RANDOM};
-use state_graph::example::{Example, ExampleInput, ExampleOutput};
-use state_graph::interface::Transaction;
+use guided_digraph::constants::{EX_DIR_GENERATED, EX_DIR_RANDOM};
+use guided_digraph::example::{Example, ExampleInput, ExampleOutput};
+use guided_digraph::interface::Transaction;
 use std::fmt::Display;
 
 /*

@@ -67,6 +67,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "guided_digraph"
+version = "0.1.1"
+dependencies = [
+ "disjoint-sets",
+ "rand",
+ "serde",
+ "serde_json",
+ "structopt",
+ "time",
+]
+
+[[package]]
 name = "heck"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -224,18 +236,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "state_graph"
-version = "0.1.0"
-dependencies = [
- "disjoint-sets",
- "rand",
- "serde",
- "serde_json",
- "structopt",
- "time",
 ]
 
 [[package]]

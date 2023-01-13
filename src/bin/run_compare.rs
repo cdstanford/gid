@@ -3,7 +3,7 @@
     and compare stats.
 */
 
-use state_graph::driver::{self, Algorithm};
+use guided_digraph::driver::{self, Algorithm};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

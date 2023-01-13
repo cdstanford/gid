@@ -4,9 +4,9 @@
     See constants::ALL_EXAMPLE_DIRS for the list of known examples.
 */
 
-use state_graph::constants::{ALL_EXAMPLE_DIRS, RESULTS_DIR};
-use state_graph::driver::{self, Algorithm};
-use state_graph::util;
+use guided_digraph::constants::{ALL_EXAMPLE_DIRS, RESULTS_DIR};
+use guided_digraph::driver::{self, Algorithm};
+use guided_digraph::util;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

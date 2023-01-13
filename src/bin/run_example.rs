@@ -2,7 +2,7 @@
     Simplest binary: run a state graph algorithm on an example input
 */
 
-use state_graph::driver::{self, Algorithm};
+use guided_digraph::driver::{self, Algorithm};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]

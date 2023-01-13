@@ -2,8 +2,8 @@
     Test the unit tests in the examples/ directory.
 */
 
-use state_graph::constants::*;
-use state_graph::driver;
+use guided_digraph::constants::*;
+use guided_digraph::driver;
 
 /*
     Helper function
