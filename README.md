@@ -154,10 +154,16 @@ The repository contains the following files and directories:
 
 ## Reproducing the experimental results (full-review phase)
 
-This section contains detailed instructions to reproduce the experimental results (Section 4).
-In general, some of our experiments would take a long time to reproduce in their entirety.
-For this reason, throughout this section we suggest commands that can be used to run a smaller number of benchmarks and get a sense of the results, without fully replicating all tables and figures.
-However, for completeness, we also include instructions that could in theory be used to fully reproduce all results, including all the tables and figures.
+This section contains detailed instructions to reproduce the raw experimental results described in Section 4.
+
+### Important caveats
+
+The plots in Figure 5 were generated using the help of a Google spreadsheet.
+Rather than reproducing the plots directly, we suggest commands here to run and reproduce the raw results, which include, for each benchmark, the running time of each algorithm on the benchmark.
+For the sake of completeness, we also include instructions on how to use a template of the Google spreadsheet if it is desired to regenerate the plots.
+
+In addition, many of our experiments take a long time to reproduce in their entirety.
+For this reason, throughout this section we suggest commands that can be used to run a subset of the benchmarks if desired for a quicker evaluation.
 
 ### 1. Lines of Source Code (Fig. 4, left)
 
@@ -205,7 +211,7 @@ Also note that `examples/handwritten` are also trivial, so are only used for uni
 and are not used for the evaluation
 (the "Handwritten" row of the table refers to handwritten regex examples in `examples/regex`).
 
-#### Suggested replication
+#### Suggested sanity checks on the benchmarks
 
 Since the Qty column is not yet reproducible,
 instead, at this stage, we suggest verifying that some smallest examples will be excluded.
