@@ -189,16 +189,16 @@ Another possibility for extension is to extend the graph interface with addition
 We have taken care to document the source code, where especially helpful, and cleaned up and removed TODOs and old features.
 We have also ensured that there are extensive unit tests to demonstrate minimal uses for the tool, see for example `tests/test_examples.rs`.
 
-### Issues and feedback
+## Authors
+
+For the artifact: Caleb Stanford `cdstanford` `ucdavis` `edu`
+
+For the paper: Caleb Stanford and Margus Veanes `margus` `microsoft` `com`
+
+## Issues and feedback
 
 Finally, if there are any issues running or re-suing the artifact, we are always open to receiving questions and feedback.
 
 - For the CAV artifact evaluation, please let us know in the comments if you encounter any issues.
 
 - In the future, the GitHub repository will be open for comments, and the best place to submit any issues, bug reports, feature requests, or comments would be through GitHub. Please open an issue or pull request at [https://github.com/cdstanford/gid](https://github.com/cdstanford/gid) and we will be happy to assist you.
-
-## Authors
-
-For the artifact: Caleb Stanford `cdstanford` `ucdavis` `edu`
-
-For the paper: Caleb Stanford and Margus Veanes `margus` `microsoft` `com`
