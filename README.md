@@ -43,16 +43,17 @@ The artifact supports the experimental results section of the paper (Section 4),
 - In particular, Algorithm 3 exhibits up to two orders of magnitude speedup over BFGT for larger GIDs – we measured speedups of 110x to 530x for GIDs in the top five size buckets (GIDs of size nearest to 100K, 200K, 500K, 1M, and 2M).
 - Both algorithms, and our implementations of all the baseline approaches, exhibit correct output on all unit tests and benchmarks.
 
-As a warning, the plots included in Figure 5 were generated using a Google spreadsheet, and cannot be produced automatically from the artifact. However, we include all information needed to reproduce these results, if necessary.
+The plots included in Figure 5 were generated using a Google spreadsheet, and cannot be produced automatically from the artifact. However, we also include all information needed to reproduce these figures, if necessary.
 (TODO)
 
 ## Quick-Start Guide (smoke-test phase)
 
-The artifact is provided as a docker container.
+The artifact is provided as a docker container
+and is assigned a DOI on Zenodo.
 (TODO)
 
 All commands are run through `cargo`, which is the Rust build system.
-We recommend two small tests to see that everything is working correctly.
+We recommend the following two tests to see that everything is working correctly.
 
 ### 1. Run the unit tests
 
@@ -145,6 +146,10 @@ The repository contains the following files and directories:
 - `Cargo.toml` and `Cargo.lock` are standard files provided by Rust packages: they document the required Rust package dependencies to run the code, and are used by `cargo` during compilation and linking. `rustfmt.toml` is a configuration file for the code formatter `cargo fmt`.
 - Finally, `scripts` contains miscellaneous scripts, and `regex-smt-benchmarks` contains SMT regular expression benchmarks as a submodule: it is not a necessary dependency, but it includes the source `.smt` files that were used to generate some of the benchmarks in `examples/` for the sake of completeness.
 
+## Reproducing the experimental results (full-review phase)
+
+TODO
+
 ## "Reusable" badge
 
 In addition to the functional and available badges, we request to be considered for the "reusable" badge. Here are some notes that support reusability.
@@ -184,6 +189,16 @@ Another possibility for extension is to extend the graph interface with addition
 We have taken care to document the source code, where especially helpful, and cleaned up and removed TODOs and old features.
 We have also ensured that there are extensive unit tests to demonstrate minimal uses for the tool, see for example `tests/test_examples.rs`.
 
-## Reproducing the experimental results (full-review phase)
+### Issues and feedback
 
-TODO
+Finally, if there are any issues running or re-suing the artifact, we are always open to receiving questions and feedback.
+
+- For the CAV artifact evaluation, please let us know in the comments if you encounter any issues.
+
+- In the future, the GitHub repository will be open for comments, and the best place to submit any issues, bug reports, feature requests, or comments would be through GitHub. Please open an issue or pull request at [https://github.com/cdstanford/gid](https://github.com/cdstanford/gid) and we will be happy to assist you.
+
+## Authors
+
+For the artifact: Caleb Stanford `cdstanford` `ucdavis` `edu`
+
+For the paper: Caleb Stanford and Margus Veanes `margus` `microsoft` `com`
