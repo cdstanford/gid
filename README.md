@@ -4,17 +4,16 @@ Welcome! This repository contains the artifact for the paper *Incremental Dead S
 See `cav23.pdf` for the version of the paper at submission time.
 The artifact can also be viewed online [here](https://github.com/cdstanford/gid).
 
-## Brief Overview
+## Overview
 
 The artifact provides a data structure, called guided incremental digraphs (GIDs), implemented as an open-source library in Rust.
-The data structure solves incremental live and dead state detection in an abstract transition system.
-
+The data structure identifies live and dead states in an abstract transition system.
 More precisely: given as input a list of graph updates like
 ```
-Edge(1, 2)
-Edge(2, 3)
+AddEdge(1, 2)
+AddEdge(2, 3)
 Close(2)
-Edge(3, 4)
+AddEdge(3, 4)
 Close(4)
 Terminal(2)
 ```
@@ -25,7 +24,7 @@ The meaning of this terminology is as follows:
 - In the output, a "live" state is one for which there is a path to a terminal state.
 - In the output, a "dead" state is one for which all reachable states are closed and not terminal. In other words, a dead state is one that is known to not be live no matter what future edges are added to the transition system.
 
-In this example, `1` and `2` should be live and `4` should be dead.
+In this example, by the above definitions, `1` and `2` should be live and `4` should be dead.
 
 The repository implements five competing solutions to the above problem:
 - our amortized logarithmic-time per update algorithm (Algorithm 2, `log`)
@@ -49,8 +48,12 @@ As a warning, the plots included in Figure 5 were generated using a Google sprea
 The artifact is provided as a docker container.
 (TODO)
 
-Everything is built and run through `cargo`, which is the Rust package manager and build system.
-Once you have navigated to the `gid` directory, try running the unit tests with the following command:
+All commands are run through `cargo`, which is the Rust build system.
+We recommend two small tests to see that everything is working correctly.
+
+### 1. Run the unit tests
+
+Once you have navigated to the `gid` directory, execute the following command:
 ```
 cargo test
 ```
@@ -65,8 +68,11 @@ test result: ok. 56 passed; 0 failed; 8 ignored; 0 measured; 0 filtered out; fin
 You will notice that there are 8 tests which are "ignored"; this is because they take an excessively long time to run.
 (If you like, you can run these with `cargo test --release -- --ignored`, which should take about 10-15 minutes to complete.)
 
-Finally, you can also try running the artifact directly on one of the examples.
-We recommend running the example `examples/handwritten/15`:
+### 2. Run one of the examples
+
+You can also run the artifact directly on one of the examples
+using the provided `run_compare` and `run_example` binaries.
+To run the example `examples/handwritten/15`:
 ```
 cargo run --release --bin run_compare -- examples/handwritten/15
 ```
@@ -98,5 +104,31 @@ Stastics: time 0ms
 Output is correct.
 ```
 
-You can also view the expected input and output for this example in:
+The input and output syntax for this example can be viewed in
 `examples/handwritten/15_in.json` and `examples/handwritten/15_expect.json`, respectively.
+The output `_expect.json` is used for testing correctness.
+The syntax used is reproduced below:
+
+Input:
+```
+[
+    {"Add": [2,3]},
+    {"Close": 2},
+    {"Live": 1},
+    {"Add": [0,1]},
+    {"Add": [1,2]},
+    {"Close": 1},
+    {"Add": [3,4]},
+    {"Close": 4}
+]
+```
+
+Output:
+```
+{
+    "live": [0, 1],
+    "dead": [4],
+    "unknown": [2],
+    "open": [3]
+}
+```
