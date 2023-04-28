@@ -45,21 +45,26 @@ The artifact supports the experimental results section of the paper (Section 4),
 
 The plots included in Figure 5, as well as the Qty column of Figure 4, were generated using a Google spreadsheet,
 and cannot be produced automatically.
-For completeness, we include the spreadsheet in `spreadsheets` as an `.xlsx` file,
+For completeness, we include the spreadsheet under `spreadsheets/`, as an `.xlsx` file,
 and we also include a link to a Google sheet template
 which can be used to regenerate the plots.
 We also include instructions for how to copy the raw results into the spreadsheet; if this is done, the plots should update based on the new data.
 However, to save time, we recommend focusing the evaluation on running the command-line tools to reproduce the raw results (in CSV form)
 as well as checking the output to see that it agrees with what is reported in the paper.
+To aid in this process, we also provide the raw results that are used in the spreadsheet, under `results/`, for comparison.
+
+## Running the Docker container
+
+The artifact is provided as a docker container, available on Zenodo:
+
+- [Zenodo Link](https://zenodo.org/record/7877718)
+
+- DOI: 10.5281/zenodo.7877718
 
 ## Quick-Start Guide (smoke-test phase)
 
-The artifact is provided as a docker container
-and is assigned a DOI on Zenodo.
-(TODO)
-
-All commands are run through `cargo`, which is the Rust build system.
-We recommend the following two tests to see that everything is working correctly.
+All commands to build and run the artifact are through `cargo`, the Rust package manager and build system.
+Once you have obtained the artifact, we recommend the following two tests to see that everything is working correctly.
 
 ### 1. Run the unit tests
 
