@@ -133,6 +133,15 @@ Output:
 }
 ```
 
+## Directory structure
+
+The repository contains the following files and directories:
+- First and foremost, `src/` contains the source code. Within this, `src/algorithm` is the most important folder, containing the implementation of each of the algorithms that are compared. `src/bin` contains the available binaries, including `run_compare` and `run_example` described above. Finally, the rest of the files implement a common interface and shared underlying directed graph structure which are used to ensure a fair comparison between the algorithms.
+- `tests/` contains unit tests, in addition to those already included inline in the source code.
+- `examples/` contains all of the (handwritten and automatically generated) benchmarks used for evaluation of the paper as well as for correctness.
+- `Cargo.toml` and `Cargo.lock` are standard files provided by Rust packages: they document the required Rust package dependencies to run the code, and are used by `cargo` during compilation and linking. `rustfmt.toml` is a configuration file for the code formatter `cargo fmt`.
+- Finally, `scripts` contains miscellaneous scripts, and `regex-smt-benchmarks` contains SMT regular expression benchmarks as a submodule: it is not a necessary dependency, but it includes the source `.smt` files that were used to generate some of the benchmarks in `examples/` for the sake of completeness.
+
 ## "Reusable" badge
 
 In addition to the functional and available badges, we request to be considered for the "reusable" badge. Here are some notes that support reusability.
@@ -141,6 +150,8 @@ In addition to the functional and available badges, we request to be considered 
 
 Our library is free and open source under an MIT license, and is also available through the Rust package registry system (`crates.io`), so it can easily be integrated into any Rust project by simply running `cargo add gid` or adding the line `gid = "0.1.1"` to `Cargo.toml`.
 Alternatively, the artifact can be downloaded and run as a binary in a project written in any other language.
+It can be run outside of a Docker container in any system with Rust installed,
+and it is also available as a GitHub repository.
 
 For Rust projects, the library provides an interface to use GIDs directly as a data structure in future applications. For example, one can import `JumpStateGraph` into another code base and use the interface in `interface.rs` to update the data structure. The methods include, for example, `.add_transition()`, `.mark_closed()`, and `.is_dead()` to update and query the data structure.
 
