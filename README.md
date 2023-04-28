@@ -81,6 +81,7 @@ To run the example `examples/handwritten/15`:
 cargo run --release --bin run_compare -- examples/handwritten/15
 ```
 
+This command runs all of the algorithms on the input files: `examples/handwritten/15_in.json` and `examples/handwritten/15_expect.json`.
 This should produce the following output:
 ```
 ===== examples/handwritten/15 =====
@@ -90,6 +91,11 @@ simple: time 0ms
 bfgt: time 0ms
 log: time 0ms
 jump: time 0ms
+```
+
+You can also run with `-h` to view command help, description, and options:
+```
+cargo run --release --bin run_compare -- -h
 ```
 
 You can also run a specific algorithm with the binary `run_example` instead of `run_compare`, and adding `-a n`, `-a s`, `-a b`, `-a l`, or `-a j`. For example, to run the `log` algorithm:
@@ -148,6 +154,167 @@ The repository contains the following files and directories:
 
 ## Reproducing the experimental results (full-review phase)
 
+This section contains detailed instructions to reproduce the experimental results (Section 4).
+In general, some of our experiments would take a long time to reproduce in their entirety.
+For this reason, throughout this section we suggest commands that can be used to run a smaller number of benchmarks and get a sense of the results, without fully replicating all tables and figures.
+However, for completeness, we also include instructions that could in theory be used to fully reproduce all results, including all the tables and figures.
+
+### 1. Lines of Source Code (Fig. 4, left)
+
+On the left, Figure 4 summarizes all the source code used for the evaluation.
+To normalize number of lines of code, all code is automatically formatted with `cargo fmt`.
+You can verify this by running `cargo fmt` followed by `git status` to see that no source files change.
+Then you can run the script
+```
+./scripts/update_loc.sh
+```
+to output the number of lines in the source code to the file `loc.txt` (or run `rm loc.txt` first, and it will be recreated with the above command).
+We recommend checking the rows to see that they agree.
+Each row in the table corresponds to one or more lines in `loc.txt`.
+The "Common framework" row includes the sum of `interface.rs`, `search.rs`, `driver.rs`, `example.rs`, and `graph.rs`.
+The "Other" row includes `mod.rs`, `lib.rs`, and `debug_counter.rs`.
+The "Experimental Scripts" row includes `run_compare.rs`, `run_example.rs`, `run_all.rs`, and `example_gen.rs`.
+The "Additional Unit Tests" row includes `constants.rs` and `test_examples.rs`.
+The "Euler Tour Trees" row includes the implementation of Euler Forests and associated AVL trees in `hashy.rs`, `euler_forest.rs`, and `avl_forest.rs`.
+All the other rows correspond directly to a single source file.
+A minor discrepancy is that "Additional Unit Tests" row now has 2 additional LoC (800 instead of 798) due to a minor update since the experiments were first run;
+we will update this row in the final version of the paper.
+
+### 2. Generating the benchmarks used (Fig. 4, right)
+
+The Basic and Random benchmarks are automatically generated. To generate these, run
+```
+cargo run --release --bin example_gen
+```
+
+which should take 1-2 minutes to complete, and generates the examples in `examples/generated` and `examples/random`.
+Note that this runs with a fixed set of 10 different random seeds, to ensure reproducibility.
+For completeness sake, it is also possible to edit the random seeds in the `main()` function at the bottom of `src/bin/example_gen.rs`; if you were to do this, this would change only the benchmarks generated in `examples/random`.
+
+#### A note on "trivial" benchmarks:
+
+In the table in Figure 4, on the right, it is not yet possible at this stage to reproduce the "Qty" column. This is because this column reports the number of benchmarks *after* filtering for trivially small examples.
+By this we mean any example for which all algorithms take less than 10 milliseconds to complete, as described on Page 15, third-to-last paragraph:
+
+> From both the Q2 and Q3 benchmarks, we filter out any benchmark which takes under 10 milliseconds for all of the algorithms to solve (including Naive), and we use a 60 second timeout.
+
+The only rows for which we report the total number of examples prior to filtering is the Regex examples,
+as these are not our benchmarks created for this paper, so we wanted to contextualize any modifications to the original number.
+For benchmarks that were created for this paper, we excluded the trivial examples entirely as they should not be considered valid benchmarks for performance comparison.
+Also note that `examples/handwritten` are also trivial, so are only used for unit tests
+and are not used for the evaluation
+(the "Handwritten" row of the table refers to handwritten regex examples in `examples/regex`).
+
+#### Suggested replication
+
+Since the Qty column is not yet reproducible,
+instead, at this stage, we suggest verifying that some smallest examples will be excluded.
+For example, running
+```
+cargo run --release --bin run_compare -- examples/generated/line_3
+```
+you should verify that all five algorithms take 0s on this example.
+For this reason, the example `line_3` (and others like it) was filtered out of the final results, and not reported in the table.
+Here is a complete list of excluded `generated` benchmarks:
+```
+examples/generated/line_3
+examples/generated/line_100
+examples/generated/unkrevcompleteacyclic_3
+examples/generated/revcompleteacyclic_3
+examples/generated/unkcompleteacyclic_10
+examples/generated/unkline_3
+examples/generated/complete_10
+examples/generated/unkloop_30
+examples/generated/reverseunkloop_10
+examples/generated/unkline_100
+examples/generated/loop_10
+examples/generated/bipartite_10_10
+examples/generated/unkbipartite_10_10
+examples/generated/reverseline_3
+examples/generated/unkbipartite_3_10
+examples/generated/unkbipartite_3_3
+examples/generated/bipartite_100_10
+examples/generated/reverseunkline_100
+examples/generated/reverseloop_30
+examples/generated/reverseline_100
+examples/generated/unkrevcompleteacyclic_10
+examples/generated/line_10
+examples/generated/unkbipartite_10_100
+examples/generated/completeacyclic_10
+examples/generated/unkbipartite_30_30
+examples/generated/reverseunkloop_3
+examples/generated/unkline_30
+examples/generated/revcompleteacyclic_10
+examples/generated/reverseunkline_10
+examples/generated/bipartite_30_30
+examples/generated/reverseline_30
+examples/generated/unkbipartite_10_3
+examples/generated/bipartite_3_3
+examples/generated/unkcomplete_10
+examples/generated/bipartite_10_100
+examples/generated/reverseloop_10
+examples/generated/unkloop_100
+examples/generated/unkbipartite_10_30
+examples/generated/bipartite_3_10
+examples/generated/loop_100
+examples/generated/unkcomplete_3
+examples/generated/reverseloop_100
+examples/generated/completeacyclic_3
+examples/generated/loop_30
+examples/generated/reverseunkloop_100
+examples/generated/bipartite_10_30
+examples/generated/reverseunkline_3
+examples/generated/unkcompleteacyclic_30
+examples/generated/complete_30
+examples/generated/unkloop_10
+examples/generated/complete_3
+examples/generated/reverseunkloop_30
+examples/generated/reverseloop_3
+examples/generated/unkcomplete_30
+examples/generated/bipartite_10_3
+examples/generated/bipartite_30_10
+examples/generated/unkcompleteacyclic_3
+examples/generated/reverseline_10
+examples/generated/completeacyclic_30
+examples/generated/unkbipartite_30_10
+examples/generated/loop_3
+examples/generated/unkbipartite_100_10
+examples/generated/unkline_10
+examples/generated/revcompleteacyclic_30
+examples/generated/unkloop_3
+examples/generated/reverseunkline_30
+examples/generated/unkrevcompleteacyclic_30
+examples/generated/line_30
+```
+
+Additionally, you can check that the `examples` folder contains all of the benchmarks described on Page 15, prior to filtering, as follows:
+
+- running `ls examples/generated`, you should see files for line graphs (`line`), cycle graphs (`loop`), complete graphs (`complete`), bipartite graphs (`bipartite`), in multiples of 3 and 10 (as described in the file name) up to size 100000.
+
+- running `ls examples/random`, you should see files for sparse graphs and dense graphs in multiples of 3 and 10 (as described in the file name) up to size 30000.
+The remaining numbers in the file name describe the generation parameters:
+for example, sparse benchmarks have a number of outgoing edges from each state (1, 2, 3, or 10) and a random seed (between 1 and 10).
+Dense benchmarks have a probability of generating each edge (independently), as a percentage, and a random seed (between 1 and 10).
+
+- Lastly, running `ls examples/regex` you should see several folders. Each folder contains the benchmarks described in the table.
+Running
+```
+find examples/regex/regexlib -name "*_in.json" | wc -l
+```
+you should see 2061 benchmarks (first row).
+`state_graph_easy` and `state_graph_hard` are the "Additional" benchmarks;
+there are 19 benchmarks prior to filtering for the 11 described in the table.
+(As in the prior cases as described earlier, we don't report the pre-filtering number here as these were created for the present paper.)
+Running
+```
+find examples/regex -name "*_in.json" | wc -l
+```
+the output is 2150 examples total:
+2061 regexlib, 19 additional state graph benchmarks (prior to filtering), and
+70 handwritten benchmarks.
+
+## To be continued...
+
 TODO
 
 ## "Reusable" badge
@@ -187,6 +354,7 @@ Another possibility for extension is to extend the graph interface with addition
 ### Documentation and tests
 
 We have taken care to document the source code, where especially helpful, and cleaned up and removed TODOs and old features.
+We have documented the binaries including `-h` options to display help.
 We have also ensured that there are extensive unit tests to demonstrate minimal uses for the tool, see for example `tests/test_examples.rs`.
 
 ## Authors
