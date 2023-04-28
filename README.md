@@ -132,3 +132,40 @@ Output:
     "open": [3]
 }
 ```
+
+## "Reusable" badge
+
+In addition to the functional and available badges, we request to be considered for the "reusable" badge. Here are some notes that support reusability.
+
+### Reusing the code
+
+Our library is free and open source under an MIT license, and is also available through the Rust package registry system (`crates.io`), so it can easily be integrated into any Rust project by simply running `cargo add gid` or adding the line `gid = "0.1.1"` to `Cargo.toml`.
+Alternatively, the artifact can be downloaded and run as a binary in a project written in any other language.
+
+For Rust projects, the library provides an interface to use GIDs directly as a data structure in future applications. For example, one can import `JumpStateGraph` into another code base and use the interface in `interface.rs` to update the data structure. The methods include, for example, `.add_transition()`, `.mark_closed()`, and `.is_dead()` to update and query the data structure.
+
+For non-Rust projects, it may be easiest to use the data structure in a more black-box fashion by constructing input files in the required `.json` format. This approach is described earlier using the `run_compare` and `run_example` binaries.
+
+### New implementations of existing work
+
+Besides GIDs, the project also provides new implementations of some existing work in online graph algorithms.
+In particular, the BFGT algorithm for strong connected component maintenance in `bfgt.rs`, and the Euler Forest data structure in `euler_forest.rs` provided as reusable data structures on their own.
+To our knowledge, this is the first implementation of BFGT for strong connected component maintenance, and the Euler Forest is the first implementation in Rust of Henzinger and King's Euler Tour Trees data structure.
+
+### Extending the code
+
+If one wishes to test out their own algorithm for incremental dead state detection, all that must be done is to provide another file in `src/algorithms` and implement the `StateGraph` interface: e.g.
+```rust
+struct MyNewStateGraph { /* ... */ }
+impl StateGraph for MyNewStateGraph { /* ... */ }
+```
+
+One of the existing files -- such as `naive.rs` -- can be used as a comparison to see the necessary implementation work.
+To compare the state graph with the existing algorithms, one can edit the code in `driver.rs` to add the new state graph to the list of compared algorithms.
+
+Another possibility for extension is to extend the graph interface with additional types of updates. The file `interface.rs` -- a Rust "Trait" -- defines the core algorithmic interface. Additional methods can be added to the interface, and then each algorithm must implement the new methods in the respective file `src/algorithms/*.rs`.
+
+### Documentation and tests
+
+We have taken care to document the source code, where especially helpful, and cleaned up and removed TODOs and old features.
+We have also ensured that there are extensive unit tests to demonstrate minimal uses for the tool, see for example `tests/test_examples.rs`.
