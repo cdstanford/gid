@@ -197,7 +197,7 @@ For the paper: Caleb Stanford and Margus Veanes `margus` `microsoft` `com`
 
 ## Issues and feedback
 
-Finally, if there are any issues running or re-suing the artifact, we are always open to receiving questions and feedback.
+Finally, if there are any issues installing, running, or reusing the artifact, we are always open to receiving questions and feedback.
 
 - For the CAV artifact evaluation, please let us know in the comments if you encounter any issues.
 
