@@ -40,3 +40,63 @@ The artifact supports the experimental results section of the paper (Section 4),
 - Algorithm 2 (`log`) also shows state-of-the-art performance, similar to BFGT on basic and regex GIDs and significantly better on random GIDs.
 - In particular, Algorithm 3 exhibits up to two orders of magnitude speedup over BFGT for larger GIDs – we measured speedups of 110x to 530x for GIDs in the top five size buckets (GIDs of size nearest to 100K, 200K, 500K, 1M, and 2M).
 - Both algorithms, and our implementations of all the baseline approaches, exhibit correct output on all unit tests and benchmarks.
+
+As a warning, the plots included in Figure 5 were generated using a Google spreadsheet, and cannot be produced automatically from the artifact. However, we include all information needed to reproduce these results, if necessary.
+(TODO)
+
+## Quick-Start Guide (smoke-test phase)
+
+The artifact is provided as a docker container.
+(TODO)
+
+Everything is built and run through `cargo`, which is the Rust package manager and build system.
+Once you have navigated to the `gid` directory, try running the unit tests with the following command:
+```
+cargo test
+```
+
+This should execute all the unit tests and should take under a minute. The output should include the following two important lines:
+```
+test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+...
+test result: ok. 56 passed; 0 failed; 8 ignored; 0 measured; 0 filtered out; finished in 24.44s
+```
+
+You will notice that there are 8 tests which are "ignored"; this is because they take an excessively long time to run.
+(If you like, you can run these with `cargo test --release -- --ignored`, which should take about 10-15 minutes to complete.)
+
+Finally, you can also try running the artifact directly on one of the examples.
+We recommend running the example `examples/handwritten/15`:
+```
+cargo run --release --bin run_compare -- examples/handwritten/15
+```
+
+This should produce the following output:
+```
+===== examples/handwritten/15 =====
+Example size: 8, timeout: 10s
+naive: time 0ms
+simple: time 0ms
+bfgt: time 0ms
+log: time 0ms
+jump: time 0ms
+```
+
+You can also run a specific algorithm with the binary `run_example` instead of `run_compare`, and adding `-a n`, `-a s`, `-a b`, `-a l`, or `-a j`. For example, to run the `log` algorithm:
+```
+cargo run --release --bin run_example -- examples/handwritten/15 -a l
+```
+
+Which should produce the following output:
+```
+===== examples/handwritten/15 =====
+Running algorithm 'log' with timeout 10s...
+=== Output ===
+ExampleOutput { live: [0, 1], dead: [4], unknown: [2], open: [3] }
+=== Result ===
+Stastics: time 0ms
+Output is correct.
+```
+
+You can also view the expected input and output for this example in:
+`examples/handwritten/15_in.json` and `examples/handwritten/15_expect.json`, respectively.
