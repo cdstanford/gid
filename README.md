@@ -79,8 +79,6 @@ docker run -it gid:gid
 ```
 This should bring you into an Ubuntu shell to continue the remainder of the instructions. You can quit the shell (and exit the container) with ctrl-D (or cmd-D on mac). Outside of this shell, you can see all (past and currently running) containers with `docker ps -a`.
 
-TODO
-
 ## Quick-Start Guide (smoke-test phase)
 
 All commands to build and run the artifact are through `cargo`, the Rust package manager and build system.
@@ -88,7 +86,12 @@ Once you have obtained the artifact, we recommend the following two tests to see
 
 ### 1. Run the unit tests
 
-Once you have navigated to the `gid` directory, execute the following command:
+Navigate to the `gid` directory, under home with
+```
+cd gid
+```
+
+Then execute the following command:
 ```
 cargo test
 ```
@@ -187,7 +190,10 @@ The repository contains the following files and directories:
 
 ## Reproducing the experimental results (full-review phase)
 
-This section contains detailed instructions to reproduce the experimental results described in Section 4.
+This section contains detailed instructions for reproducing the experimental results described in Section 4.
+We have organized the section into 4 suggested steps.
+We also include a separate section on some notes for the Reusable badge,
+below.
 
 ### Important caveats
 
@@ -195,8 +201,12 @@ The plots in Figure 5 were generated using the help of a Google spreadsheet.
 Rather than reproducing the plots directly, we suggest commands here to run and reproduce the raw results, which include, for each benchmark, the running time of each of the five algorithms on the benchmark.
 For the sake of completeness, we also include instructions on how to use a template of the Google spreadsheet if it is desired to regenerate the plots.
 
-In addition, many of our experiments take a long time to reproduce in their entirety.
-For this reason, throughout this section we suggest commands that can be used to run a subset of the benchmarks if desired for a quicker evaluation.
+In addition, the full results take a long time to reproduce in their entirety.
+For this reason, in step 4 below, we suggest reproducing only a subset of the results.
+Specifically, we suggest omitting the Naive and Simple baseline algorithms (as they are slow and often time out); the resulting experiment should take under an hour (around 30 minutes on our machine).
+This way, no benchmarks are excluded from the results.
+We also give the commands that can be used to run all 5 algorithms
+if this is desired.
 
 ### 1. Lines of Source Code (Fig. 4, left)
 
@@ -221,7 +231,7 @@ we will update this row in the final version of the paper.
 
 ### 2. Generating the benchmarks used (Fig. 4, right)
 
-The Basic and Random benchmarks are automatically generated. To generate these, run
+The Basic and Random benchmarks are generated automatically, and we provide a binary to do so. To generate these, run
 ```
 cargo run --release --bin example_gen
 ```
@@ -254,7 +264,8 @@ cargo run --release --bin run_compare -- examples/generated/line_3
 ```
 you should verify that all five algorithms take 0s on this example.
 For this reason, the example `line_3` (and others like it) was filtered out of the final results, and not reported in the table.
-Here is a complete list of excluded `generated` benchmarks:
+Here is a complete list of excluded `generated` benchmarks;
+if you like, you can substitute any of these above to verify they take under 10 milliseconds for all algorithms:
 ```
 examples/generated/line_3
 examples/generated/line_100
@@ -354,33 +365,78 @@ the output is 2150 examples total:
 
 ### 3. Reproducing the raw results (Fig. 5, top right)
 
-Now that you have generated the benchmarks, the raw results are produced using the
+Now that we have all the benchmarks, the raw results are produced using the
 `run_all` binary.
 This runs all algorithms on all known examples.
-First, though, we need to run the following command to avoid a stack overflow on some larger examples for some of the algorithms:
+First, though, we need to run the following command to avoid a possible stack overflow on some larger examples, for some of the algorithms, on some platforms:
 ```
 ulimit -s hard
 ```
 
-then running `ulimit -s`, the output should be 65520 or larger (TODO).
+Following this, you can view the stack limit by running `ulimit -s`, it should be at least 65520.
 
 #### Quick version
 
-For a quicker version, we recommend running all the results *excluding* the Naive and Simple algorithms, which are generally quite slow.
-The `-e` flag can be used to exclude these. Run the following command:
+For a quicker version, we recommend running all the results *excluding* the Naive and Simple algorithms, which are generally slow and often timeout.
+The `-e` flag can be used to exclude the algorithms given the first letter of each algorithm to exclude: `n` and `s` respectively.
+Run the following command to generate results on *all* benchmarks in `examples/`:
 ```
 time cargo run --release --bin run_all -- -e n s
 ```
 
-#### Full results
+This command should take 30-60 minutes to complete.
+It will print out the output as it goes, which you can inspect.
+For example, it will print:
+```
+===== examples/random/dense_10000_2_1 =====
+Example size: 2012345, timeout: 10s
+bfgt: Timeout
+log: time 614ms
+jump: time 430ms
+```
+
+Each of these output lines corresponds to a point in the scatter plot in Figure 5, top right.
+The example size is on the x-axis,
+and the running time of each algorithm is on the y-axis,
+using a color to indicate the algorithm (`bfgt`, `log`, or `jump`).
+
+Once all benchmarks are finished, the command will display a message that it has saved the results, that should look something like the following:
+```
+========= Results =========
+Results saved to: results/2023-04-28-212821_release_t10.csv
+cargo run --release --bin run_all -- -e n s  1774.36s user 12.33s system 99% cpu 29:54.84 total
+```
+
+We recommend comparing the results by inspection to the provided results under
+`results/`: we provide the results that were reported in the paper.
+
+#### Full version
 
 To generate the full experimental results,
+run the same command but without the `-e n s` flag:
+```
+time cargo run --release --bin run_all
+```
 
-TODO
+This command will take much longer to run; around 10 hours.
+Just as with the previous command,
+it will generate results in `results/`
+with a timestamp for the run.
+Here is an example line in the output:
+```
+===== examples/generated/reverseunkline_3000 =====
+Example size: 6000, timeout: 10s
+naive: time 1230ms
+simple: time 862ms
+bfgt: time 3ms
+log: time 74ms
+jump: time 16ms
+```
 
 ### 4. Generating the plots (Fig. 5) (not recommended)
 
-Finally, we include the spreadsheet which can be used to replicate the plots.
+As a last step, we include the spreadsheet which can be used to replicate the plots
+from the raw results in `results/`
 This step is not recommended unless the reviewer is adept with Google sheets.
 
 Please make sure to access the following link from a **private** browser or while not logged in, so as not to reveal your identity:
@@ -389,10 +445,11 @@ Please make sure to access the following link from a **private** browser or whil
 
 The spreadsheet is also packaged with the artifact, in the `spreadsheet/` folder, as a `.xlsx` file.
 Once you have opened the spreadsheet, make a copy of spreadsheet for editing.
-Then, you can paste in the raw experimental data under the `raw` tab.
+Then, you can paste in the raw experimental data under the `raw` tab:
+that is, upload the results `.csv` file, and paste them in in this tab.
 The data in the other tabs should automatically update and generate the plot images.
 
-In the `raw` tab, the "include?" column includes a Boolean which computes whether or not the benchmark should be included in the plots: it is included if it is not a handwritten (unit test) example, *and* if it is not trivial, i.e. at least one algorithm takes at least 10 milliseconds to solve the benchmark.
+In the `raw` tab, the finaln "include?" column is a Boolean field which computes whether or not the benchmark should be included in the plots: it is included if it is not a handwritten (unit test) example, *and* if it is not trivial, i.e. at least one algorithm takes at least 10 milliseconds to solve the benchmark.
 The total number of rows in this sheet is what is used to determine the number of included benchmarks in the Qty column in Fig. 4 (right).
 
 In the tab `plots2`, the cell O20 controls which plot is generated:
