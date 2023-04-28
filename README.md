@@ -61,6 +61,26 @@ The artifact is provided as a docker container, available on Zenodo:
 
 - DOI: 10.5281/zenodo.7877718
 
+You will need a working installation of [Docker](https://www.docker.com/). Run
+```
+docker run hello-world
+```
+to see if it is working properly. You should have a file `gid.tar.gz` which contains the docker image. Please load the image with:
+```
+docker load < gid.tar.gz
+```
+(this should take less than 5 minutes). You can see all of your images with
+```
+docker image ls
+```
+you should see one listed as `gid gid`. Load the image into an interactive container with
+```
+docker run -it gid:gid
+```
+This should bring you into an Ubuntu shell to continue the remainder of the instructions. You can quit the shell (and exit the container) with ctrl-D (or cmd-D on mac). Outside of this shell, you can see all (past and currently running) containers with `docker ps -a`.
+
+TODO
+
 ## Quick-Start Guide (smoke-test phase)
 
 All commands to build and run the artifact are through `cargo`, the Rust package manager and build system.
