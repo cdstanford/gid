@@ -43,8 +43,14 @@ The artifact supports the experimental results section of the paper (Section 4),
 - In particular, Algorithm 3 exhibits up to two orders of magnitude speedup over BFGT for larger GIDs – we measured speedups of 110x to 530x for GIDs in the top five size buckets (GIDs of size nearest to 100K, 200K, 500K, 1M, and 2M).
 - Both algorithms, and our implementations of all the baseline approaches, exhibit correct output on all unit tests and benchmarks.
 
-The plots included in Figure 5 were generated using a Google spreadsheet, and cannot be produced automatically from the artifact. However, we also include all information needed to reproduce these figures, if necessary.
-(TODO)
+The plots included in Figure 5, as well as the Qty column of Figure 4, were generated using a Google spreadsheet,
+and cannot be produced automatically.
+For completeness, we include the spreadsheet in `spreadsheets` as an `.xlsx` file,
+and we also include a link to a Google sheet template
+which can be used to regenerate the plots.
+We also include instructions for how to copy the raw results into the spreadsheet; if this is done, the plots should update based on the new data.
+However, to save time, we recommend focusing the evaluation on running the command-line tools to reproduce the raw results (in CSV form)
+as well as checking the output to see that it agrees with what is reported in the paper.
 
 ## Quick-Start Guide (smoke-test phase)
 
@@ -150,6 +156,7 @@ The repository contains the following files and directories:
 - `tests/` contains unit tests, in addition to those already included inline in the source code.
 - `examples/` contains all of the (handwritten and automatically generated) benchmarks used for evaluation of the paper as well as for correctness.
 - `Cargo.toml` and `Cargo.lock` are standard files provided by Rust packages: they document the required Rust package dependencies to run the code, and are used by `cargo` during compilation and linking. `rustfmt.toml` is a configuration file for the code formatter `cargo fmt`.
+- `spreadsheets/` contains the Google sheet (downloaded as a `.xlsx` file) that can be used to produce the plots in Figure 5.
 - Finally, `scripts` contains miscellaneous scripts, and `regex-smt-benchmarks` contains SMT regular expression benchmarks as a submodule: it is not a necessary dependency, but it includes the source `.smt` files that were used to generate some of the benchmarks in `examples/` for the sake of completeness.
 
 ## Reproducing the experimental results (full-review phase)
@@ -159,7 +166,7 @@ This section contains detailed instructions to reproduce the raw experimental re
 ### Important caveats
 
 The plots in Figure 5 were generated using the help of a Google spreadsheet.
-Rather than reproducing the plots directly, we suggest commands here to run and reproduce the raw results, which include, for each benchmark, the running time of each algorithm on the benchmark.
+Rather than reproducing the plots directly, we suggest commands here to run and reproduce the raw results, which include, for each benchmark, the running time of each of the five algorithms on the benchmark.
 For the sake of completeness, we also include instructions on how to use a template of the Google spreadsheet if it is desired to regenerate the plots.
 
 In addition, many of our experiments take a long time to reproduce in their entirety.
