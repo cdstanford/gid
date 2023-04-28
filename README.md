@@ -8,6 +8,14 @@ The artifact can also be viewed online [here](https://github.com/cdstanford/gid)
 
 The artifact provides a data structure, called guided incremental digraphs (GIDs), implemented as an open-source library in Rust.
 The data structure identifies live and dead states in an abstract transition system.
+
+The repository implements, documents, and compares five competing solutions to solve the core problem of live and dead state detection (described below):
+- our amortized logarithmic-time per update algorithm (Algorithm 2, `log`)
+- an even faster lazy algorithm (Algorithm 3, `jump`), and
+- three baseline approaches for comparison: `bfgt` (the state of the art), `naive`, and `simple`.
+
+### Problem statement
+
 More precisely: given as input a list of graph updates like
 ```
 AddEdge(1, 2)
@@ -25,11 +33,6 @@ The meaning of this terminology is as follows:
 - In the output, a "dead" state is one for which all reachable states are closed and not terminal. In other words, a dead state is one that is known to not be live no matter what future edges are added to the transition system.
 
 In this example, by the above definitions, `1` and `2` should be live and `4` should be dead.
-
-The repository implements five competing solutions to the above problem:
-- our amortized logarithmic-time per update algorithm (Algorithm 2, `log`)
-- an even faster lazy algorithm (Algorithm 3, `jump`), and
-- three baseline approaches for comparison: `bfgt` (the state of the art), `naive`, and `simple`.
 
 ## List of claims supported
 
@@ -155,7 +158,7 @@ and it is also available as a GitHub repository.
 
 For Rust projects, the library provides an interface to use GIDs directly as a data structure in future applications. For example, one can import `JumpStateGraph` into another code base and use the interface in `interface.rs` to update the data structure. The methods include, for example, `.add_transition()`, `.mark_closed()`, and `.is_dead()` to update and query the data structure.
 
-For non-Rust projects, it may be easiest to use the data structure in a more black-box fashion by constructing input files in the required `.json` format. This approach is described earlier using the `run_compare` and `run_example` binaries.
+For non-Rust projects, it is possible to use the data structure in a more black-box fashion by constructing input files in the required `.json` format. This approach is described earlier using the `run_compare` and `run_example` binaries.
 
 ### New implementations of existing work
 
@@ -180,3 +183,7 @@ Another possibility for extension is to extend the graph interface with addition
 
 We have taken care to document the source code, where especially helpful, and cleaned up and removed TODOs and old features.
 We have also ensured that there are extensive unit tests to demonstrate minimal uses for the tool, see for example `tests/test_examples.rs`.
+
+## Reproducing the experimental results (full-review phase)
+
+TODO
