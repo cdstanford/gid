@@ -319,9 +319,30 @@ the output is 2150 examples total:
 2061 regexlib, 19 additional state graph benchmarks (prior to filtering), and
 70 handwritten benchmarks.
 
-## To be continued...
+### Replicating the raw results
 
 TODO
+
+### Generating the plots (Figure 5) (not recommended)
+
+Finally, we include the spreadsheet which can be used to replicate the plots.
+This step is not recommended unless the reviewer is adept with Google sheets.
+
+Please make sure to access the following link from a **private** browser or while not logged in, so as not to reveal your identity:
+
+[Google Sheets Link](https://docs.google.com/spreadsheets/d/18niEXFnQnqUQGxJ5eOrYE701LyjJVlTVqKezSNir8HI/edit?usp=sharing)
+
+The spreadsheet is also packaged with the artifact, in the `spreadsheet/` folder, as a `.xlsx` file.
+Once you have opened the spreadsheet, make a copy of spreadsheet for editing.
+Then, you can paste in the raw experimental data under the `raw` tab.
+The data in the other tabs should automatically update and generate the plot images.
+
+In the `raw` tab, the "include?" column includes a Boolean which computes whether or not the benchmark should be included in the plots: it is included if it is not a handwritten (unit test) example, *and* if it is not trivial, i.e. at least one algorithm takes at least 10 milliseconds to solve the benchmark.
+The total number of rows in this sheet is what is used to determine the number of included benchmarks in the Qty column in Fig. 4 (right).
+
+In the tab `plots2`, the cell O20 controls which plot is generated:
+it should be toggled between `generated`, `random` and `regex`.
+This will cause the data to update to include only the selected benchmark category.
 
 ## "Reusable" badge
 
