@@ -19,6 +19,6 @@
      370 ./src/graph.rs
      389 ./src/euler_forest.rs
      420 ./src/bin/example_gen.rs
-     682 ./tests/test_examples.rs
+     684 ./tests/test_examples.rs
      814 ./src/avl_forest.rs
-    5324 total
+    5326 total

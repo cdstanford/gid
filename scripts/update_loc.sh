@@ -1,1 +1,1 @@
-find . -name '*.rs' | xargs wc -l | sort > loc.txt
+find . -name '*.rs' -not -path "./target/*" | xargs wc -l | sort > loc.txt
