@@ -91,6 +91,12 @@ Navigate to the `gid` directory, under home with
 cd gid
 ```
 
+Optionally, compile all the code (if this step is omitted, it will be done automatically by the following commands):
+```
+cargo build && cargo build --release
+```
+
+This may take a minute or so, and should print "Finished" in green without any errors.
 Then execute the following command:
 ```
 cargo test
@@ -368,15 +374,22 @@ the output is 2150 examples total:
 Now that we have all the benchmarks, the raw results are produced using the
 `run_all` binary.
 This runs all algorithms on all known examples.
-First, though, we need to run the following command to avoid a possible stack overflow on some larger examples, for some of the algorithms, on some platforms:
+
+#### Preparation: setting the stack overflow limit
+
+In our testing, we have found that it is occasionally possible to encounter a stack overflow on some platforms -- though this doesn't seem to be currently occurring in the provided Docker images.
+This would occur only for a few of the larger examples, with some of the algorithms, on some platforms.
+**Just to be extra safe,** please run this command before continuing:
 ```
-ulimit -s hard
+ulimit -s 65520
 ```
 
-Following this, you can view the stack limit by running `ulimit -s`, it should be at least 65520.
+This ensures that the stack overflow limit is set higher than the default (typically 8192).
+You can run `ulimit -s` to view the current limit.
 
 #### Quick version
 
+Now we are ready to reproduce the full experimental results.
 For a quicker version, we recommend running all the results *excluding* the Naive and Simple algorithms, which are generally slow and often timeout.
 The `-e` flag can be used to exclude the algorithms given the first letter of each algorithm to exclude: `n` and `s` respectively.
 Run the following command to generate results on *all* benchmarks in `examples/`:
