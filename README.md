@@ -73,9 +73,9 @@ docker load < gid.tar.gz
 ```
 docker image ls
 ```
-you should see one listed as `gid gid`. Load the image into an interactive container with
+you should see one listed as `gid gid` or `gid latest`. Load the image into an interactive container with
 ```
-docker run -it gid:gid
+docker run -it gid
 ```
 This should bring you into an Ubuntu shell to continue the remainder of the instructions. You can quit the shell (and exit the container) with ctrl-D (or cmd-D on mac). Outside of this shell, you can see all (past and currently running) containers with `docker ps -a`.
 
