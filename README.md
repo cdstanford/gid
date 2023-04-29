@@ -86,12 +86,9 @@ Once you have obtained the artifact, we recommend the following two tests to see
 
 ### 1. Run the unit tests
 
-Navigate to the `gid` directory, under home with
-```
-cd gid
-```
+Make sure you are in the correct directory: if you run `ls`, you should see this README.md, the `src/` directory, and other files.
 
-Optionally, compile all the code (if this step is omitted, it will be done automatically by the following commands):
+Then optionally: to compile the code with cargo (if this step is omitted, it will be done automatically by the following commands)
 ```
 cargo build && cargo build --release
 ```
