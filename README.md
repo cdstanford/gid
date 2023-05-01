@@ -57,9 +57,9 @@ To aid in this process, we also provide the raw results that are used in the spr
 
 The artifact is provided as a docker container, available on Zenodo:
 
-- [Zenodo Link](https://zenodo.org/record/7877718)
+- [Zenodo Link](https://zenodo.org/record/7883748)
 
-- DOI: 10.5281/zenodo.7877718
+- DOI: 10.5281/zenodo.7877717
 
 You will need a working installation of [Docker](https://www.docker.com/). Run
 ```
