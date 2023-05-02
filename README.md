@@ -53,13 +53,15 @@ However, to save time, we recommend focusing the evaluation on running the comma
 as well as checking the output to see that it agrees with what is reported in the paper.
 To aid in this process, we also provide the raw results that are used in the spreadsheet, under `results/`, for comparison.
 
-## Running the Docker container
+## Installation
 
-The artifact is provided as a docker container, available on Zenodo:
+### Running the Docker container
 
-- [Zenodo Link](https://zenodo.org/record/7883748)
-
-- DOI: 10.5281/zenodo.7877717
+The artifact is provided as a docker container, available on [Zenodo](https://zenodo.org/record/7885130) (DOI: 10.5281/zenodo.7877717).
+Unfortunately, we regret to have discovered that Docker has cross-platform incompatibilities for newer ARM-based Macs (unrelated to our artifact).
+We have therefore provided *two* images:
+- Please download the Mac docker image for newer Macs; and
+- Please download the Linux image if you have access to any traditional system (it should work on Linux, Windows or WSL, or older Macs).
 
 You will need a working installation of [Docker](https://www.docker.com/). Run
 ```
@@ -78,6 +80,10 @@ you should see one listed as `gid gid` or `gid latest`. Load the image into an i
 docker run -it gid
 ```
 This should bring you into an Ubuntu shell to continue the remainder of the instructions. You can quit the shell (and exit the container) with ctrl-D (or cmd-D on mac). Outside of this shell, you can see all (past and currently running) containers with `docker ps -a`.
+
+### Alternative to Docker
+
+As an alternative to Docker, if you prefer, you can also run the code natively as long as you have a working installation of Rust (and Cargo). To install Rust on Mac or Linux, run `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` or follow the instructions [here](https://www.rust-lang.org/tools/install). You will also need `git` and `time` for a few of the commands below. Then run `git clone https://github.com/cdstanford/gid` to get the code.
 
 ## Quick-Start Guide (smoke-test phase)
 
@@ -210,6 +216,10 @@ Specifically, we suggest omitting the Naive and Simple baseline algorithms (as t
 This way, no benchmarks are excluded from the results.
 We also give the commands that can be used to run all 5 algorithms
 if this is desired.
+
+Lastly, for some containerized Docker builds, there can be substantial differences (e.g., 2-3x) between the running time of the algorithms reported in the paper with native code, and those that are obtained running in the container.
+This occurs especially when running the newer Mac Docker builds;
+please take this into account if comparing numbers directly across platforms.
 
 ### 1. Lines of Source Code (Fig. 4, left)
 
@@ -394,7 +404,7 @@ Run the following command to generate results on *all* benchmarks in `examples/`
 time cargo run --release --bin run_all -- -e n s
 ```
 
-This command should take 30-60 minutes to complete.
+This command may take up to 30 minutes to complete.
 It will print out the output as it goes, which you can inspect.
 For example, it will print:
 ```
@@ -428,7 +438,7 @@ run the same command but without the `-e n s` flag:
 time cargo run --release --bin run_all
 ```
 
-This command will take much longer to run; around 10 hours.
+This command will take much longer to run, but less than 10 hours.
 Just as with the previous command,
 it will generate results in `results/`
 with a timestamp for the run.
