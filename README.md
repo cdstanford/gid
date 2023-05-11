@@ -2,7 +2,6 @@
 
 Welcome! This repository contains the artifact for the paper *Incremental Dead State Detection in Logarithmic Time,* to appear at CAV 2023.
 See `cav23.pdf` for the version of the paper at submission time.
-The artifact can also be viewed online [here](https://github.com/cdstanford/gid).
 
 ## Overview
 
