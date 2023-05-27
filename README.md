@@ -481,7 +481,7 @@ In addition to the functional and available badges, we request to be considered 
 
 ### Reusing the code
 
-Our library is free and open source under an MIT license, and is also available through the Rust package registry system (`crates.io`), so it can easily be integrated into any Rust project by simply running `cargo add gid` or adding the line `gid = "0.1.1"` to `Cargo.toml`.
+Our library is free and open source under an MIT license, and is also available through the Rust package registry system (`crates.io`), so it can easily be integrated into any Rust project by simply running `cargo add guided_digraph` or adding the line `guided_digraph = "0.1.1"` to `Cargo.toml`.
 Alternatively, the artifact can be downloaded and run as a binary in a project written in any other language.
 It can be run outside of a Docker container in any system with Rust installed,
 and it is also available as a GitHub repository.
